@@ -19,9 +19,9 @@
 
 package picframe.at.picframe.activities;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.inputmethodservice.Keyboard;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -34,7 +34,6 @@ import android.support.v4.view.ViewPager.PageTransformer;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -205,6 +204,16 @@ public class MainActivity extends ActionBarActivity{
             deleteTimerz(true);
         }
 
+        if("-1".equals(mPrefs.getString(this.getString(R.string.sett_key_srcpath_sd), "-1"))
+            &&
+            settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)){
+            AlertDialog.Builder path_not_set_dialog = new AlertDialog.Builder(MainActivity.this);
+            path_not_set_dialog
+                    .setCancelable(true)
+                    .setMessage(R.string.main_dialog_path_not_set);
+            path_not_set_dialog.show();
+        }
+
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
             if (!settingsObj.getImagePath().equals(mOldPath) || mOldRecursive != settingsObj.getRecursiveSearch()) {
                 loadAdapter();
@@ -319,7 +328,7 @@ public class MainActivity extends ActionBarActivity{
         public void run() {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    if (setUp.getCount() > 0) {
+                    if (setUp.getCount() > 0 && !paused) {
                         pager.setCurrentItem(page, true);
                         if(!toggleDirection) {
                             page++;
@@ -374,9 +383,6 @@ public class MainActivity extends ActionBarActivity{
         private Activity activity;
         private LayoutInflater inflater;
         private ImageView imgDisplay;
-        private static final int POS_MAIN_PAGE = 0;
-        private static final float WIDTH_MAIN_PAGE = 0.9f;
-
         private int localpage;
 //        private int size;
 
@@ -424,6 +430,21 @@ public class MainActivity extends ActionBarActivity{
                 public void onSwipeTop() {
                     if (getSupportActionBar() != null){
                         getSupportActionBar().hide();
+                    }
+                }
+
+                @Override
+                public void onTap() {
+                    if (settingsObj.getSlideshow()) {
+                        //For Linda .... TAP
+                        Log.d("test", "TAPED " + paused);
+                        paused = !paused;
+                        if (paused) {
+                            Toast.makeText(MainActivity.mContext, R.string.main_paused_yes, Toast.LENGTH_SHORT).show();
+                        }
+                        else if(settingsObj.getDisplayTime() >= 5){
+                            Toast.makeText(MainActivity.mContext, R.string.main_paused_no, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
             });
@@ -751,7 +772,7 @@ public class MainActivity extends ActionBarActivity{
         } else if(settingsObj.getSlideshow()){
             pager.setPageTransformer(true,transformers.get(settingsObj.getTransitionType()));
         } else {
-            pager.setPageTransformer(true,new StackTransformer());
+            pager.setPageTransformer(true,new ZoomOutPageTransformer());
         }
     }
 

@@ -34,6 +34,9 @@ public class Gestures implements View.OnTouchListener{
     public void doubleTap(){
     }
 
+    public void onTap(){
+    }
+
     public boolean onTouch(View v, MotionEvent event) {
         return detector.onTouchEvent(event);
     }
@@ -51,6 +54,12 @@ public class Gestures implements View.OnTouchListener{
         @Override
         public boolean onDoubleTap(MotionEvent event){
             doubleTap();
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent event){
+            onTap();
             return true;
         }
 

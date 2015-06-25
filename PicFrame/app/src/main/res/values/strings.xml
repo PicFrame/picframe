@@ -789,5 +789,8 @@
         Apache JackRabbit depends on Commons HTTPClient version 3.1 and SLF4j version 1.7.5.\n
         Copyright © 2004-2010 The Apache Software Foundation. Licensed under Apache License,
         Version 2.0."</string>
+    <string name="main_paused_yes">Paused</string>
+    <string name="main_paused_no">Play</string>
+    <string name="main_dialog_path_not_set">You have not set a picture source directory yet! \nPlease go to the settings to pick a folder.</string>
     <!-- ABOUT STRINGS END -->
 </resources>
