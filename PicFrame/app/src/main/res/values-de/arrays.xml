@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="displayTimeEntries">
+        <item name="2">2 Sekunden</item>
+        <item name="3">3 Sekunden</item>
+        <item name="4">4 Sekunden</item>
+        <item name="5">5 Sekunden</item>
+        <item name="15">15 Sekunden</item>
+        <item name="30">30 Sekunden</item>
+        <item name="60">1 Minute</item>
+        <item name="90">1,5 Minuten</item>
+        <item name="300">5 Minuten</item>
+        <item name="600">10 Minuten</item>
+        <item name="1800">30 Minuten</item>
+        <item name="3600">1 Stunde</item>
+        <item name="5400">1,5 Stunden</item>
+        <item name="18000">5 Stunden</item>
+        <item name="36000">10 Stunden</item>
+        <item name="86400">1 Tag</item>
+    </string-array>
+
+    <string-array name="srcTypeEntries">
+        <item name="0">SD-Karte</item>
+        <item name="1">OwnCloud</item>
+        <!--item name="2">Samba</item-->
+    </string-array>
+
+    <string-array name="updateIntervalEntries">
+        <item name="-1">Jetzt!</item>
+        <item name="1">1 Stunde</item>
+        <item name="3">3 Stunden</item>
+        <item name="5">5 Stunden</item>
+        <item name="12">12 Stunden</item>
+        <item name="24">24 Stunden</item>
+        <item name="48">2 Tage</item>
+        <item name="72">3 Tage</item>
+        <item name="168">1 Woche</item>
+    </string-array>
+    <string-array name="transitionTypeEntries">
+        <item name="0">Akkordion</item>
+        <item name="1">Vom Hintergrund nach vorne</item>
+        <item name="2">Würfel</item>
+        <item name="3">In den Hintergrund verblassen</item>
+        <item name="4">Überblenden</item>
+        <item name="5">Vertikal drehen</item>
+        <item name="6">Vom Vordergrung nach hinten</item>
+        <item name="7">Hineindrehen</item>
+        <item name="8">Stapel</item>
+        <item name="9">Hineinzoomen</item>
+        <item name="10">Herauszoomen</item>
+        <item name="11">Zufällig</item>
+    </string-array>
+
+
+</resources>

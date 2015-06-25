@@ -1,0 +1,34 @@
+*******************
+*TODO:
+X   C grayscale and sepia option? (comment in EXIF_helper) => Z says: "NO!"
+*   U if stopped and played again, still wait on displayTime to pass
+***********
+*   Letter stands for assigned person to handle task
+*   If no person is assigned, you are free to handle the task (please add letter)
+*******************
+
+____________________________________________________________________________________________________
+DONE:
+*  LM OwnCloud Anbindung
+*   C change EditTextPref SrcPath_OwnCloud to (flagExtractNoUi)
+*   L must recognize new files on download -> plz no crash if new files added, and memorize active picture
+*   C show alert dialoh with licenses in about on button click
+*   C new settings added
+*   L timer task for download
+*   M translations
+*   C different checks like wifi, read/write permissions, OC login
+*   C check for storage size before download
+* LMC OwnCloud Anbindung (ReadRemote, Compare, Download, Scale&Rotate&Save, DeleteSrc)
+*   U Icon (mehrere Größen)
+*   U Gesture Detection (SingleTap, Swipe (left,right)
+*   U change onClick from imageView to onTouch and recognize tap
+*   C Add ACRA: Debug-Log to email (also email-account for picframe-team created)
+*   C Use Toolbar instead of actionbar:
+*   C Add implementation for new buttons (scale (centerCrop), recursiveSearch, RandomImage)
+*   C Add new Buttons (scale (centerCrop), recursiveSearch, RandomImage)
+*   C change EditText to stay small, when editing
+*   C Save SrcPath for different SrcTypes in different Variables?! - Yes, in the Preferences only
+*   C Disable Username/Password if Type==ExternalSD
+*   C Add SrcPath field programmatically to change preference-type, title etc accordingly
+*   C Find a way, to add an intent to SrcPath programmatically!
+*   C Change Keys to string-Constants (strings.xml)

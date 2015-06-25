@@ -1,0 +1,76 @@
+<resources>
+    <!-- MAIN STRINGS -->
+    <string name="main_toast_noUsernameSet">Benutzername oder Passwort für die Netzwerkressource wurden nicht gesetzt.</string>
+    <string name="main_toast_noSDReadRights">Von externer SD-Karte konnte nicht gelesen werden.</string>
+    <string name="main_toast_noSDWriteRights">Auf externe SD-Karte konnte nicht geschrieben werden.</string>
+    <string name="main_toast_noFileFound">Keine Bilder im angegebenen Ordner gefunden.</string>
+    <string name="main_toast_noNewFiles">Keine neuen Dateien am Server gefunden.</string>
+    <string name="main_toast_noWifiConnection">Konnte sich nicht mit WIFI verbinden.\nBilder werden nicht heruntergeladen.</string>
+    <string name="main_toast_notEnoughStorage">Es steht nicht genug Speicher auf der SD Karte zu Verfügung.</string>
+    <string name="main_toast_loginFailedSMB">Verbindung/Anmeldung zu Samba nicht möglich.\nBitte überprüfen sie ihre Einstellungen.</string>
+    <string name="main_toast_download_interrupted">Zum Verlassen und beenden des Downloads erneut \'zurück\' drücken.</string>
+    <string name="main_toast_exitmsg">Zum Verlassen erneut \'zurück\' drücken.</string>
+    <!-- MAIN STRINGS END -->
+
+    <!-- OC-Tasks -->
+    <string name="octask_toast_loginFailed">Verbindung/Anmeldung zu Owncloud-Server nicht möglich.\nBitte überprüfen sie ihre Einstellungen.</string>
+    <!-- OC-Tasks END -->
+
+    <!-- SETTINGS STRINGS -->
+    <string name="action_settings">Einstellungen</string>
+    <string name="title_activity_settings">Einstellungen</string>
+    <string name="sett_displayTime">Anzeigedauer</string>
+    <string name="sett_displayTimeSumm">Anzeigedauer eines Bildes</string>
+    <string name="sett_slideShow">Slideshow</string>
+    <string name="sett_randomize">Zufällige Bildwiedergabe</string>
+    <string name="sett_randomizeSummOff">Bilderwiedergabe ist nicht zufällig (Reihenfolge nach Dateinamen)</string>
+    <string name="sett_randomizeSumm">Ob die Bilderwiedergabe zufällig oder nach Dateinamen sein soll</string>
+    <string name="sett_randomizeSummOn">Bilderwiedergabe ist zufällig</string>
+    <string name="sett_slideShowSumm">Ob die Bilder sich nach der angegebenen Zeit automatisch ändern sollen</string>
+    <string name="sett_slideShowSummOff">Bilder ändern sich nicht automatisch</string>
+    <string name="sett_slideShowSummOn">Bilder ändern sich nach der angegebenen Zeit automatisch</string>
+    <string name="sett_scaling">Bilder skalieren</string>
+    <string name="sett_scalingSumm">Ob Bilder den ganzen Bildschirm ausfüllen sollen</string>
+    <string name="sett_scalingSummOff">Bilder werden vollständig angezeigt</string>
+    <string name="sett_scalingSummOn">Bilder werden skaliert um den Bildschirm auszufüllen</string>
+    <string name="sett_cat1">Anzeige-Einstellungen</string>
+    <string name="sett_cat2">Quellen-Einstellungen</string>
+    <string name="sett_srcType">Bildquelle</string>
+    <string name="sett_srcTypeSumm">Wählen Sie die Quelle Ihrer Bilder aus.</string>
+    <string name="sett_username">Benutzername</string>
+    <string name="sett_usernameSumm">Benutzername für die ausgewählte Quelle</string>
+    <string name="sett_password">Passwort</string>
+    <string name="sett_passwordSumm">Passwort für die ausgewählte Quelle</string>
+    <string name="sett_srcPath_externalSD">Verzeichnis</string>
+    <string name="sett_srcPath_externalSDSumm">Pfad zu Ihren Bildern</string>
+	<string name="sett_srcPath_OwnCloudSumm">Geben Sie die Adresse Ihres OwnCloud-Servers an</string>
+    <string name="sett_recursiveSearch">Bilder aus Unterordnern anzeigen</string>
+    <string name="sett_recursiveSearchSumm">Ob Bilder aus Unterordnern angezeigt werden sollen</string>
+    <string name="sett_recursiveSearchSummOff">Bilder aus Unterordnern werden nicht angezeigt</string>
+    <string name="sett_recursiveSearchSummOn">Bilder aus Unterordnern werden angezeigt</string>
+    <string name="sett_deleteData">Daten löschen</string>
+    <string name="sett_deleteDataSumm">Alle heruntergeladenen Bilder im picframe-Ordner werden gelöscht</string>
+    <string name="sett_transition">Übergänge</string>
+    <string name="sett_transitionSumm">Wählen Sie, welche Bildübergänge Sie bei der Slideshow haben wollen.</string>
+    <string name="sett_updateInterval">Aktualisierungsintervall</string>
+    <string name="sett_updateIntervalSumm">Wählen Sie aus, in welchem Intervall neue Bilder von der Quelle heruntergeladen werden sollen.</string>
+    <!-- Settings Dialog Strings -->
+    <string name="sett_dialog_title">Ordner auswählen</string>
+    <string name="sett_dialog_posBtn">Ok</string>
+    <string name="sett_dialog_negBtn">Abbrechen</string>
+    <string name="sett_deleteDataDialog_posBtn">Ja</string>
+    <string name="sett_deleteDataDialog_negBtn">Nein</string>
+    <string name="sett_deleteDataDialog_msg">Wollen Sie wirklich alle heruntergeladenen Bilder löschen?</string>
+    <string name="sett_dialog_changedURL_message">Sie haben Ihre OwnCloud URL verändert. \nWollen sie Ihre alten Bilder löschen bevor die neuen Bilder heruntergeladen werden?</string>
+    <!-- Settings Toast Strings -->
+    <string name="sett_toast_delFiles">Lösche Bilder!</string>
+    <!-- SETTINGS STRINGS END -->
+
+    <!-- ABOUT STRINGS -->
+    <string name="action_about">Über uns</string>
+    <string name="title_activity_about">Über uns</string>
+    <string name="about_line1">Entwickelt von:</string>
+    <string name="about_license_button">Lizenzen</string>
+    <!-- ABOUT STRINGS END -->
+    <string name="deleteMe">deleteMe</string>
+</resources>

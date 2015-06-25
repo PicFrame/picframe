@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:key="@string/sett_key_cat1"
+        android:title="@string/sett_cat1">
+        <picframe.at.picframe.helper.settings.MySwitchPref
+            android:title="@string/sett_slideShow"
+            android:summary="@string/sett_slideShowSumm"
+            android:summaryOff="@string/sett_slideShowSummOff"
+            android:summaryOn="@string/sett_slideShowSummOn"
+            android:defaultValue="true"
+            android:key="@string/sett_key_slideshow" />
+        <ListPreference
+            android:title="@string/sett_displayTime"
+            android:summary="@string/sett_displayTimeSumm"
+            android:key="@string/sett_key_displaytime"
+            android:dependency="Slideshow"
+            android:defaultValue="2"
+            android:entries="@array/displayTimeEntries"
+            android:entryValues="@array/displayTimeValues" />
+        <ListPreference
+            android:title="@string/sett_transition"
+            android:summary="@string/sett_transitionSumm"
+            android:key="@string/sett_key_transition"
+            android:dependency="Slideshow"
+            android:defaultValue="0"
+            android:entries="@array/transitionTypeEntries"
+            android:entryValues="@array/transitionTypeValues" />
+        <picframe.at.picframe.helper.settings.MySwitchPref
+            android:title="@string/sett_randomize"
+            android:summary="@string/sett_randomizeSumm"
+            android:summaryOff="@string/sett_randomizeSummOff"
+            android:summaryOn="@string/sett_randomizeSummOn"
+            android:key="@string/sett_key_randomize"
+            android:defaultValue="false" />
+        <picframe.at.picframe.helper.settings.MySwitchPref
+            android:title="@string/sett_scaling"
+            android:summary="@string/sett_scalingSumm"
+            android:summaryOff="@string/sett_scalingSummOff"
+            android:summaryOn="@string/sett_scalingSummOn"
+            android:defaultValue="false"
+            android:key="@string/sett_key_scaling" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="@string/sett_key_cat2"
+        android:title="@string/sett_cat2" >
+        <ListPreference
+            android:title="@string/sett_srcType"
+            android:summary="@string/sett_srcTypeSumm"
+            android:key="@string/sett_key_srctype"
+            android:defaultValue="0"
+            android:entries="@array/srcTypeEntries"
+            android:entryValues="@array/srcTypeValues" />
+        <EditTextPreference
+            android:title="@string/sett_username"
+            android:summary="@string/sett_usernameSumm"
+            android:shouldDisableView="true"
+            android:defaultValue=""
+            android:inputType="textNoSuggestions|textPersonName"
+            android:imeOptions="flagNoExtractUi"
+            android:key="@string/sett_key_username" />
+        <EditTextPreference
+            android:title="@string/sett_password"
+            android:summary="@string/sett_passwordSumm"
+            android:shouldDisableView="true"
+            android:defaultValue=""
+            android:inputType="textNoSuggestions|textPassword|"
+            android:imeOptions="flagNoExtractUi"
+            android:key="@string/sett_key_password" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

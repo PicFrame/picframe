@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- not currently used, but is the BG for the sync button -->
+<shape
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval" >
+    <solid android:color="#ff0099cc" />
+   <stroke android:color="#ff0099cc" android:width="5dp" />
+</shape>

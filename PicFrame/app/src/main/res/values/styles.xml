@@ -1,0 +1,18 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="@style/Theme.AppCompat">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="windowActionBarOverlay">true</item>
+        <!--item name="android:windowActionBarOverlay">true</item-->
+    </style>
+
+    <style name="myPreferenceTheme" parent="@style/Theme.AppCompat">
+        <item name="android:windowNoTitle">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="windowActionBarOverlay">true</item>
+    </style>
+
+</resources>

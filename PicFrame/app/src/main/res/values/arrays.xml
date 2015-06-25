@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="displayTimeEntries">
+        <item name="2">2 seconds</item>
+        <item name="3">3 seconds</item>
+        <item name="4">4 seconds</item>
+        <item name="5">5 seconds</item>
+        <item name="15">15 seconds</item>
+        <item name="30">30 seconds</item>
+        <item name="60">1 minute</item>
+        <item name="90">1.5 minutes</item>
+        <item name="300">5 minutes</item>
+        <item name="600">10 minutes</item>
+        <item name="1800">30 minutes</item>
+        <item name="3600">1 hour</item>
+        <item name="5400">1.5 hours</item>
+        <item name="18000">5 hours</item>
+        <item name="36000">10 hours</item>
+        <item name="86400">1 day</item>
+    </string-array>
+    <string-array translatable="false" name="displayTimeValues">
+        <item name="2">2</item>
+        <item name="3">3</item>
+        <item name="4">4</item>
+        <item name="5">5</item>
+        <item name="15">15</item>
+        <item name="30">30</item>
+        <item name="60">60</item>
+        <item name="90">90</item>
+        <item name="300">300</item>
+        <item name="600">600</item>
+        <item name="1800">1800</item>
+        <item name="3600">3600</item>
+        <item name="5400">5400</item>
+        <item name="18000">18000</item>
+        <item name="36000">36000</item>
+        <item name="86400">86400</item>
+    </string-array>
+
+    <string-array name="transitionTypeEntries">
+        <item name="0">Accordion</item>
+        <item name="1">Background to foreground</item>
+        <item name="2">Cube Out</item>
+        <item name="3">Draw from background</item>
+        <item name="4">Fade</item>
+        <item name="5">Flip vertical</item>
+        <item name="6">Foreground to background</item>
+        <item name="7">Rotate Down</item>
+        <item name="8">Stack</item>
+        <item name="9">Zoom In</item>
+        <item name="10">Zoom Out</item>
+        <item name="11">Random</item>
+    </string-array>
+
+    <string-array translatable="false" name="transitionTypeValues">
+        <item name="0">0</item>
+        <item name="1">1</item>
+        <item name="2">2</item>
+        <item name="3">3</item>
+        <item name="4">4</item>
+        <item name="5">5</item>
+        <item name="6">6</item>
+        <item name="7">7</item>
+        <item name="8">8</item>
+        <item name="9">9</item>
+        <item name="10">10</item>
+        <item name="11">11</item>
+    </string-array>
+
+    <string-array name="srcTypeEntries">
+        <item name="0">External SD</item>
+        <item name="1">OwnCloud</item>
+        <!--item name="2">Samba</item-->
+    </string-array>
+    <string-array translatable="false" name="srcTypeValues">
+        <item name="0">0</item>
+        <item name="1">1</item>
+        <!--item name="2">2</item-->
+    </string-array>
+    <string-array name="updateIntervalEntries">
+        <item name="-1">Now!</item>
+        <item name="1">1 hour</item>
+        <item name="3">3 hours</item>
+        <item name="5">5 hours</item>
+        <item name="12">12 hours</item>
+        <item name="24">24 hours</item>
+        <item name="48">2 days</item>
+        <item name="72">3 days</item>
+        <item name="168">1 week</item>
+    </string-array>
+
+    <string-array translatable="false" name="updateIntervalValues">
+        <item name="-1">-1</item>
+        <item name="1">1</item>
+        <item name="3">3</item>
+        <item name="5">5</item>
+        <item name="12">12</item>
+        <item name="24">24</item>
+        <item name="48">48</item>
+        <item name="72">72</item>
+        <item name="168">168</item>
+    </string-array>
+
+</resources>
