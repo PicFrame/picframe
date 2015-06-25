@@ -75,15 +75,18 @@ public class SettingsActivity extends PreferenceActivity {
         mPrefs = this.getSharedPreferences(MainActivity.mySettingsFilename, MODE_PRIVATE);
 
         Map<String, ?> keyMap = mPrefs.getAll();
-        for (String e : keyMap.keySet()) {
+        /*for (String e : keyMap.keySet()) {
             //System.out.println("Key: " + e + " == Value: " + keyMap.get(e));
-        }
+        }*/
 
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 settingsObj.loadConfig(getApplicationContext(), sharedPreferences);
                 if (key.contains("SrcType")) {
                     setCorrectSrcPathField();
+                    if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
+                        settingsObj.setDownloadNow(true);
+                    }
                 }
                 updateTitlePrefsWithValues(sharedPreferences, key);
             }
@@ -139,6 +142,7 @@ public class SettingsActivity extends PreferenceActivity {
                 getString(R.string.sett_key_srcpath_owncloud),
                 getString(R.string.sett_key_srcpath_samba),
                 getString(R.string.sett_key_recursiveSearch),
+                getString(R.string.sett_key_updateInterval),
                 getString(R.string.sett_key_deleteData)};
         for (String path : SrcPaths) {
             mySrcPathPref = findPreference(path);
@@ -408,6 +412,7 @@ public class SettingsActivity extends PreferenceActivity {
         myUpdatePref.setKey(getString(R.string.sett_key_updateInterval));
         myUpdatePref.setEntries(R.array.updateIntervalEntries);
         myUpdatePref.setEntryValues(R.array.updateIntervalValues);
+        myUpdatePref.setShouldDisableView(true);
         myUpdatePref.setDefaultValue("12");
         myUpdatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override

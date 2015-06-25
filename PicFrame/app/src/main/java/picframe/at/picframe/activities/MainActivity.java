@@ -21,6 +21,7 @@ package picframe.at.picframe.activities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.inputmethodservice.Keyboard;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -33,6 +34,7 @@ import android.support.v4.view.ViewPager.PageTransformer;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -167,9 +169,19 @@ public class MainActivity extends ActionBarActivity{
     // TODO: folderpicker for owncloud server folder                                ! M
         // TODO: Read operation for getting folder structure                        ! C
 
+    @Override
+    public boolean onMenuOpened(int featureId, Menu menu) {
+        startActivity(new Intent(this, SettingsActivity.class));
+        return super.onMenuOpened(featureId, menu);
+    }
+
     protected void onResume() {
         super.onResume();
         loadSettings();
+        if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
+            mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
+            startActivity(new Intent(this, SettingsActivity.class));
+        }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // if the user choose "download NOW", download pictures; then set timer as usual
@@ -733,7 +745,6 @@ public class MainActivity extends ActionBarActivity{
 
     private int random(){
         //Random from 0 to 13
-
         return (int)(Math.random() * 11);
     }
 
