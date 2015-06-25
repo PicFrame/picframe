@@ -8,6 +8,13 @@ X   C grayscale and sepia option? (comment in EXIF_helper) => Z says: "NO!"
 *******************
 
 ____________________________________________________________________________________________________
+Latest updates:
+First start? -> settings
+SrcType change to OC? -> download_now:true
+MenuButton? -> settings
+Update preference fixed
+Download-bug fixed
+Action-Bar-Bug fixed
 DONE:
 *  LM OwnCloud Anbindung
 *   C change EditTextPref SrcPath_OwnCloud to (flagExtractNoUi)

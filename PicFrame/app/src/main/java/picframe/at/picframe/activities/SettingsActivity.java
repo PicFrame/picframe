@@ -46,7 +46,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.util.Map;
 
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.settings.AppData;
@@ -73,12 +72,12 @@ public class SettingsActivity extends PreferenceActivity {
 
         settingsObj = AppData.getINSTANCE();
         mPrefs = this.getSharedPreferences(MainActivity.mySettingsFilename, MODE_PRIVATE);
-
+/*
         Map<String, ?> keyMap = mPrefs.getAll();
-        /*for (String e : keyMap.keySet()) {
-            //System.out.println("Key: " + e + " == Value: " + keyMap.get(e));
-        }*/
-
+        for (String e : keyMap.keySet()) {
+            System.out.println("Key: " + e + " == Value: " + keyMap.get(e));
+        }
+*/
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 settingsObj.loadConfig(getApplicationContext(), sharedPreferences);

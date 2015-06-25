@@ -84,10 +84,11 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
         mExtFolderCachePath = mExtFolderAppRoot + File.separator + "cache";
 
         if (DEBUG) Log.i(TAG, "AppRootFolder: "+ mExtFolderAppRoot +
-                "\nCacheFolder: " +mExtFolderCachePath +
-                "\nDisplayFoler: " +mExtFolderDisplayPath);
+                " -- CacheFolder: " +mExtFolderCachePath +
+                " -- DisplayFoler: " +mExtFolderDisplayPath);
         if (DEBUG) Log.i(TAG, "thread counter at first: " + mThreadCounter.get());
 
+        if (DEBUG) Log.i(TAG, "###### STARTING OWNCLOUD DOWNLOAD TASK #####");
         // read all files on the server
         remoteReadAnyFolder(FileUtils.PATH_SEPARATOR);
         
@@ -98,7 +99,7 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
                 return null;
             }
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 if (DEBUG) Log.e(TAG, "Exception happened while trying to await end of remote reads");
                 //e.printStackTrace();
@@ -107,14 +108,19 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
 
         // check which files aren't in the picture folder yet
         compareLocalAndRemoteFolder();
-        // download missing files
-        downloadFiles();
 
         boolean processed, deleted;
+        int fileIndex = 0;
+        File mExtFolderCacheObject = new File(mExtFolderCachePath);
+        boolean cacheFolderExists = mExtFolderCacheObject.exists();
+        if (DEBUG && cacheFolderExists) Log.i(TAG, "mExtFolderCacheObject exists! (" + mExtFolderCachePath + ")");
+        if (DEBUG) Log.i(TAG, "Number of files to download: " + mRemoteFilesToDownloadList.size());
         // while there are still files to process and the download isn't done yet, loop
-        while(mThreadCounter.get() > 0 || mDownloadedFiles.peek() != null) {    // Retrieves but doesn't remove from FIFO
+        while(
+                mThreadCounter.get() > 0 ||
+                (mDownloadedFilesCount.get() != mRemoteFilesToDownloadList.size())  ||
+                mDownloadedFiles.peek() != null) {    // Retrieves but doesn't remove from FIFO
             try {
-                Thread.sleep(500);
                 if (mDownloadedFiles.peek() != null) {      // Check if DownloadList has files to process
                     String fileToProcess = mDownloadedFiles.poll();
                     processed = scaleRotateAndSave(fileToProcess);
@@ -131,6 +137,35 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
                     } else {
                         if (DEBUG) Log.e(TAG, "Failure while processing file. (scaleRotateAndSave");
                     }
+                }
+                if (isCancelled()) {
+                    if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: doInBackground - downloadFiles");
+                    if (mDownloadedFiles.peek() == null)
+                        return null;
+                    Thread.sleep(200);
+                }  else {
+                    if (mRemoteFilesToDownloadList.size() > 0 &&
+                            mDownloadedFilesCount.get() < mRemoteFilesToDownloadList.size()) {
+                        // download here
+                        if (cacheFolderExists
+                                && mThreadCounter.get() < 2
+                                && fileIndex < mRemoteFilesToDownloadList.size()) {
+                            RemoteFile remoteFile = mRemoteFilesToDownloadList.get(fileIndex);
+                            if (15 * 1024 * 1024 < GlobalPhoneFuncs.getSdCardFreeBytes() - remoteFile.getLength()) {
+                                if (DEBUG) Log.i(TAG, "Starting download: " + remoteFile.getRemotePath());
+                                mThreadCounter.getAndIncrement();
+                                DownloadRemoteFileOperation downloadOperation =
+                                        new DownloadRemoteFileOperation(remoteFile.getRemotePath(), mExtFolderCacheObject.getAbsolutePath());
+                                downloadOperation.execute( mClient, this, mHandler);
+                                fileIndex++;
+                            } else {
+                                if (DEBUG) Log.e(TAG, "No more space available on the sd card!");
+                                publishProgress(-1.5f);
+                                this.cancel(true);
+                            }
+                        }
+                    }
+                    Thread.sleep(200);
                 }
             } catch (InterruptedException e) {
                 if (DEBUG) Log.e(TAG, "Exception happened while trying to await end of remote downloads");
@@ -242,34 +277,6 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
         }
     }
 
-    private void downloadFiles(){
-        if (mRemoteFilesToDownloadList.size() < 1)
-            return;
-        File mExtFolderCacheObject = new File(mExtFolderCachePath);
-        if(mExtFolderCacheObject.exists()) {
-            if (DEBUG) Log.i(TAG, "mExtFolderCacheObject exists! (" + mExtFolderCachePath + ")");
-            if (DEBUG) Log.i(TAG, "Number of files to download: " + mRemoteFilesToDownloadList.size());
-            for(RemoteFile remoteFile: mRemoteFilesToDownloadList){
-                // check if after the download of the file, more than 15MB are still free on SD card
-                if (15*1024*1024 < GlobalPhoneFuncs.getSdCardFreeBytes() - remoteFile.getLength()) {
-                    if (DEBUG) Log.i(TAG, "Starting download: " + remoteFile.getRemotePath());
-                    if (isCancelled()) {
-                        if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: downloadFiles");
-                        return;
-                    }
-                    mThreadCounter.getAndIncrement();
-                    DownloadRemoteFileOperation downloadOperation =
-                            new DownloadRemoteFileOperation(remoteFile.getRemotePath(), mExtFolderCacheObject.getAbsolutePath());
-                    downloadOperation.execute( mClient, this, mHandler);
-                } else {
-                    if (DEBUG) Log.e(TAG, "No more space available on the sd card!");
-                    publishProgress(-1.5f);
-                    return;
-                }
-            }
-        }
-    }
-
     @Override
     protected void onProgressUpdate(Float... values) {
         super.onProgressUpdate(values);
@@ -370,6 +377,7 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
         handleCancelled();
     }
     private void handleCancelled() {
+        publishProgress(0f);
         if (DEBUG) Log.e(TAG, "Thread 'successfully' cancelled.");
     }
 }

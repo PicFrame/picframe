@@ -102,6 +102,7 @@ public class MainActivity extends ActionBarActivity{
     private String mOldPath;
     private boolean mOldRecursive;
     private RelativeLayout mainLayout;
+    private boolean paused;
 
     public static ProgressBar mProgressBar;
     private static OwnCloudClient mClientOwnCloud;
@@ -114,11 +115,12 @@ public class MainActivity extends ActionBarActivity{
     private static int size;
     private static int currentPageSaved;
     private static boolean toggleDirection;
+    private Handler actionbarHideHandler;
 
     public static boolean mConnCheckOC, mConnCheckSMB;
     public boolean mDoubleBackToExitPressedOnce;
 
-    private final static boolean DEBUG = false;
+    private final static boolean DEBUG = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,6 +134,7 @@ public class MainActivity extends ActionBarActivity{
         mConnCheckOC = false;
         mConnCheckSMB = false;
         toggleDirection = false;
+        paused = false;
         enableGestures();
         mPrefs = getSharedPreferences(mySettingsFilename, MODE_PRIVATE);
         //deletePreferences();
@@ -166,6 +169,7 @@ public class MainActivity extends ActionBarActivity{
     // TODO: Make download timer to alarm                                           -> later update
     // TODO: Use info of "include sub dirs" for file download                       -> later update
     // TODO: stop slideshow with tap                                                -> later update
+    // TODO: actionbar hide-handler cancel if swiped down again
     // TODO: folderpicker for owncloud server folder                                ! M
         // TODO: Read operation for getting folder structure                        ! C
 
@@ -291,12 +295,17 @@ public class MainActivity extends ActionBarActivity{
         if (this.getSupportActionBar() != null) {
             this.getSupportActionBar().show();
         }
-        new Handler().postDelayed(new Runnable() {
+        if (actionbarHideHandler != null) {
+            actionbarHideHandler.removeCallbacksAndMessages(null);
+            actionbarHideHandler = null;
+        }
+        actionbarHideHandler = new Handler();
+        actionbarHideHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 getSupportActionBar().hide();
             }
-        }, 2000);
+        }, 2500);
     }
 
     public void pageSwitcher(int seconds) {
@@ -440,6 +449,7 @@ public class MainActivity extends ActionBarActivity{
             return this.localpage;
         }
 
+        /*
         @Override
         public float getPageWidth (int position) {
             if (position == POS_MAIN_PAGE) {
@@ -447,7 +457,7 @@ public class MainActivity extends ActionBarActivity{
             }
             return 1f;
         }
-
+*/
     }
 
     private void deleteTimerz() { deleteTimerz(true); }
@@ -523,16 +533,20 @@ public class MainActivity extends ActionBarActivity{
                         Toast.makeText(this, R.string.main_toast_noWifiConnection, Toast.LENGTH_LONG).show();
                     } else {
                         if (DEBUG) Log.i(TAG, "wifi connected");
-                        // Try to connect & login to selected source server
-                        if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-                            if (!mConnCheckOC) {
-                                if (DEBUG) Log.i(TAG, "trying OC check");
-                                startConnectionCheck();
-                                return true;
+                        if (!initializedFolders()) {
+                            Toast.makeText(this, R.string.main_toast_folderInitFailure, Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Try to connect & login to selected source server
+                            if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
+                                if (!mConnCheckOC) {
+                                    if (DEBUG) Log.i(TAG, "trying OC check");
+                                    startConnectionCheck();
+                                    return true;
+                                }
+                            }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
+                            {
+                                // TODO: Samba checks go here
                             }
-                        }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
-                        {
-                            // TODO: Samba checks go here
                         }
                     }
                 }
@@ -598,21 +612,17 @@ public class MainActivity extends ActionBarActivity{
     }
 
     public static void startFileDownload() {
-        if (initializedFolders()) {
-            if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-                if (mConnCheckOC) {
-                    startOwnCloudDownloadTask();
-                }
-            }       /**
-                     *  else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba)) {
-                     *      if (mConnCheckSMB) {
-                     *      TODO    Start samba download task here
-                     *      }
-                     *  }
-                     */
-        } else {
-            if (DEBUG) Log.e(TAG, "Failed to initialise local folders");
-        }
+        if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
+            if (mConnCheckOC) {
+                startOwnCloudDownloadTask();
+            }
+        }       /**
+                 *  else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba)) {
+                 *      if (mConnCheckSMB) {
+                 *      TODO    Start samba download task here
+                 *      }
+                 *  }
+                 */
     }
 
     public static boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
@@ -623,6 +633,7 @@ public class MainActivity extends ActionBarActivity{
                 } else {
                     if (!file.delete()) {
                         if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
+                        return false;
                     }
                 }
             }
@@ -631,7 +642,7 @@ public class MainActivity extends ActionBarActivity{
             return dir.delete();
         }
         // Comment to remove warning xD
-        return false;
+        return true;
     }
 
     private static boolean initializedFolders() {
@@ -650,13 +661,15 @@ public class MainActivity extends ActionBarActivity{
             if (dirCreated)
                 if (DEBUG) Log.i(TAG, "Creating folder: >" +dir+ "< successful");
             else {
-                Log.i(TAG, "Creating folder: >" +dir+ "< FAILED!");
+                if (DEBUG) Log.i(TAG, "Creating folder: >" +dir+ "< FAILED!");
                 return false;
             }
         }
         File folder = new File(folderList.get(1));
         if (DEBUG) Log.i(TAG, "deleting files in cache dir before downloading");
-        recursiveDelete(folder, false);     // delete all files and folders in cache folder
+        if (!recursiveDelete(folder, false)) {    // delete all files and folders in cache folder
+            return false;
+        }
         File nomedia = new File(folderList.get(1) + File.separator + ".nomedia");
         if (!nomedia.exists()) {
             try {
@@ -698,6 +711,7 @@ public class MainActivity extends ActionBarActivity{
         }
     }
 
+
     private static void progressAnimate(boolean fadeIn) {
         // FADEIN
         if (fadeIn) {
@@ -734,12 +748,10 @@ public class MainActivity extends ActionBarActivity{
     public void selectTransformer(){
         if(settingsObj.getSlideshow() && settingsObj.getTransitionType() == 11){
             pager.setPageTransformer(true,transformers.get(random()));
-        }
-        else if(settingsObj.getSlideshow()){
+        } else if(settingsObj.getSlideshow()){
             pager.setPageTransformer(true,transformers.get(settingsObj.getTransitionType()));
-        }
-        else {
-            pager.setPageTransformer(true,new NoTransformer());
+        } else {
+            pager.setPageTransformer(true,new StackTransformer());
         }
     }
 

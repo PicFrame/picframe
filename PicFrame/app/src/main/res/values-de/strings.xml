@@ -73,4 +73,5 @@
     <string name="about_license_button">Lizenzen</string>
     <!-- ABOUT STRINGS END -->
     <string name="deleteMe">deleteMe</string>
+    <string name="main_toast_folderInitFailure">Konnte download Ordner nicht erstellen.</string>
 </resources>

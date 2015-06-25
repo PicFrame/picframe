@@ -55,6 +55,7 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
 
         mThreadCounter = new AtomicInteger(0);
         if (DEBUG) Log.i(TAG, "###### STARTING OWNCLOUD CONNECTION CHECK #####");
+        publishProgress();
         // read root on the server
         mThreadCounter.getAndIncrement();
         ReadRemoteFolderOperation refreshOperation = new ReadRemoteFolderOperation(FileUtils.PATH_SEPARATOR);
@@ -70,6 +71,12 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
             }
         }
         return null;
+    }
+
+    @Override
+    protected void onProgressUpdate(Float... values) {
+        super.onProgressUpdate(values);
+        MainActivity.updateDownloadProgress(50f, true);
     }
 
     @Override

@@ -2,8 +2,8 @@
 
     <!-- MAIN STRINGS -->
     <string name="app_name" translatable="false">PicFrame</string>
-    <string name="app_version" translatable="false">1.1</string>
-    <string name="app_key_firstRun" tranlatable="false">FirstStart</string>
+    <string name="app_version" translatable="false">1.2</string>
+    <string name="app_key_firstRun" translatable="false">FirstStart</string>
     <string name="main_toast_noUsernameSet">No Username or Password set for network resource.</string>
     <string name="main_toast_noSDReadRights">Can\'t read from external SD card.</string>
     <string name="main_toast_noSDWriteRights">Can\'t write to external SD card.</string>
@@ -14,6 +14,7 @@
     <string name="main_toast_download_interrupted">Press back again to stop the download and leave.</string>
     <string name="main_toast_exitmsg">Press back again to leave.</string>
     <string name="main_toast_notEnoughStorage">Not enough storage available on external SD card.</string>
+    <string name="main_toast_folderInitFailure">Couldn\'t create download folder.</string>
     <!-- MAIN STRINGS END -->
 
     <!-- OC-Tasks -->
