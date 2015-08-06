@@ -16,6 +16,8 @@ Update preference fixed
 Download-bug fixed
 Action-Bar-Bug fixed
 DONE:
+*   C actionbar hide-handler cancel if swiped down again
+*  UL stop slideshow with tap
 *  LM OwnCloud Anbindung
 *   C change EditTextPref SrcPath_OwnCloud to (flagExtractNoUi)
 *   L must recognize new files on download -> plz no crash if new files added, and memorize active picture

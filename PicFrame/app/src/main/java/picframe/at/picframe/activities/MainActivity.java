@@ -164,11 +164,9 @@ public class MainActivity extends ActionBarActivity{
         });
     }
 
-    // TODO: make download task a service (+react to wifi-connection broadcast)     -> later update
-    // TODO: Make download timer to alarm                                           -> later update
+    // TODO: make download task a service (+react to wifi-connection broadcast)     !! C
+    // TODO: Make download timer to alarm                                           !! L
     // TODO: Use info of "include sub dirs" for file download                       -> later update
-    // TODO: stop slideshow with tap                                                -> later update
-    // TODO: actionbar hide-handler cancel if swiped down again
     // TODO: folderpicker for owncloud server folder                                ! M
         // TODO: Read operation for getting folder structure                        ! C
 
