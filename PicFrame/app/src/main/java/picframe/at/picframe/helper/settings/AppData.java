@@ -56,11 +56,11 @@ public class AppData {
     private boolean recursiveSearch;
     private String imagePath;
     private int updateInterval;
-    private boolean downloadNow;
+    private boolean wifiConnected;
 
     private String extFolderAppRoot;        // sc-card-dir/Pictures/picframe
     private String extFolderDisplayPath;    // sc-card-dir/Pictures/picframe/pictures
-    private String extFolderCachePath;      // sc-card-dir/Pictures/cache
+    private String extFolderCachePath;      // sc-card-dir/Pictures/picframe/cache
 
     private static AppData INSTANCE;
 
@@ -84,7 +84,7 @@ public class AppData {
         this.imagePath = srcPath;
         this.transitionType = 2;
         this.updateInterval = 12;
-        this.downloadNow = false;
+        this.wifiConnected = false;
 
         extFolderAppRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
                 File.separator + "picframe";
@@ -180,10 +180,10 @@ public class AppData {
     public int getUpdateIntervalInHours() {
         return this.updateInterval;
     }
-    public boolean getdownloadNow() {
-        return this.downloadNow;
+    public boolean getWifiConnected() {
+        return this.wifiConnected;
     }
-
-    public void setDownloadNow(boolean download){downloadNow = download;
-        System.out.println("Download now is: "+downloadNow);}
+    public void setWifiConnected(boolean connected){
+        wifiConnected = connected;
+        System.out.println("Wifi connected? - "+ wifiConnected);}
 }

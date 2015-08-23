@@ -20,7 +20,9 @@
 package picframe.at.picframe.activities;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -28,6 +30,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.PageTransformer;
@@ -76,20 +79,23 @@ import picframe.at.picframe.helper.viewpager.FlipVerticalTransformer;
 import picframe.at.picframe.helper.viewpager.ForegroundToBackgroundTransformer;
 import picframe.at.picframe.helper.viewpager.Gestures;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.viewpager.NoTransformer;
 import picframe.at.picframe.helper.viewpager.RotateDownTransformer;
 import picframe.at.picframe.helper.viewpager.StackTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomInTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomOutPageTransformer;
+import picframe.at.picframe.service_broadcast.DownloadService;
+import picframe.at.picframe.service_broadcast.Keys;
 
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends ActionBarActivity{
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private ResponseReceiver receiver;
     public static final String mySettingsFilename = "PicFrameSettings";
     private SharedPreferences mPrefs = null;
     public static AppData settingsObj = null;
+    LocalBroadcastManager broadcastManager;
 
    // private RelativeLayout playPauseBtn;
     private static DisplayImages setUp;
@@ -126,7 +132,7 @@ public class MainActivity extends ActionBarActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        //mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
         mFadeInAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         mFadeOutAnim = AnimationUtils.loadAnimation(this, R.anim.fade_out);
@@ -185,10 +191,16 @@ public class MainActivity extends ActionBarActivity{
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        // if the user choose "download NOW", download pictures; then set timer as usual
-        if(settingsObj.getdownloadNow()){
-            downloadPictures();
-            settingsObj.setDownloadNow(false);
+        // get localBroadcastManager instance to receive localBroadCasts
+        if (broadcastManager == null) {
+            broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        }
+        // register broadcast receiver for UI update from service
+        if (receiver == null) {
+            IntentFilter filter = new IntentFilter(Keys.ACTION_DOWNLOAD_FINISHED);
+            filter.addCategory(Intent.CATEGORY_DEFAULT);
+            receiver = new ResponseReceiver();
+            broadcastManager.registerReceiver(receiver, filter);
         }
 
         if(settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
@@ -228,12 +240,6 @@ public class MainActivity extends ActionBarActivity{
         slideShow();
     }
 
-    private void downloadPictures(){
-        // set to false again every time
-        mConnCheckOC = false;
-        checkForProblemsAndShowToasts();  // check for connection or file reading problems
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -267,6 +273,10 @@ public class MainActivity extends ActionBarActivity{
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        // unregister receiver, because if the activity is not in focus, we want no UI updates
+        broadcastManager.unregisterReceiver(receiver);
+        receiver = null;
 
         currentPageSaved = pager.getCurrentItem();
     }
@@ -437,6 +447,13 @@ public class MainActivity extends ActionBarActivity{
                         //For Linda .... TAP
                         Log.d("test", "TAPED " + paused);
                         paused = !paused;
+
+                        // testing service call     TODO!
+                        Intent msgIntent = new Intent(mContext, DownloadService.class);
+                        msgIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
+                        startService(msgIntent);
+                        // EOf testing
+
                         if (paused) {
                             Toast.makeText(MainActivity.mContext, R.string.main_paused_yes, Toast.LENGTH_SHORT).show();
                         }
@@ -529,12 +546,6 @@ public class MainActivity extends ActionBarActivity{
         });
     }
 
-    private boolean wifiConnected() {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        return wifi != null && wifi.isConnected();
-    }
-
     private boolean checkForProblemsAndShowToasts() {
         // OwnCloud or Samba selected
         if (!settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)) {
@@ -548,7 +559,7 @@ public class MainActivity extends ActionBarActivity{
                 } else {
                     if (DEBUG) Log.i(TAG, "username and pw set");
                     // Wifi connected?
-                    if (!wifiConnected()) {
+                    if (!settingsObj.getWifiConnected()) {
                         Toast.makeText(this, R.string.main_toast_noWifiConnection, Toast.LENGTH_LONG).show();
                     } else {
                         if (DEBUG) Log.i(TAG, "wifi connected");
@@ -664,7 +675,7 @@ public class MainActivity extends ActionBarActivity{
         return true;
     }
 
-    private static boolean initializedFolders() {
+    private boolean initializedFolders() {
         // mExtFolderCachePath + mExtFolderDisplayPath
         boolean dirCreated;
         // check if folders exist, if not, create them
@@ -702,7 +713,7 @@ public class MainActivity extends ActionBarActivity{
         return true;
     }
 
-    public static void updateDownloadProgress(Float percent, boolean indeterminate) {
+    public void updateDownloadProgress(Float percent, boolean indeterminate) {
         if (percent == -1f) {
             Toast.makeText(mContext, R.string.main_toast_noNewFiles, Toast.LENGTH_SHORT).show();
             return;
@@ -731,7 +742,7 @@ public class MainActivity extends ActionBarActivity{
     }
 
 
-    private static void progressAnimate(boolean fadeIn) {
+    private void progressAnimate(boolean fadeIn) {
         // FADEIN
         if (fadeIn) {
             if (mProgressBar.getVisibility() == View.GONE ||
@@ -792,5 +803,33 @@ public class MainActivity extends ActionBarActivity{
         this.transformers.add(new StackTransformer());
         this.transformers.add(new ZoomInTransformer());
         this.transformers.add(new ZoomOutPageTransformer());
+    }
+
+    public class ResponseReceiver extends BroadcastReceiver {
+        public static final String BOOTED_MSG = "booted";
+        private float percent;
+        private boolean indeterminate;
+
+        // to prevent instantiation
+        private ResponseReceiver() {
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null) {
+                // received an intent to update the viewpager
+                if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
+                    if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
+                    updateFileList();
+                    /*
+                    Bundle extras = intent.getExtras();
+                    if (extras != null) {
+                        percent = extras.getFloat(Keys.MSG_PROGRESSUPDATE_PERCENT);
+                        indeterminate = extras.getBoolean(Keys.MSG_PROGRESSUPDATE_INDITERMINATE);
+                        updateDownloadProgress(percent, indeterminate);
+                    }*/
+                }
+            }
+        }
     }
 }
