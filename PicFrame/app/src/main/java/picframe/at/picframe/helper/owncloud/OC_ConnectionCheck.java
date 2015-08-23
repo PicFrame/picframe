@@ -76,7 +76,7 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
     @Override
     protected void onProgressUpdate(Float... values) {
         super.onProgressUpdate(values);
-        MainActivity.updateDownloadProgress(50f, true);
+    //    MainActivity.updateDownloadProgress(50f, true); TODO
     }
 
     @Override
@@ -95,7 +95,7 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
 
     @Override
     protected void onPostExecute(Object o) {
-        MainActivity.updateDownloadProgress(0f, false);
+        //MainActivity.updateDownloadProgress(0f, false);
         if (MainActivity.mConnCheckOC) {
             new Thread(new Runnable() {
                 @Override
@@ -111,7 +111,7 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
 
     @Override
     protected void onPreExecute() {
-        MainActivity.updateDownloadProgress(50f, true);
+        //MainActivity.updateDownloadProgress(50f, true);
     }
 
     @Override

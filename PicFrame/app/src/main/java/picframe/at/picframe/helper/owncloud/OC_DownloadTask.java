@@ -138,6 +138,7 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
                         if (DEBUG) Log.e(TAG, "Failure while processing file. (scaleRotateAndSave");
                     }
                 }
+                // if cancelled, process downloaded pictures and then stop
                 if (isCancelled()) {
                     if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: doInBackground - downloadFiles");
                     if (mDownloadedFiles.peek() == null)
@@ -284,7 +285,7 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
         if (percent > 0)
             percent *= 100;
         if (DEBUG) Log.i(TAG, "% update: " + percent);
-        MainActivity.updateDownloadProgress(percent, false);
+        //MainActivity.updateDownloadProgress(percent, false); TODO
     }
 
     @Override
