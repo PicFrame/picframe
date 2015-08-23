@@ -14,7 +14,12 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:name=".MainApp">
+        <service
+            android:name=".service_broadcast.DownloadService"
+            android:exported="false" >
+        </service>
         <activity
+            android:launchMode="singleTask"
             android:name=".activities.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="sensorLandscape" >
