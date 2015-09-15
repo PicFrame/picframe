@@ -6,6 +6,16 @@ https://play.google.com/store/apps/details?id=picframe.at.picframe
 PicFrame App source code.
 
 
+### Setup
+
+Clone this repository (https://github.com/PicFrame/picframe).
+
+Clone the edited android-library, as found here: https://github.com/PicFrame/android-library.
+
+Copy the contents of the edited android-library into the following folder within picframe:
+PicFrame/owncloud-library
+
+
 ### License
 
 Copyright (C) 2015 Clemens Hlawacek, Myra Fuchs, Linda Spindler, Ebenezer Bonney Ussher
