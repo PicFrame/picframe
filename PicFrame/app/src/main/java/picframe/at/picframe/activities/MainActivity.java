@@ -107,7 +107,7 @@ public class MainActivity extends ActionBarActivity{
     private static AsyncTask<Object, Float, Object> mBackgroundTask;
     private static Animation mFadeInAnim, mFadeOutAnim;
     private static final int nbOfExamplePictures = 6;
-    private static boolean showExamplePictures = true;
+    private static boolean showExamplePictures = false;
 
     private ArrayList<PageTransformer> transformers;
     private static List<String> mFilePaths;
@@ -200,6 +200,7 @@ public class MainActivity extends ActionBarActivity{
         } else {
             System.out.println("no new timer");
             deleteTimerz(true);
+            Log.d(TAG, "current path: "+settingsObj.getSrcPath());
         }
 
         if("-1".equals(mPrefs.getString(this.getString(R.string.sett_key_srcpath_sd), "-1"))
@@ -213,8 +214,9 @@ public class MainActivity extends ActionBarActivity{
                     .setMessage(R.string.main_dialog_path_not_set);
             path_not_set_dialog.show();
              */
-
         }
+
+        Log.d(TAG,"showExamplePictures? "+showExamplePictures);
 
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
             if (!settingsObj.getImagePath().equals(mOldPath) || mOldRecursive != settingsObj.getRecursiveSearch()) {
@@ -273,6 +275,7 @@ public class MainActivity extends ActionBarActivity{
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         currentPageSaved = pager.getCurrentItem();
+        showExamplePictures = false;
     }
 
     public void onBackPressed() {
@@ -378,6 +381,7 @@ public class MainActivity extends ActionBarActivity{
     protected void onDestroy() {
         super.onDestroy();
         deleteTimerz();
+        showExamplePictures = false;
     }
 
     private class DisplayImages extends PagerAdapter {
