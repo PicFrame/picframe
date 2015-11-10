@@ -19,7 +19,6 @@
 
 package picframe.at.picframe.activities;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -76,7 +75,6 @@ import picframe.at.picframe.helper.viewpager.FlipVerticalTransformer;
 import picframe.at.picframe.helper.viewpager.ForegroundToBackgroundTransformer;
 import picframe.at.picframe.helper.viewpager.Gestures;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.viewpager.NoTransformer;
 import picframe.at.picframe.helper.viewpager.RotateDownTransformer;
 import picframe.at.picframe.helper.viewpager.StackTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomInTransformer;
@@ -108,6 +106,8 @@ public class MainActivity extends ActionBarActivity{
     private static Object[] mParamsOwnCloud;
     private static AsyncTask<Object, Float, Object> mBackgroundTask;
     private static Animation mFadeInAnim, mFadeOutAnim;
+    private static final int nbOfExamplePictures = 6;
+    private static boolean showExamplePictures = true;
 
     private ArrayList<PageTransformer> transformers;
     private static List<String> mFilePaths;
@@ -181,7 +181,7 @@ public class MainActivity extends ActionBarActivity{
         loadSettings();
         if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
             mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
-            startActivity(new Intent(this, SettingsActivity.class));
+            showExamplePictures = true;
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -205,11 +205,15 @@ public class MainActivity extends ActionBarActivity{
         if("-1".equals(mPrefs.getString(this.getString(R.string.sett_key_srcpath_sd), "-1"))
             &&
             settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)){
+            showExamplePictures = true;
+            /*
             AlertDialog.Builder path_not_set_dialog = new AlertDialog.Builder(MainActivity.this);
             path_not_set_dialog
                     .setCancelable(true)
                     .setMessage(R.string.main_dialog_path_not_set);
             path_not_set_dialog.show();
+             */
+
         }
 
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
@@ -417,8 +421,16 @@ public class MainActivity extends ActionBarActivity{
                 imgDisplay.setScaleType(ImageView.ScaleType.FIT_CENTER);
             }
             this.localpage = position;
-            imgDisplay.setImageBitmap(EXIF_helper.decodeFile(mFilePaths.get(this.localpage), mContext));
-
+            Log.d(TAG, "localpage/position: " + this.localpage);
+            Log.d(TAG, "pager size: " + pager.getAdapter().getCount());
+            if(!showExamplePictures){
+                imgDisplay.setImageBitmap(EXIF_helper.decodeFile(mFilePaths.get(this.localpage), mContext));
+            } else {
+                String currentImage = "ex" + this.localpage;
+                int currentImageID = mContext.getResources().getIdentifier(currentImage, "drawable", mContext.getPackageName());
+                Log.d(TAG, "currentImage: " + currentImage);
+                imgDisplay.setImageResource(currentImageID);
+            }
             imgDisplay.setOnTouchListener(new Gestures(getApplicationContext()) {
                 @Override
                 public void onSwipeBottom() {
@@ -458,10 +470,11 @@ public class MainActivity extends ActionBarActivity{
         }
 
         private void updateSettings() {
-            System.out.println("updateSetting setUp.getCount "+size);
+            Log.d(TAG,"size in updateSettings: " + size);
             mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
             //setUp.notifyDataSetChanged();
-            size = mFilePaths.size();
+            setSize();
+            Log.d(TAG, "size at the end of updateSettings: "+size);
         }
 
         public int getPage(){
@@ -495,7 +508,7 @@ public class MainActivity extends ActionBarActivity{
 
     public static void updateFileList() {
         mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
-        size = mFilePaths.size();
+        setSize(); // size is count of images in folder, or constant if example pictures are used
         setUp.notifyDataSetChanged();
     }
 
@@ -777,6 +790,13 @@ public class MainActivity extends ActionBarActivity{
     private int random(){
         //Random from 0 to 13
         return (int)(Math.random() * 11);
+    }
+
+    private static void setSize(){
+        if(!showExamplePictures)
+            size = mFilePaths.size();
+        else
+            size = nbOfExamplePictures; // TODO: don't hardcode this!
     }
 
     private void initializeTransitions(){
