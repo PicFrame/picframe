@@ -179,10 +179,6 @@ public class MainActivity extends ActionBarActivity{
     protected void onResume() {
         super.onResume();
         loadSettings();
-        if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
-            mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
-            showExamplePictures = true;
-        }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // if the user choose "download NOW", download pictures; then set timer as usual
