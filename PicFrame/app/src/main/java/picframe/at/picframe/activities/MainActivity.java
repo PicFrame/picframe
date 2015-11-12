@@ -110,6 +110,7 @@ public class MainActivity extends ActionBarActivity{
     private static Animation mFadeInAnim, mFadeOutAnim;
     private static final int nbOfExamplePictures = 6;
     private static boolean showExamplePictures = false;
+    private static boolean showTutorial = true;
 
     private ArrayList<PageTransformer> transformers;
     private static List<String> mFilePaths;
@@ -183,25 +184,14 @@ public class MainActivity extends ActionBarActivity{
         loadSettings();
         if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
             mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
+            showTutorial = true;
             showExamplePictures = true;
-            AlertDialog.Builder first_run_dialog_builder = new AlertDialog.Builder(MainActivity.this);
-            first_run_dialog_builder
-                    .setCancelable(true)
-                    .setMessage(R.string.main_first_run_dialog_text)
-                    .setNeutralButton("Open Settings now", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            //showActionBar();
-                            startActivity(getSettingsActivityIntent());
-                        }
-                    });
-            AlertDialog first_run_dialog = first_run_dialog_builder.create();
-            first_run_dialog.getWindow().setGravity(Gravity.TOP| Gravity.LEFT);
-            first_run_dialog.show();
         }
 
+        if(showTutorial) {
+            tutorial();
+        }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         // if the user choose "download NOW", download pictures; then set timer as usual
         if(settingsObj.getdownloadNow()){
             downloadPictures();
@@ -832,5 +822,47 @@ public class MainActivity extends ActionBarActivity{
         this.transformers.add(new StackTransformer());
         this.transformers.add(new ZoomInTransformer());
         this.transformers.add(new ZoomOutPageTransformer());
+    }
+
+    private void tutorial (){
+        AlertDialog.Builder first_run_dialog_builder = new AlertDialog.Builder(MainActivity.this);
+        first_run_dialog_builder
+                .setMessage(R.string.main_first_run_dialog_text)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                        AlertDialog.Builder click_on_settings_dialog_builder = new AlertDialog.Builder(MainActivity.this);
+                        click_on_settings_dialog_builder
+                                .setMessage("You can open the settings anytime by swiping down and clicking on the ??? button, or by clicking the menu button")
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                    }
+                                })
+                                .setNeutralButton("Don't show this message again", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        showTutorial = false;
+                                    }
+                                });
+                        AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();
+                        click_on_settings_dialog.getWindow().setGravity(Gravity.TOP | Gravity.LEFT);
+
+                        if(showTutorial){
+                            click_on_settings_dialog.show();
+                            showActionBar();
+                        }
+                    }
+                })
+                .setNeutralButton("Open Settings now", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        startActivity(getSettingsActivityIntent());
+                    }
+                });
+        AlertDialog first_run_dialog = first_run_dialog_builder.create();
+        first_run_dialog.getWindow().setGravity(Gravity.TOP| Gravity.LEFT);
+        first_run_dialog.show();
     }
 }
