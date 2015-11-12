@@ -1,4 +1,4 @@
-/*
+ /*
     Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher
 
     This file is part of PicFrame.
@@ -19,7 +19,9 @@
 
 package picframe.at.picframe.activities;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -33,6 +35,7 @@ import android.support.v4.view.ViewPager.PageTransformer;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -79,7 +82,6 @@ import picframe.at.picframe.helper.viewpager.RotateDownTransformer;
 import picframe.at.picframe.helper.viewpager.StackTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomInTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomOutPageTransformer;
-
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends ActionBarActivity{
@@ -179,6 +181,25 @@ public class MainActivity extends ActionBarActivity{
     protected void onResume() {
         super.onResume();
         loadSettings();
+        if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
+            mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
+            showExamplePictures = true;
+            AlertDialog.Builder first_run_dialog_builder = new AlertDialog.Builder(MainActivity.this);
+            first_run_dialog_builder
+                    .setCancelable(true)
+                    .setMessage(R.string.main_first_run_dialog_text)
+                    .setNeutralButton("Open Settings now", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            //showActionBar();
+                            startActivity(getSettingsActivityIntent());
+                        }
+                    });
+            AlertDialog first_run_dialog = first_run_dialog_builder.create();
+            first_run_dialog.getWindow().setGravity(Gravity.TOP| Gravity.LEFT);
+            first_run_dialog.show();
+        }
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // if the user choose "download NOW", download pictures; then set timer as usual
@@ -203,13 +224,7 @@ public class MainActivity extends ActionBarActivity{
             &&
             settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)){
             showExamplePictures = true;
-            /*
-            AlertDialog.Builder path_not_set_dialog = new AlertDialog.Builder(MainActivity.this);
-            path_not_set_dialog
-                    .setCancelable(true)
-                    .setMessage(R.string.main_dialog_path_not_set);
-            path_not_set_dialog.show();
-             */
+            Toast.makeText(this,R.string.main_toast_noFolderPathSet, Toast.LENGTH_LONG).show();
         }
 
         Log.d(TAG,"showExamplePictures? "+showExamplePictures);
@@ -432,6 +447,7 @@ public class MainActivity extends ActionBarActivity{
                 imgDisplay.setImageResource(currentImageID);
             }
             imgDisplay.setOnTouchListener(new Gestures(getApplicationContext()) {
+                AlertDialog click_on_settings_dialog;
                 @Override
                 public void onSwipeBottom() {
                     showActionBar();
@@ -797,6 +813,10 @@ public class MainActivity extends ActionBarActivity{
             size = mFilePaths.size();
         else
             size = nbOfExamplePictures; // TODO: don't hardcode this!
+    }
+
+    private Intent getSettingsActivityIntent(){
+        return new Intent(this, SettingsActivity.class);
     }
 
     private void initializeTransitions(){

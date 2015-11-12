@@ -15,6 +15,8 @@
     <string name="main_toast_exitmsg">Press back again to leave.</string>
     <string name="main_toast_notEnoughStorage">Not enough storage available on external SD card.</string>
     <string name="main_toast_folderInitFailure">Couldn\'t create download folder.</string>
+    <string name="main_toast_noFolderPathSet">You have not set picture source directory yet!</string>
+    <string name="main_first_run_dialog_text">Welcome!\nTo access the settings, please swipe down or press the menu button.</string>
     <!-- MAIN STRINGS END -->
 
     <!-- OC-Tasks -->
@@ -791,6 +793,5 @@
         Version 2.0."</string>
     <string name="main_paused_yes">Paused</string>
     <string name="main_paused_no">Play</string>
-    <string name="main_dialog_path_not_set">You have not set a picture source directory yet! \nPlease go to the settings to pick a folder.</string>
     <!-- ABOUT STRINGS END -->
 </resources>
