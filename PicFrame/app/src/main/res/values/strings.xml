@@ -16,7 +16,7 @@
     <string name="main_toast_notEnoughStorage">Not enough storage available on external SD card.</string>
     <string name="main_toast_folderInitFailure">Couldn\'t create download folder.</string>
     <string name="main_toast_noFolderPathSet">You have not set a picture source folder yet!</string>
-    <string name="main_dialog_tutorial_text">To access the settings, please swipe and click on the settings icon, or press the menu button.</string>
+    <string name="main_dialog_tutorial_text">To access the settings, please swipe down and click on the settings icon, or press the menu button.</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Don\'t show this message again</string>
     <string name="main_dialog_tutorial_okButton">OK</string>
     <!-- MAIN STRINGS END -->
@@ -795,5 +795,8 @@
         Version 2.0."</string>
     <string name="main_paused_yes">Paused</string>
     <string name="main_paused_no">Play</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- ABOUT STRINGS END -->
 </resources>
