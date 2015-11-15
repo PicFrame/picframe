@@ -17,6 +17,7 @@
     <string name="main_toast_folderInitFailure">Couldn\'t create download folder.</string>
     <string name="main_toast_noFolderPathSet">You have not set a picture source folder yet!</string>
     <string name="main_dialog_tutorial_text">To access the settings, please swipe down and click on the settings icon, or press the menu button.</string>
+    <string name="main_dialog_tutorial_openSettingsNowButton">Open setting now</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Don\'t show this message again</string>
     <string name="main_dialog_tutorial_okButton">OK</string>
     <!-- MAIN STRINGS END -->

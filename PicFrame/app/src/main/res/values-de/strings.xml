@@ -80,4 +80,5 @@
     <string name="main_dialog_tutorial_text">Bitte nach unter swipen und die Einstellungen Icon antippen, oder den Menu-Button drücken, um die Einstellungen zu öffnen</string>
     <string name="main_dialog_tutorial_okButton">OK</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Diese Nachricht nicht mehr anzeigen</string>
+    <string name="main_dialog_tutorial_openSettingsNowButton">Einstellungen jetzt öffnen</string>
 </resources>

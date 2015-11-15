@@ -457,6 +457,7 @@ public class MainActivity extends ActionBarActivity{
                         paused = !paused;
                         if (paused) {
                             Toast.makeText(MainActivity.mContext, R.string.main_paused_yes, Toast.LENGTH_SHORT).show();
+                            showActionBar();
                         }
                         else if(settingsObj.getDisplayTime() >= 5){
                             Toast.makeText(MainActivity.mContext, R.string.main_paused_no, Toast.LENGTH_SHORT).show();
@@ -838,6 +839,12 @@ public class MainActivity extends ActionBarActivity{
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     showTutorial = false;
+                }
+            })
+            .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    startActivity(getSettingsActivityIntent());
                 }
             });
         AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();
