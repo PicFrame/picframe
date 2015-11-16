@@ -92,7 +92,7 @@ public class MainActivity extends ActionBarActivity{
     public static AppData settingsObj = null;
     LocalBroadcastManager broadcastManager;
 
-   // private RelativeLayout playPauseBtn;
+    private ImageView pauseIcon;
     private static DisplayImages setUp;
     private static Context mContext;
     private static CustomViewPager pager;
@@ -127,6 +127,7 @@ public class MainActivity extends ActionBarActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        pauseIcon = (ImageView) findViewById(R.id.pauseIcon);
         //mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
         mFadeInAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in);
@@ -439,8 +440,6 @@ public class MainActivity extends ActionBarActivity{
                 @Override
                 public void onTap() {
                     if (settingsObj.getSlideshow()) {
-                        //For Linda .... TAP
-                        Log.d("test", "TAPED " + paused);
                         paused = !paused;
 
                         // testing service call     TODO!
@@ -450,10 +449,14 @@ public class MainActivity extends ActionBarActivity{
                         // EOf testing
 
                         if (paused) {
+                            if (pauseIcon.getVisibility()!= View.VISIBLE)
+                                pauseIcon.setVisibility(View.VISIBLE);
                             Toast.makeText(MainActivity.mContext, R.string.main_paused_yes, Toast.LENGTH_SHORT).show();
-                        }
-                        else if(settingsObj.getDisplayTime() >= 5){
-                            Toast.makeText(MainActivity.mContext, R.string.main_paused_no, Toast.LENGTH_SHORT).show();
+                        } else {
+                            if (pauseIcon.getVisibility()!= View.GONE)
+                                pauseIcon.setVisibility(View.GONE);
+                            if(settingsObj.getDisplayTime() >= 5)
+                                Toast.makeText(MainActivity.mContext, R.string.main_paused_no, Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
