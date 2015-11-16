@@ -24,6 +24,7 @@ import com.owncloud.android.lib.common.OwnCloudCredentialsFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -127,16 +128,13 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 args = setUpOcClientArguments();
                 downloader = new Downloader_OC(args);
             } // else if (AppData.sourceTypes.Samba.equals(tmpSource) {}    //  TODO Samba
-
-            // show basic start notification
-            showNotification(Keys.NotificationStates.START, 0, null);
-
-            // more resources to handle service (forces notification with ongoing flag)
-            startForeground(Keys.NOTIFICATION_ID, notificationBuilder.build());
-
             // start download here, progress will be published via callback to this class and then broadcast
             downloading = true;
             downloader.start();
+            // show basic start notification
+            showNotification(Keys.NotificationStates.START, 0, null);
+            // more resources to handle service (forces notification with ongoing flag)
+            startForeground(Keys.NOTIFICATION_ID, notificationBuilder.build());
         }
         // restart service until it is stopped
         return Service.START_STICKY;
@@ -266,13 +264,11 @@ public class DownloadService extends Service implements ServiceCallbacks {
     }
 
     private void showNotification(Keys.NotificationStates notification_state, int progress, String msg) {
-        // if state is "STOP" cancel notification and return
-        if (Keys.NotificationStates.STOP.equals(notification_state)) {
-            notificationManager.cancel(Keys.NOTIFICATION_ID);
-            return;
-        }
 
-        PendingIntent mainPendIntent = PendingIntent.getActivity(this, 0, mainActIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent mainPendIntent = PendingIntent
+                .getActivity(this, 0, mainActIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent stopDownloadPendIntent = PendingIntent
+                .getService(this, 0, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         notificationBuilder
             .setSmallIcon(android.R.drawable.stat_sys_download_done)// set tickerIcon (download-icon)
             .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher)) // set app-icon
@@ -280,11 +276,13 @@ public class DownloadService extends Service implements ServiceCallbacks {
             .setPriority(NotificationCompat.PRIORITY_MAX)           // to stay on top
             .setContentTitle(getString(R.string.app_name))          // set title
             .setWhen(System.currentTimeMillis())                    // timestamp
+            .setDefaults(NotificationCompat.FLAG_AUTO_CANCEL)
             .setOnlyAlertOnce(true)                                 // sound, vibrate and ticker only ONCE
             .setVisibility(NotificationCompat.VISIBILITY_SECRET);   // to hide from lockScreen
 
-        if (Keys.NotificationStates.START.equals(notification_state)
-                || Keys.NotificationStates.PROGRESS.equals(notification_state)) {
+        if (downloading &&
+                (   Keys.NotificationStates.START.equals(notification_state) ||
+                    Keys.NotificationStates.PROGRESS.equals(notification_state))) {
             notificationBuilder
                     .setOngoing(true)
                     .setAutoCancel(false);
@@ -294,6 +292,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - download started")
                         .setContentText("Checking for files to download")
+                        .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop download", stopDownloadPendIntent)
                         .setProgress(100, 50, true);
         // PROGRESS
             } else if (Keys.NotificationStates.PROGRESS.equals(notification_state)) {
@@ -303,8 +302,19 @@ public class DownloadService extends Service implements ServiceCallbacks {
             }
         } else if (Keys.NotificationStates.FAILURE.equals(notification_state)
                 || Keys.NotificationStates.INTERRUPT.equals(notification_state)
+                || Keys.NotificationStates.STOP.equals(notification_state)
                 || Keys.NotificationStates.FINISHED.equals(notification_state)) {
             stopForeground(true);
+            // Reflection to remove the stop action: https://code.google.com/p/android/issues/detail?id=68063
+            try {
+                Field f = notificationBuilder.getClass().getDeclaredField("mActions");
+                f.setAccessible(true);
+                f.set(notificationBuilder, new ArrayList<NotificationCompat.Action>());
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
             //notificationManager.cancel(Keys.NOTIFICATION_ID);
             notificationBuilder
                     .setOngoing(false)
@@ -326,6 +336,12 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - download finished")
                         .setContentText("Download finished: " + msg + " files downloaded.")
+                        .setSubText("Tap to open PicFrame");
+        // STOPPED
+            } else if (Keys.NotificationStates.STOP.equals(notification_state)) {
+                notificationBuilder
+                        .setTicker(getString(R.string.app_name) + " - download stopped")
+                        .setContentText("Download stopped.")
                         .setSubText("Tap to open PicFrame");
             }
         }
