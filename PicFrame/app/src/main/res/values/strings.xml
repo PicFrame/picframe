@@ -20,6 +20,8 @@
     <string name="main_dialog_tutorial_openSettingsNowButton">Open setting now</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Don\'t show this message again</string>
     <string name="main_dialog_tutorial_okButton">OK</string>
+    <string name="main_paused_yes">Paused</string>
+    <string name="main_paused_no">Play</string>
     <!-- MAIN STRINGS END -->
 
     <!-- OC-Tasks -->
@@ -99,11 +101,19 @@
     <!-- ABOUT STRINGS -->
     <string name="action_about">About</string>
     <string name="title_activity_about">About</string>
-    <string name="about_line1">Developed by:</string>
-    <string name="about_line2" translatable="false">Fuchs Myra</string>
-    <string name="about_line3" translatable="false">Hlawacek Clemens</string>
-    <string name="about_line4" translatable="false">Spindler Linda</string>
-    <string name="about_line5" translatable="false">Ussher Ebenezer Bonney</string>
+    <string name="about_developpedBy">Developed by:</string>
+    <string name="about_myra" translatable="false">Fuchs Myra</string>
+    <string name="about_clemens" translatable="false">Hlawacek Clemens</string>
+    <string name="about_linda" translatable="false">Spindler Linda</string>
+    <string name="about_ussher" translatable="false">Ussher Ebenezer Bonney</string>
+    <string name="about_martin" translatable="false">Bayerl Martin</string>
+    <string name="about_christoph" translatable="false">Krasa Christoph</string>
+    <string name="about_photosBy">Photographs by:</string>
+    <string name="about_nilles" translatable="false">Nilles Kevin</string>
+    <string name="about_hedl" translatable="false">Hedl Michael</string>
+    <string name="about_zaczek" translatable="false">Zaczek Arthur</string>
+    <string name="about_esraa" translatable="false">AlHafidh Esraa</string>
+    <string name="about_rights_reserved" translatable="false">All Rights Reserved</string>
     <string name="deleteMe">deleteMe</string>
     <string name="about_license_button">Licenses</string>
     <string name="about_licenses_dialog_button_1" translatable="false">Full GNU General Public License</string>
@@ -794,10 +804,6 @@
         Apache JackRabbit depends on Commons HTTPClient version 3.1 and SLF4j version 1.7.5.\n
         Copyright © 2004-2010 The Apache Software Foundation. Licensed under Apache License,
         Version 2.0."</string>
-    <string name="main_paused_yes">Paused</string>
-    <string name="main_paused_no">Play</string>
 
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- ABOUT STRINGS END -->
 </resources>

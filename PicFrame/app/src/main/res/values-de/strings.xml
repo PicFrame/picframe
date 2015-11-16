@@ -69,7 +69,6 @@
     <!-- ABOUT STRINGS -->
     <string name="action_about">Über uns</string>
     <string name="title_activity_about">Über uns</string>
-    <string name="about_line1">Entwickelt von:</string>
     <string name="about_license_button">Lizenzen</string>
     <!-- ABOUT STRINGS END -->
     <string name="deleteMe">deleteMe</string>
@@ -81,4 +80,7 @@
     <string name="main_dialog_tutorial_okButton">OK</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Diese Nachricht nicht mehr anzeigen</string>
     <string name="main_dialog_tutorial_openSettingsNowButton">Einstellungen jetzt öffnen</string>
+    <string name="about_line1"></string>
+    <string name="about_developpedBy">Entwickelt von:</string>
+    <string name="about_photosBy">Fotos von:</string>
 </resources>
