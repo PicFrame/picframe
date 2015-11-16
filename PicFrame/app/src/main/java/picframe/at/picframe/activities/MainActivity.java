@@ -118,6 +118,7 @@ public class MainActivity extends ActionBarActivity{
     private static int currentPageSaved;
     private static boolean toggleDirection;
     private Handler actionbarHideHandler;
+    private ImageView pauseView;
 
     public static boolean mConnCheckOC, mConnCheckSMB;
     public boolean mDoubleBackToExitPressedOnce;
@@ -130,6 +131,7 @@ public class MainActivity extends ActionBarActivity{
         setContentView(R.layout.activity_main);
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        pauseView = (ImageView) findViewById(R.id.pause_view);
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
         mFadeInAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         mFadeOutAnim = AnimationUtils.loadAnimation(this, R.anim.fade_out);
@@ -452,15 +454,13 @@ public class MainActivity extends ActionBarActivity{
                 @Override
                 public void onTap() {
                     if (settingsObj.getSlideshow()) {
-                        //For Linda .... TAP
-                        Log.d("test", "TAPED " + paused);
                         paused = !paused;
                         if (paused) {
-                            Toast.makeText(MainActivity.mContext, R.string.main_paused_yes, Toast.LENGTH_SHORT).show();
+                            pauseView.setVisibility(View.VISIBLE);
                             showActionBar();
                         }
-                        else if(settingsObj.getDisplayTime() >= 5){
-                            Toast.makeText(MainActivity.mContext, R.string.main_paused_no, Toast.LENGTH_SHORT).show();
+                        else {
+                            pauseView.setVisibility(View.INVISIBLE);
                         }
                     }
                 }
