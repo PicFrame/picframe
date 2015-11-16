@@ -565,7 +565,6 @@ public class MainActivity extends ActionBarActivity{
                 // If no Username set although source is not SD Card
                 if (settingsObj.getUserName().equals("") || settingsObj.getUserPassword().equals("")) {
                     Toast.makeText(this, R.string.main_toast_noUsernameSet, Toast.LENGTH_SHORT).show();
-                    if(showTutorial) tutorial();
                 } else {
                     if (DEBUG) Log.i(TAG, "username and pw set");
                     // Wifi connected?
