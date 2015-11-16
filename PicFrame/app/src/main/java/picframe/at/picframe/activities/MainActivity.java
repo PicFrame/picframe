@@ -110,7 +110,7 @@ public class MainActivity extends ActionBarActivity{
     private static Animation mFadeInAnim, mFadeOutAnim;
     private static final int nbOfExamplePictures = 6;
     private static boolean showExamplePictures = false;
-    private static boolean showTutorial = true;
+    private boolean showTutorial = true;
 
     private ArrayList<PageTransformer> transformers;
     private static List<String> mFilePaths;
@@ -182,6 +182,7 @@ public class MainActivity extends ActionBarActivity{
     protected void onResume() {
         super.onResume();
         loadSettings();
+        showTutorial = settingsObj.getTutorial();
         if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
             mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
             showTutorial = true;
@@ -275,6 +276,7 @@ public class MainActivity extends ActionBarActivity{
 
         currentPageSaved = pager.getCurrentItem();
         showExamplePictures = false;
+        settingsObj.setTutorial(showTutorial);
     }
 
     public void onBackPressed() {
@@ -455,6 +457,7 @@ public class MainActivity extends ActionBarActivity{
                         paused = !paused;
                         if (paused) {
                             Toast.makeText(MainActivity.mContext, R.string.main_paused_yes, Toast.LENGTH_SHORT).show();
+                            showActionBar();
                         }
                         else if(settingsObj.getDisplayTime() >= 5){
                             Toast.makeText(MainActivity.mContext, R.string.main_paused_no, Toast.LENGTH_SHORT).show();
@@ -836,6 +839,12 @@ public class MainActivity extends ActionBarActivity{
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     showTutorial = false;
+                }
+            })
+            .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    startActivity(getSettingsActivityIntent());
                 }
             });
         AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();

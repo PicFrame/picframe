@@ -51,7 +51,6 @@ public class AboutActivity extends ActionBarActivity {
                         secondDialog.setMessage(R.string.about_license_gpl_full);
                         AlertDialog myDialog = secondDialog.show();
                         TextView message = (TextView)myDialog.findViewById(android.R.id.message);
-                        message.setGravity(Gravity.CENTER);
                     }
                 })
                 .setNeutralButton(R.string.about_licenses_dialog_button_2, new DialogInterface.OnClickListener() {
@@ -61,11 +60,9 @@ public class AboutActivity extends ActionBarActivity {
                         secondDialog.setMessage(R.string.about_license_thirdparty);
                         AlertDialog myDialog = secondDialog.show();
                         TextView message = (TextView)myDialog.findViewById(android.R.id.message);
-                        message.setGravity(Gravity.CENTER);
                     }
                 });
         AlertDialog myDialog = shortLicenseDialog.show();
         TextView message = (TextView)myDialog.findViewById(android.R.id.message);
-        message.setGravity(Gravity.CENTER);
     }
 }

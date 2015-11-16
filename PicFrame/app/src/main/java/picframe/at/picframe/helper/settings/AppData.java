@@ -57,6 +57,7 @@ public class AppData {
     private String imagePath;
     private int updateInterval;
     private boolean downloadNow;
+    private boolean tutorial;
 
     private String extFolderAppRoot;        // sc-card-dir/Pictures/picframe
     private String extFolderDisplayPath;    // sc-card-dir/Pictures/picframe/pictures
@@ -85,6 +86,7 @@ public class AppData {
         this.transitionType = 2;
         this.updateInterval = 12;
         this.downloadNow = false;
+        this.tutorial = true;
 
         extFolderAppRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
                 File.separator + "picframe";
@@ -183,7 +185,13 @@ public class AppData {
     public boolean getdownloadNow() {
         return this.downloadNow;
     }
+    public boolean getTutorial() {
+        return this.tutorial;
+    }
 
     public void setDownloadNow(boolean download){downloadNow = download;
         System.out.println("Download now is: "+downloadNow);}
+    public void setTutorial(boolean showTutorial) {
+        tutorial = showTutorial;
+    }
 }
