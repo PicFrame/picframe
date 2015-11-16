@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -46,7 +45,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
     private Intent mainActIntent;
     private Intent stopDownloadIntent;
     private Downloader downloader;
-    private boolean running;
     private boolean downloading;
     private boolean finished;
 
@@ -56,7 +54,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
     @Override
     public void onCreate() {
         if (DEBUG)  Log.d(TAG, this.getClass().getSimpleName() + "  -- onCreate");
-        running = true;
     }
 
     @Override
@@ -69,7 +66,8 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 if (DEBUG) Log.d(TAG, "got STOPDOWNLOAD action");
                 stopDownload();
             } else {
-                if (DEBUG) Log.d(TAG, "stopping due to wrong intent action: " + intent==null? "0" : intent.getAction());
+                if (DEBUG) //noinspection ConstantConditions
+                    Log.d(TAG, "stopping due to wrong intent action: " + intent==null ? "intent==null" : intent.getAction());
                 stopSelf();
             }
             return Service.START_NOT_STICKY;
@@ -88,7 +86,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
         // set up Intent to open activity
         mainActIntent = new Intent(this, MainActivity.class);
         mainActIntent.addCategory(Intent.CATEGORY_DEFAULT);
-
+        // set up Intent to stop download/service
         stopDownloadIntent = new Intent(this, DownloadService.class);
         stopDownloadIntent.setAction(Keys.ACTION_STOPDOWNLOAD);
         stopDownloadIntent.addCategory(Intent.CATEGORY_DEFAULT);
@@ -163,8 +161,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
             }
             downloader = null;
         }
-
-        running = false;
         Log.d(TAG, "Service - onDestroy");
     }
 
@@ -286,7 +282,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
             notificationBuilder
                     .setOngoing(true)
                     .setAutoCancel(false);
-            // TODO: STILL MISSING THE STOP BUTTON ( without an expanded notification)
         // START
             if (Keys.NotificationStates.START.equals(notification_state)) {
                 notificationBuilder
@@ -306,6 +301,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 || Keys.NotificationStates.FINISHED.equals(notification_state)) {
             stopForeground(true);
             // Reflection to remove the stop action: https://code.google.com/p/android/issues/detail?id=68063
+            //noinspection TryWithIdenticalCatches
             try {
                 Field f = notificationBuilder.getClass().getDeclaredField("mActions");
                 f.setAccessible(true);
@@ -381,7 +377,8 @@ public class DownloadService extends Service implements ServiceCallbacks {
         downloading = false;
         finished = true;
         showNotification(Keys.NotificationStates.FINISHED, 0, String.valueOf(count));
-        // TODO: MainActivity.updateFileList();
+        // TODO: also test this first
+        broadcastManager.sendBroadcast(new Intent().setAction(Keys.ACTION_DOWNLOAD_FINISHED));  // TODO not only after finished
         stopSelf();
     }
 }

@@ -11,10 +11,10 @@ public class Keys {
     public enum NotificationStates {
         START, PROGRESS, FINISHED, STOP, INTERRUPT, FAILURE ;
         private static NotificationStates[] allValues = values();
-        public static NotificationStates getStatesForInt(int num){
+        public static NotificationStates getStatesForInt(int num) {
             try{
                 return allValues[num];
-            }catch(ArrayIndexOutOfBoundsException e){
+            } catch(ArrayIndexOutOfBoundsException e) {
                 return STOP;
             }
         }
@@ -29,7 +29,7 @@ public class Keys {
             //public static final String ACTION_FAILURE = "picframe.at.picframe.service.ERROR";
     // FROM NOTIFICATION TO SERVICE (to stop download and service)
     public static final String ACTION_STOPDOWNLOAD = "picframe.at.picframe.service.STOPDOWNLOAD";
-    // FROM SERVICE TO RECEIVER
+    // FROM SERVICE TO ACTIVITY/RECEIVER
     public static final String ACTION_DOWNLOAD_FINISHED = "picframe.at.picframe.service.DOWNLOAD_FINISHED";
     public static final String MSG_PROGRESSUPDATE_PERCENT = "progressUpdatePercent";
     public static final String MSG_PROGRESSUPDATE_INDITERMINATE = "progressUpdateInditerminate";

@@ -45,6 +45,7 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
 
     // private fields holding the download-parameter-data
     private OwnCloudClient mClient;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private String remoteFolder;                                // folder, in which the download should start   TODO folderpicke stuff
     private Handler mHandler;
     private Context mContext;                                   // only needed for EXIF-helper to get screen width and height

@@ -24,8 +24,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -57,8 +55,6 @@ import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.OwnCloudClientFactory;
 import com.owncloud.android.lib.common.OwnCloudCredentialsFactory;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -66,7 +62,6 @@ import java.util.TimerTask;
 
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.owncloud.OC_ConnectionCheck;
-import picframe.at.picframe.helper.owncloud.OC_DownloadTask;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
 import picframe.at.picframe.helper.viewpager.BackgroundToForegroundTransformer;
 import picframe.at.picframe.helper.viewpager.CubeOutTransformer;
@@ -510,7 +505,7 @@ public class MainActivity extends ActionBarActivity{
         }
     }
 
-    public static void updateFileList() {
+    public void updateFileList() {
         mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
         size = mFilePaths.size();
         setUp.notifyDataSetChanged();
@@ -558,26 +553,16 @@ public class MainActivity extends ActionBarActivity{
                     Toast.makeText(this, R.string.main_toast_noUsernameSet, Toast.LENGTH_SHORT).show();
                 } else {
                     if (DEBUG) Log.i(TAG, "username and pw set");
-                    // Wifi connected?
-                    if (!settingsObj.getWifiConnected()) {
-                        Toast.makeText(this, R.string.main_toast_noWifiConnection, Toast.LENGTH_LONG).show();
-                    } else {
-                        if (DEBUG) Log.i(TAG, "wifi connected");
-                        if (!initializedFolders()) {
-                            Toast.makeText(this, R.string.main_toast_folderInitFailure, Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Try to connect & login to selected source server
-                            if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-                                if (!mConnCheckOC) {
-                                    if (DEBUG) Log.i(TAG, "trying OC check");
-                                    startConnectionCheck();
-                                    return true;
-                                }
-                            }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
-                            {
-                                // TODO: Samba checks go here
-                            }
+                    // Try to connect & login to selected source server
+                    if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
+                        if (!mConnCheckOC) {
+                            if (DEBUG) Log.i(TAG, "trying OC check");
+                            startConnectionCheck();
+                            return true;
                         }
+                    }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
+                    {
+                        // TODO: Samba checks go here
                     }
                 }
             }
@@ -628,89 +613,6 @@ public class MainActivity extends ActionBarActivity{
             mBackgroundTask = new OC_ConnectionCheck();
             mBackgroundTask.execute(mParamsOwnCloud);       // OwnCloud connection check
         }
-    }
-
-    private static void startOwnCloudDownloadTask() {
-        if (mClientOwnCloud == null || mParamsOwnCloud == null ||
-                !mClientOwnCloud.getCredentials().getUsername().equals(settingsObj.getUserName()) ||
-                !mClientOwnCloud.getCredentials().getAuthToken().equals(settingsObj.getUserPassword()) ||
-                !mClientOwnCloud.getBaseUri().toString().equals(settingsObj.getSrcPath()) ) {
-            setUpOcClient();
-        }
-        mBackgroundTask = new OC_DownloadTask();
-        mBackgroundTask.execute(mParamsOwnCloud);
-    }
-
-    public static void startFileDownload() {
-        if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-            if (mConnCheckOC) {
-                startOwnCloudDownloadTask();
-            }
-        }       /**
-                 *  else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba)) {
-                 *      if (mConnCheckSMB) {
-                 *      TODO    Start samba download task here
-                 *      }
-                 *  }
-                 */
-    }
-
-    public static boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                        return false;
-                    }
-                }
-            }
-        }
-        if (delRoot) {
-            return dir.delete();
-        }
-        // Comment to remove warning xD
-        return true;
-    }
-
-    private boolean initializedFolders() {
-        // mExtFolderCachePath + mExtFolderDisplayPath
-        boolean dirCreated;
-        // check if folders exist, if not, create them
-        ArrayList<String> folderList = new ArrayList<>();
-        folderList.add(settingsObj.getExtFolderAppRoot());
-        folderList.add(settingsObj.getExtFolderCachePath());
-        folderList.add(settingsObj.getExtFolderDisplayPath());
-        for (String folder : folderList) {
-            File dir = new File(folder);
-            if (dir.exists() && dir.isDirectory())
-                continue;
-            dirCreated = dir.mkdir();
-            if (dirCreated)
-                if (DEBUG) Log.i(TAG, "Creating folder: >" +dir+ "< successful");
-            else {
-                if (DEBUG) Log.i(TAG, "Creating folder: >" +dir+ "< FAILED!");
-                return false;
-            }
-        }
-        File folder = new File(folderList.get(1));
-        if (DEBUG) Log.i(TAG, "deleting files in cache dir before downloading");
-        if (!recursiveDelete(folder, false)) {    // delete all files and folders in cache folder
-            return false;
-        }
-        File nomedia = new File(folderList.get(1) + File.separator + ".nomedia");
-        if (!nomedia.exists()) {
-            try {
-                if (nomedia.createNewFile()) {
-                    if (DEBUG) Log.i(TAG, "Created .nomedia file successfully");
-                }
-            } catch (IOException e) {
-                if (DEBUG) Log.e(TAG, "Couldn't create .nomedia file");
-            }
-        }
-        return true;
     }
 
     public void updateDownloadProgress(Float percent, boolean indeterminate) {
@@ -821,13 +723,6 @@ public class MainActivity extends ActionBarActivity{
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
                     if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
                     updateFileList();
-                    /*
-                    Bundle extras = intent.getExtras();
-                    if (extras != null) {
-                        percent = extras.getFloat(Keys.MSG_PROGRESSUPDATE_PERCENT);
-                        indeterminate = extras.getBoolean(Keys.MSG_PROGRESSUPDATE_INDITERMINATE);
-                        updateDownloadProgress(percent, indeterminate);
-                    }*/
                 }
             }
         }

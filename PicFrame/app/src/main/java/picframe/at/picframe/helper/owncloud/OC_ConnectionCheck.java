@@ -100,7 +100,7 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    MainActivity.startFileDownload();
+//                    MainActivity.startFileDownload();
                 }
             }).run();
         } else {

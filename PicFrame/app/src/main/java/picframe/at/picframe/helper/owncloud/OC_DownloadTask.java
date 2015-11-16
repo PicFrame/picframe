@@ -366,7 +366,7 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
     @Override
     protected void onPostExecute(Object o) {
         super.onPostExecute(o);
-        MainActivity.updateFileList();
+        //MainActivity.updateFileList();
         if (DEBUG) Log.i(TAG, "###### FINISHED OWNCLOUD TASK #####");
     }
     @Override
