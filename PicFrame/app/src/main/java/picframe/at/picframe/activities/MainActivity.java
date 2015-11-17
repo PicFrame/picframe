@@ -171,6 +171,7 @@ public class MainActivity extends ActionBarActivity{
 
     protected void onResume() {
         super.onResume();
+        supportInvalidateOptionsMenu();
         loadSettings();
         if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
             mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
@@ -227,12 +228,20 @@ public class MainActivity extends ActionBarActivity{
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        if(settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
-            menu.getItem(1).setVisible(true);
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (menu == null || !menu.hasVisibleItems())
+            return super.onPrepareOptionsMenu(menu);
+
+        if (settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
+            menu.findItem(R.id.action_download).setVisible(true);
         } else {
-            menu.getItem(1).setVisible(false);
+            menu.findItem(R.id.action_download).setVisible(false);
         }
+        return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
