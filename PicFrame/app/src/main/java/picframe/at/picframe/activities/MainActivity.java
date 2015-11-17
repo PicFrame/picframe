@@ -27,6 +27,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.PageTransformer;
@@ -46,7 +47,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -228,6 +228,11 @@ public class MainActivity extends ActionBarActivity{
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        if(settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
+            menu.getItem(1).setVisible(true);
+        } else {
+            menu.getItem(1).setVisible(false);
+        }
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
@@ -240,6 +245,12 @@ public class MainActivity extends ActionBarActivity{
             case R.id.action_settings:
                 myIntent = new Intent(this, SettingsActivity.class);
                 break;
+            case R.id.action_download:
+                Log.d(TAG, "dowdnload now clicked");
+                Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
+                startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
+                startService(startDownloadIntent);
+                return true;
             case R.id.action_about:
                 myIntent = new Intent(this, AboutActivity.class);
                 break;

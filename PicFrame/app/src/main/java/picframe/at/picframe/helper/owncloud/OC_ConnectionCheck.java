@@ -84,10 +84,10 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
         if (operation instanceof ReadRemoteFolderOperation) {
             if (result.isSuccess()) {
                 if (DEBUG) Log.i(TAG, "Could connect to owncloud: " + result.getLogMessage());
-                MainActivity.mConnCheckOC = true;
+                //MainActivity.mConnCheckOC = true;
             } else {
                 if (DEBUG) Log.i(TAG, "Could NOT connect to owncloud: " + result.getLogMessage());
-                MainActivity.mConnCheckOC = false;
+                //MainActivity.mConnCheckOC = false;
             }
             mThreadCounter.getAndDecrement();
         }
@@ -96,16 +96,16 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
     @Override
     protected void onPostExecute(Object o) {
         //MainActivity.updateDownloadProgress(0f, false);
-        if (MainActivity.mConnCheckOC) {
+/*        if (MainActivity.mConnCheckOC) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-//                    MainActivity.startFileDownload();
+                    MainActivity.startFileDownload();
                 }
             }).run();
         } else {
             Toast.makeText(mContext, R.string.octask_toast_loginFailed, Toast.LENGTH_LONG).show();
-        }
+        }*/
         if (DEBUG) Log.i(TAG, "###### FINISHED OWNCLOUD CONNECTION CHECK #####");
     }
 
