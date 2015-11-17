@@ -48,8 +48,10 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -102,6 +104,7 @@ public class MainActivity extends ActionBarActivity{
     private boolean mOldRecursive;
     private RelativeLayout mainLayout;
     private boolean paused;
+    private int remainingDisplayTime; // in seconds
 
     public static ProgressBar mProgressBar;
     private static OwnCloudClient mClientOwnCloud;
@@ -118,7 +121,8 @@ public class MainActivity extends ActionBarActivity{
     private static int currentPageSaved;
     private static boolean toggleDirection;
     private Handler actionbarHideHandler;
-    private ImageView pauseView;
+    private ImageView mPause;
+    private LinearLayout mRemainingTimeLayout;
 
     public static boolean mConnCheckOC, mConnCheckSMB;
     public boolean mDoubleBackToExitPressedOnce;
@@ -131,8 +135,9 @@ public class MainActivity extends ActionBarActivity{
         setContentView(R.layout.activity_main);
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        pauseView = (ImageView) findViewById(R.id.pause_view);
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
+        mPause = (ImageView) findViewById(R.id.pauseIcon);
+        mRemainingTimeLayout = (LinearLayout) findViewById(R.id.remaining_time);
         mFadeInAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         mFadeOutAnim = AnimationUtils.loadAnimation(this, R.anim.fade_out);
         mConnCheckOC = false;
@@ -456,11 +461,20 @@ public class MainActivity extends ActionBarActivity{
                     if (settingsObj.getSlideshow()) {
                         paused = !paused;
                         if (paused) {
-                            pauseView.setVisibility(View.VISIBLE);
+                            mPause.setVisibility(View.VISIBLE);
+                            remainingDisplayTime = 4; // TODO: actual remaining time instead of hardcoded value
+                            if(settingsObj.getDisplayTime() >= 60){
+                                String remainingTimeString = String.valueOf(remainingDisplayTime);
+                                TextView textView = (TextView) findViewById(R.id.remaining_time_value);
+                                textView.setText(remainingTimeString);
+                                mRemainingTimeLayout.setVisibility(View.VISIBLE);
+                            }
                             showActionBar();
                         }
                         else {
-                            pauseView.setVisibility(View.INVISIBLE);
+                            mPause.setVisibility(View.INVISIBLE);
+                            if(mRemainingTimeLayout.getVisibility() == View.VISIBLE)
+                                mRemainingTimeLayout.setVisibility(View.INVISIBLE);
                         }
                     }
                 }

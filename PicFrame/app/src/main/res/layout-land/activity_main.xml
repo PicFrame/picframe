@@ -14,16 +14,42 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:src="@drawable/pause"
-        android:id="@+id/pause_view"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+    <ImageView
+        android:id="@+id/pauseIcon"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@android:drawable/ic_media_pause"
+        android:scaleType="fitXY"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:visibility="invisible"
+        android:visibility="gone"
         />
-
+    <LinearLayout
+            android:orientation="horizontal"
+            android:id="@+id/remaining_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:visibility="invisible"
+            android:layout_marginBottom="10dp"
+            android:layout_toRightOf="@id/pauseIcon">
+            <TextView
+                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:text="Time remaining: "
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="5dp"
+                android:padding="5dp"
+                android:background="@android:color/background_dark"
+    />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/remaining_time_value"
+                android:layout_marginRight="10dp"
+                android:padding="5dp"
+                android:background="@android:color/background_dark"/>
+        </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
