@@ -374,7 +374,6 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
                 f *= 100;
             serviceCallbacks.publishProgress(f, b);
             if (DEBUG) Log.i(TAG, "% update: " + f);
-
         } else {
             if (DEBUG)  Log.d(TAG, "couldn't publish progress, event object is null");
         }

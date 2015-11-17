@@ -348,7 +348,13 @@ public class DownloadService extends Service implements ServiceCallbacks {
     @Override
     public void publishProgress(float progressPercent, boolean progressIndeterminate) {
         Log.d(TAG, "SHOW NOTIFICATION PROGRESS: " + progressPercent);
-        showNotification(Keys.NotificationStates.PROGRESS, Math.round(progressPercent), null);
+        if (progressPercent == -1f) {
+            showNotification(Keys.NotificationStates.FINISHED, 0, "No new" ); // TODO STRING
+        } else if (progressPercent == -1.5f) {
+            showNotification(Keys.NotificationStates.FAILURE, 0, getString(R.string.main_toast_notEnoughStorage)); // TODO STRING
+        } else {
+            showNotification(Keys.NotificationStates.PROGRESS, Math.round(progressPercent), null);
+        }
     }
 
     @Override

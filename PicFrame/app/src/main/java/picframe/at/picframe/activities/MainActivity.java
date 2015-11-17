@@ -24,9 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
@@ -41,9 +39,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.content.Intent;
 import android.view.ViewGroup;
-import android.view.ViewPropertyAnimator;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -51,9 +47,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.owncloud.android.lib.common.OwnCloudClient;
-import com.owncloud.android.lib.common.OwnCloudClientFactory;
-import com.owncloud.android.lib.common.OwnCloudCredentialsFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +54,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import picframe.at.picframe.R;
-import picframe.at.picframe.helper.owncloud.OC_ConnectionCheck;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
 import picframe.at.picframe.helper.viewpager.BackgroundToForegroundTransformer;
 import picframe.at.picframe.helper.viewpager.CubeOutTransformer;
@@ -104,11 +96,10 @@ public class MainActivity extends ActionBarActivity{
     private RelativeLayout mainLayout;
     private boolean paused;
 
-    public static ProgressBar mProgressBar;
-    private static OwnCloudClient mClientOwnCloud;
-    private static Object[] mParamsOwnCloud;
-    private static AsyncTask<Object, Float, Object> mBackgroundTask;
-    private static Animation mFadeInAnim, mFadeOutAnim;
+    public static ProgressBar mProgressBar;                             //TODO still needed?
+    private static Object[] mParamsOwnCloud;                            //TODO still needed?
+    private static AsyncTask<Object, Float, Object> mBackgroundTask;    //TODO still needed?
+    private static Animation mFadeInAnim, mFadeOutAnim;                 //TODO still needed?
 
     private ArrayList<PageTransformer> transformers;
     private static List<String> mFilePaths;
@@ -117,7 +108,7 @@ public class MainActivity extends ActionBarActivity{
     private static boolean toggleDirection;
     private Handler actionbarHideHandler;
 
-    public static boolean mConnCheckOC, mConnCheckSMB;
+    //public static boolean mConnCheckOC, mConnCheckSMB; //TODO still needed?
     public boolean mDoubleBackToExitPressedOnce;
 
     private final static boolean DEBUG = true;
@@ -132,8 +123,8 @@ public class MainActivity extends ActionBarActivity{
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
         mFadeInAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         mFadeOutAnim = AnimationUtils.loadAnimation(this, R.anim.fade_out);
-        mConnCheckOC = false;
-        mConnCheckSMB = false;
+        //mConnCheckOC = false;
+        //mConnCheckSMB = false;
         toggleDirection = false;
         paused = false;
         enableGestures();
@@ -210,9 +201,8 @@ public class MainActivity extends ActionBarActivity{
             deleteTimerz(true);
         }
 
-        if("-1".equals(mPrefs.getString(this.getString(R.string.sett_key_srcpath_sd), "-1"))
-            &&
-            settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)){
+        if("-1".equals(mPrefs.getString(this.getString(R.string.sett_key_srcpath_sd), "-1")) &&
+                settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)) {
             AlertDialog.Builder path_not_set_dialog = new AlertDialog.Builder(MainActivity.this);
             path_not_set_dialog
                     .setCancelable(true)
@@ -355,7 +345,7 @@ public class MainActivity extends ActionBarActivity{
             runOnUiThread(new Runnable() {
                 public void run() {
                     // set to false again every time
-                    mConnCheckOC = false;
+                    //mConnCheckOC = false;
                     checkForProblemsAndShowToasts();  // check for connection or file reading problems
                 }
             });
@@ -441,12 +431,6 @@ public class MainActivity extends ActionBarActivity{
                 public void onTap() {
                     if (settingsObj.getSlideshow()) {
                         paused = !paused;
-
-                        // testing service call     TODO!
-                        Intent msgIntent = new Intent(mContext, DownloadService.class);
-                        msgIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
-                        startService(msgIntent);
-                        // EOf testing
 
                         if (paused) {
                             if (pauseIcon.getVisibility()!= View.VISIBLE)
@@ -558,11 +542,12 @@ public class MainActivity extends ActionBarActivity{
                     if (DEBUG) Log.i(TAG, "username and pw set");
                     // Try to connect & login to selected source server
                     if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-                        if (!mConnCheckOC) {
-                            if (DEBUG) Log.i(TAG, "trying OC check");
-                            startConnectionCheck();
-                            return true;
-                        }
+                        if (DEBUG) Log.i(TAG, "trying OC check");
+                        //startConnectionCheck();
+                        Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
+                        startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
+                        startService(startDownloadIntent);
+                        return true;
                     }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
                     {
                         // TODO: Samba checks go here
@@ -584,101 +569,6 @@ public class MainActivity extends ActionBarActivity{
         }
         return false;
     }
-
-    private static void setUpOcClient() {
-        Handler mHandler = new Handler();
-        Uri serverUri = Uri.parse(settingsObj.getSrcPath());
-        if (DEBUG) Log.i(TAG, "OwnCloud serverUri: " + serverUri);
-        // Create client object to perform remote operations
-        mClientOwnCloud = OwnCloudClientFactory.createOwnCloudClient(serverUri, mContext , true);
-        mClientOwnCloud.setCredentials(
-                OwnCloudCredentialsFactory.newBasicCredentials(
-                        settingsObj.getUserName(),
-                        settingsObj.getUserPassword()
-                )
-        );
-        mParamsOwnCloud = new Object[4];
-        mParamsOwnCloud[0] = mClientOwnCloud;
-        mParamsOwnCloud[1] = mHandler;
-        mParamsOwnCloud[2] = mContext;
-        mParamsOwnCloud[3] = settingsObj.getExtFolderAppRoot();
-    }
-
-    private void startConnectionCheck() {
-        if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-            if (mClientOwnCloud == null || mParamsOwnCloud == null ||
-                    !mClientOwnCloud.getCredentials().getUsername().equals(settingsObj.getUserName()) ||
-                    !mClientOwnCloud.getCredentials().getAuthToken().equals(settingsObj.getUserPassword()) ||
-                    !mClientOwnCloud.getBaseUri().toString().equals(settingsObj.getSrcPath()) ) {
-
-               setUpOcClient();
-           }
-            mBackgroundTask = new OC_ConnectionCheck();
-            mBackgroundTask.execute(mParamsOwnCloud);       // OwnCloud connection check
-        }
-    }
-
-    public void updateDownloadProgress(Float percent, boolean indeterminate) {
-        if (percent == -1f) {
-            Toast.makeText(mContext, R.string.main_toast_noNewFiles, Toast.LENGTH_SHORT).show();
-            return;
-        } else if (percent == -1.5f) {
-            Toast.makeText(mContext, R.string.main_toast_notEnoughStorage, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (mProgressBar != null && !percent.isNaN() && !percent.isInfinite()) {
-            mProgressBar.setIndeterminate(indeterminate);
-            if (percent == 0) {
-                mProgressBar.setProgress(0);
-                progressAnimate(false);
-
-            } else if (percent > 0 && percent <= 0.2) {
-                mProgressBar.setProgress(0);
-                progressAnimate(true);
-            } else if (percent > 0.2 && percent < 99.8) {
-                mProgressBar.setProgress(Math.round(percent));
-                if (mProgressBar.getVisibility() == View.INVISIBLE)
-                    progressAnimate(true);
-            } else if (percent >= 99.8) {
-                mProgressBar.setProgress(100);
-                progressAnimate(false);
-            }
-        }
-    }
-
-
-    private void progressAnimate(boolean fadeIn) {
-        // FADEIN
-        if (fadeIn) {
-            if (mProgressBar.getVisibility() == View.GONE ||
-                    mProgressBar.getVisibility() == View.INVISIBLE) {
-                mProgressBar.setVisibility(View.VISIBLE);
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
-                ViewPropertyAnimator i = mProgressBar.animate();
-                i.setDuration(500).alphaBy(0).alpha(1).setInterpolator(new AccelerateInterpolator());
-
-            } else {
-                mProgressBar.startAnimation(mFadeInAnim);
-            }
-        // FADEOUT
-        } else {
-            if (mProgressBar.getProgress() == 0) {
-                mProgressBar.setVisibility(View.INVISIBLE);
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
-                ViewPropertyAnimator i = mProgressBar.animate();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-                    i.setStartDelay(1000);
-                i.setDuration(1000).alphaBy(1).alpha(0).setInterpolator(new AccelerateInterpolator());
-
-            } else {
-                mProgressBar.startAnimation(mFadeOutAnim);
-            }
-        }
-    }
-
 
     public void selectTransformer(){
         if(settingsObj.getSlideshow() && settingsObj.getTransitionType() == 11){
