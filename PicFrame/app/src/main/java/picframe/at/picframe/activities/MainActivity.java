@@ -19,7 +19,9 @@
 
 package picframe.at.picframe.activities;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -48,12 +50,17 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import picframe.at.picframe.R;
+import picframe.at.picframe.downloader.AlarmReceiver;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
 import picframe.at.picframe.helper.viewpager.BackgroundToForegroundTransformer;
 import picframe.at.picframe.helper.viewpager.CubeOutTransformer;
@@ -155,6 +162,12 @@ public class MainActivity extends ActionBarActivity{
                 selectTransformer();
             }
         });
+
+        //getlastpage
+        page = mPrefs.getInt("currentpage", 1);
+        if(pager.getAdapter().getCount() < page){
+            page = 1;
+        }
     }
 
     // TODO: make download task a service (+react to wifi-connection broadcast)     !! C
@@ -371,6 +384,42 @@ public class MainActivity extends ActionBarActivity{
             });
         }
     }
+
+    public void scheduleAlarm(View v)
+    {
+        // The time at which the alarm will be scheduled. Here the alarm is scheduled for 1 day from the current time.
+        // We fetch the current time in milliseconds and add 1 day's time
+        // i.e. 24*60*60*1000 = 86,400,000 milliseconds in a day.
+      //  Long time = new GregorianCalendar().getTimeInMillis()+24*60*60*1000;
+        Long time = new GregorianCalendar().getTimeInMillis()+settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
+        // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
+        // specified AlarmReceiver in the Intent. The onReceive() method of this class will execute when the broadcast from your alarm is received.
+        Intent intentAlarm = new Intent(this, AlarmReceiver.class);
+
+        // Get the Alarm Service.
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        // Set the alarm for a particular time.
+        alarmManager.set(AlarmManager.RTC_WAKEUP, time, PendingIntent.getBroadcast(this, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
+
+        //Testing purpose
+        Date date = new Date(time);
+        DateFormat formatter = new SimpleDateFormat("HH:mm:ss:SSS");
+        String dateFormatted = formatter.format(date);
+        Toast.makeText(this, "Alarm Scheduled for " + dateFormatted, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        // Save the current Page to resume after next start
+        // maybe not right here will test
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putInt("currentpage", page);
+        editor.commit();
+
+    }
+
 
 
     public void slideShow(){
@@ -591,7 +640,7 @@ public class MainActivity extends ActionBarActivity{
     }
 
     public void selectTransformer(){
-        if(settingsObj.getSlideshow() && settingsObj.getTransitionType() == 11){
+        if(settingsObj.getSlideshow() && settingsObj.getTransitionType() == 11) {
             pager.setPageTransformer(true,transformers.get(random()));
         } else if(settingsObj.getSlideshow()){
             pager.setPageTransformer(true,transformers.get(settingsObj.getTransitionType()));

@@ -51,6 +51,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.MainActivity" />
         </activity>
+
+        <!-- Register the Alarm Receiver -->
+        <receiver android:name=".downloader.AlarmReceiver"/>
     </application>
 
 </manifest>
