@@ -124,6 +124,9 @@ public class MainActivity extends ActionBarActivity{
 
     private final static boolean DEBUG = true;
 
+    //Save last download time
+    private long remainingDownloadSchedule = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -165,6 +168,15 @@ public class MainActivity extends ActionBarActivity{
                 selectTransformer();
             }
         });
+
+
+        //getlastpage
+        page = mPrefs.getInt("currentpage", 1);
+        if(pager.getAdapter().getCount() < page){
+            page = 1;
+        }
+        System.out.println("CURRENTPAGE: " + page);
+
     }
 
     // TODO: make download task a service (+react to wifi-connection broadcast)     !! C
@@ -199,7 +211,7 @@ public class MainActivity extends ActionBarActivity{
         }
 
         if(settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
-            Log.d(TAG,"new timer");
+            Log.d(TAG, "new timer");
             deleteTimerz(true);
             this.downloadTimer = new Timer();
             int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
@@ -275,6 +287,7 @@ public class MainActivity extends ActionBarActivity{
 
         currentPageSaved = pager.getCurrentItem();
         showExamplePictures = false;
+
     }
 
     public void onBackPressed() {
@@ -326,6 +339,7 @@ public class MainActivity extends ActionBarActivity{
         this.timer = new Timer();
         this.timer.scheduleAtFixedRate(new RemindTask(), 0, seconds * 1000); // delay
 
+
     }
     private class RemindTask extends TimerTask {
         @Override
@@ -352,6 +366,7 @@ public class MainActivity extends ActionBarActivity{
     public class DownloadingTimerTask extends TimerTask {
         @Override
         public void run() {
+            remainingDownloadSchedule = this.scheduledExecutionTime();
             runOnUiThread(new Runnable() {
                 public void run() {
                     // set to false again every time
@@ -377,10 +392,26 @@ public class MainActivity extends ActionBarActivity{
     }
 
     @Override
+    protected void onStop(){
+        super.onStop();
+        // Save the current Page to resume after next start
+        // maybe not right here will test
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putInt("currentpage", page);
+        editor.commit();
+
+        remainingDownloadSchedule = remainingDownloadSchedule - System.currentTimeMillis();
+        System.out.println("REMAINING: " + remainingDownloadSchedule);
+        editor.putLong("downloadSchedule", remainingDownloadSchedule);
+
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         deleteTimerz();
         showExamplePictures = false;
+
     }
 
     private class DisplayImages extends PagerAdapter {
