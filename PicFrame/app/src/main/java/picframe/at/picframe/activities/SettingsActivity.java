@@ -255,6 +255,9 @@ public class SettingsActivity extends PreferenceActivity {
                 return;
             }
         }
+        if(key.equals("currentpage")){
+            return;
+        }
         // UNTIL HERE ARE CHECKS FOR SWITCH-PREFERENCES, APP WOULD CRASH OTHERWISE
 
         boolean loadAll = false;

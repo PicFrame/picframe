@@ -168,6 +168,8 @@ public class MainActivity extends ActionBarActivity{
         if(pager.getAdapter().getCount() < page){
             page = 1;
         }
+
+        scheduleAlarm();
     }
 
     // TODO: make download task a service (+react to wifi-connection broadcast)     !! C
@@ -385,13 +387,21 @@ public class MainActivity extends ActionBarActivity{
         }
     }
 
-    public void scheduleAlarm(View v)
+    public void scheduleAlarm()
     {
+        System.out.println("Starting Alarm to go off " + settingsObj.getUpdateIntervalInHours());
         // The time at which the alarm will be scheduled. Here the alarm is scheduled for 1 day from the current time.
         // We fetch the current time in milliseconds and add 1 day's time
         // i.e. 24*60*60*1000 = 86,400,000 milliseconds in a day.
-      //  Long time = new GregorianCalendar().getTimeInMillis()+24*60*60*1000;
-        Long time = new GregorianCalendar().getTimeInMillis()+settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
+        //  Long time = new GregorianCalendar().getTimeInMillis()+24*60*60*1000;
+
+
+       // Long time = new GregorianCalendar().getTimeInMillis()+settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
+
+        Long time = new GregorianCalendar().getTimeInMillis()+ 2 * 60 * 1000;
+
+
+
         // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
         // specified AlarmReceiver in the Intent. The onReceive() method of this class will execute when the broadcast from your alarm is received.
         Intent intentAlarm = new Intent(this, AlarmReceiver.class);
@@ -400,12 +410,14 @@ public class MainActivity extends ActionBarActivity{
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         // Set the alarm for a particular time.
-        alarmManager.set(AlarmManager.RTC_WAKEUP, time, PendingIntent.getBroadcast(this, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, time, time * 100, PendingIntent.getBroadcast(this, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
 
         //Testing purpose
         Date date = new Date(time);
-        DateFormat formatter = new SimpleDateFormat("HH:mm:ss:SSS");
+        DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
         String dateFormatted = formatter.format(date);
+        System.out.println("Start time: " + formatter.format(new GregorianCalendar().getTimeInMillis()) + " " + (new GregorianCalendar().getTimeInMillis()));
+        System.out.println("Go OFF time: " + formatter.format(time) + " " + time);
         Toast.makeText(this, "Alarm Scheduled for " + dateFormatted, Toast.LENGTH_LONG).show();
     }
 
