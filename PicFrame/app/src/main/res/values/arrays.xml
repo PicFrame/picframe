@@ -79,7 +79,7 @@
         <!--item name="2">2</item-->
     </string-array>
     <string-array name="updateIntervalEntries">
-        <item name="-1">Now!</item>
+        <item name="-1">Never</item>
         <item name="1">1 hour</item>
         <item name="3">3 hours</item>
         <item name="5">5 hours</item>

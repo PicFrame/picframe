@@ -84,7 +84,7 @@ public class SettingsActivity extends PreferenceActivity {
                 if (key.contains("SrcType")) {
                     setCorrectSrcPathField();
                     if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-                        startDownload();
+                        // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }
                 }
                 updateTitlePrefsWithValues(sharedPreferences, key);
@@ -417,12 +417,9 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ("-1".equals(String.valueOf(newValue))) {
-                    startDownload();    // TODO
-                    return false;
+                    // clicked "never" .. remove alarm here TODO
+                    return true;
                 } else {
-                    // if user clicks "now" and then other value, should now be executed anyway?
-                    // current it is
-//                    settingsObj.setDownloadNow(false);
                     return true;
                 }
             }
@@ -430,14 +427,6 @@ public class SettingsActivity extends PreferenceActivity {
         if (myCategory != null) {
             myCategory.addPreference(myUpdatePref);
         }
-    }
-
-    private void startDownload() {
-        /*
-        // set to false again every time
-        mConnCheckOC = false;
-        checkForProblemsAndShowToasts();  // check for connection or file reading problems
-        */
     }
 
     private void setDeleteDataButton() {
