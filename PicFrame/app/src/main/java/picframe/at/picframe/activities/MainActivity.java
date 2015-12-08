@@ -215,7 +215,6 @@ public class MainActivity extends ActionBarActivity{
         } else {
             System.out.println("no new timer");
             deleteTimerz(true);
-            Log.d(TAG, "current path: "+settingsObj.getSrcPath());
         }
 
         if("-1".equals(mPrefs.getString(this.getString(R.string.sett_key_srcpath_sd), "-1"))
@@ -433,8 +432,6 @@ public class MainActivity extends ActionBarActivity{
                 imgDisplay.setScaleType(ImageView.ScaleType.FIT_CENTER);
             }
             this.localpage = position;
-            Log.d(TAG, "localpage/position: " + this.localpage);
-            Log.d(TAG, "pager size: " + pager.getAdapter().getCount());
             if(!showExamplePictures){
                 imgDisplay.setImageBitmap(EXIF_helper.decodeFile(mFilePaths.get(this.localpage), mContext));
             } else {
@@ -491,11 +488,9 @@ public class MainActivity extends ActionBarActivity{
         }
 
         private void updateSettings() {
-            Log.d(TAG,"size in updateSettings: " + size);
             mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
             //setUp.notifyDataSetChanged();
             setSize();
-            Log.d(TAG, "size at the end of updateSettings: "+size);
         }
 
         public int getPage(){
