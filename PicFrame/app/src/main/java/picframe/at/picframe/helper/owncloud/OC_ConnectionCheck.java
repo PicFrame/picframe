@@ -76,7 +76,7 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
     @Override
     protected void onProgressUpdate(Float... values) {
         super.onProgressUpdate(values);
-        MainActivity.updateDownloadProgress(50f, true);
+    //    MainActivity.updateDownloadProgress(50f, true); TODO
     }
 
     @Override
@@ -84,10 +84,10 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
         if (operation instanceof ReadRemoteFolderOperation) {
             if (result.isSuccess()) {
                 if (DEBUG) Log.i(TAG, "Could connect to owncloud: " + result.getLogMessage());
-                MainActivity.mConnCheckOC = true;
+                //MainActivity.mConnCheckOC = true;
             } else {
                 if (DEBUG) Log.i(TAG, "Could NOT connect to owncloud: " + result.getLogMessage());
-                MainActivity.mConnCheckOC = false;
+                //MainActivity.mConnCheckOC = false;
             }
             mThreadCounter.getAndDecrement();
         }
@@ -95,8 +95,8 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
 
     @Override
     protected void onPostExecute(Object o) {
-        MainActivity.updateDownloadProgress(0f, false);
-        if (MainActivity.mConnCheckOC) {
+        //MainActivity.updateDownloadProgress(0f, false);
+/*        if (MainActivity.mConnCheckOC) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -105,13 +105,13 @@ public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
             }).run();
         } else {
             Toast.makeText(mContext, R.string.octask_toast_loginFailed, Toast.LENGTH_LONG).show();
-        }
+        }*/
         if (DEBUG) Log.i(TAG, "###### FINISHED OWNCLOUD CONNECTION CHECK #####");
     }
 
     @Override
     protected void onPreExecute() {
-        MainActivity.updateDownloadProgress(50f, true);
+        //MainActivity.updateDownloadProgress(50f, true);
     }
 
     @Override

@@ -27,7 +27,7 @@
     </string-array>
 
     <string-array name="updateIntervalEntries">
-        <item name="-1">Jetzt!</item>
+        <item name="-1">Nie</item>
         <item name="1">1 Stunde</item>
         <item name="3">3 Stunden</item>
         <item name="5">5 Stunden</item>

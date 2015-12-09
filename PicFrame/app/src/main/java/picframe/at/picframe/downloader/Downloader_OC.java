@@ -1,28 +1,9 @@
-/*
-    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher
-
-    This file is part of PicFrame.
-
-    PicFrame is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PicFrame is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-package picframe.at.picframe.helper.owncloud;
-
+package picframe.at.picframe.downloader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.util.Log;
 
@@ -41,45 +22,68 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import picframe.at.picframe.activities.MainActivity;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.viewpager.EXIF_helper;
+import picframe.at.picframe.service_broadcast.Keys;
+import picframe.at.picframe.service_broadcast.ServiceCallbacks;
 
-public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
-        implements OnRemoteOperationListener, OnDatatransferProgressListener {
 
+@SuppressWarnings("ConstantConditions")
+public class Downloader_OC extends Downloader implements OnRemoteOperationListener, OnDatatransferProgressListener {
     private final String TAG = this.getClass().getSimpleName();
+    private final boolean DEBUG = true;
+
+    // Keys for the argument hashmap
+    public static final String CLIENT = "OcClient";
+    public static final String HANDLER = "OcHandler";
+    public static final String REMOTEFOLDER = "OcRemoteFolder";
+
+    // private fields holding the download-parameter-data
+    private OwnCloudClient mClient;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
+    private String remoteFolder;                                // folder, in which the download should start   TODO folderpicke stuff
+    private Handler mHandler;
+    private Context mContext;                                   // only needed for EXIF-helper to get screen width and height
+    private String mExtFolderAppRoot;
     private String mExtFolderDisplayPath;
     private String mExtFolderCachePath;
-    private OwnCloudClient mClient;
-    private Handler mHandler;
-    private Context mContext;
     private ArrayList<String> mLocalFileList;                   // files (relative path), that are currently in the display folder
     private ArrayList<RemoteFile> remoteFileList;               // all files on remote server
     private ArrayList<RemoteFile> mRemoteFilesToDownloadList;       // files that need to be downloaded (full remote paths to the files)
     public LinkedBlockingQueue<String> mDownloadedFiles;        // files downloaded successfully - empty after processed all files
     private AtomicInteger mDownloadedFilesCount;                // total count of sucessfully downloaded files
     private AtomicInteger mThreadCounter;                       // Count active threads so task only finishes once all threads are done
-    private final static boolean DEBUG = false;
+
+
+    public Downloader_OC(HashMap<String, Object> args) {
+        mClient = (OwnCloudClient) args.get(CLIENT);
+        mHandler = (Handler) args.get(HANDLER);
+        mExtFolderAppRoot = (String) args.get(Keys.PICFRAMEPATH);
+        remoteFolder = (String) args.get(REMOTEFOLDER);
+        serviceCallbacks = (ServiceCallbacks) args.get(Keys.CALLBACK);
+        mContext = (Context) args.get(Keys.CONTEXT);
+        if (DEBUG) Log.d(TAG, "created OC Downloader");
+    }
 
     @Override
-    protected Object doInBackground(Object[] params) {
-        mClient = (OwnCloudClient) params[0];
-        mHandler = (Handler) params[1];
-        mContext = (Context) params[2];
-        String mExtFolderAppRoot = (String) params[3];
+    public void run() {
+        if (DEBUG) Log.d(TAG, "started OC Downloader");
+        // set counter to zero
         mThreadCounter = new AtomicInteger(0);
         mDownloadedFilesCount = new AtomicInteger(0);
 
+        // initialise empty arraylists and queue
         remoteFileList = new ArrayList<>();
         mLocalFileList = new ArrayList<>();
         mRemoteFilesToDownloadList = new ArrayList<>();
         mDownloadedFiles = new LinkedBlockingQueue<>();
 
+        // build the paths to the needed folders
         mExtFolderDisplayPath = mExtFolderAppRoot + File.separator + "pictures";
         mExtFolderCachePath = mExtFolderAppRoot + File.separator + "cache";
 
@@ -87,22 +91,17 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
                 " -- CacheFolder: " +mExtFolderCachePath +
                 " -- DisplayFoler: " +mExtFolderDisplayPath);
         if (DEBUG) Log.i(TAG, "thread counter at first: " + mThreadCounter.get());
-
         if (DEBUG) Log.i(TAG, "###### STARTING OWNCLOUD DOWNLOAD TASK #####");
+
         // read all files on the server
-        remoteReadAnyFolder(FileUtils.PATH_SEPARATOR);
-        
+        remoteReadAnyFolder(FileUtils.PATH_SEPARATOR);      // TODO: limit read too (like download)
+
         // await for all read operations to finish
         while(mThreadCounter.get() > 0) {
-            if (isCancelled()) {
+            if (isInterrupted()) {
                 if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: doInB -waited for reads");
-                return null;
-            }
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                if (DEBUG) Log.e(TAG, "Exception happened while trying to await end of remote reads");
-                //e.printStackTrace();
+                interruptDownload();
+                return;
             }
         }
 
@@ -113,72 +112,80 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
         int fileIndex = 0;
         File mExtFolderCacheObject = new File(mExtFolderCachePath);
         boolean cacheFolderExists = mExtFolderCacheObject.exists();
+        //noinspection PointlessBooleanExpression
         if (DEBUG && cacheFolderExists) Log.i(TAG, "mExtFolderCacheObject exists! (" + mExtFolderCachePath + ")");
         if (DEBUG) Log.i(TAG, "Number of files to download: " + mRemoteFilesToDownloadList.size());
         // while there are still files to process and the download isn't done yet, loop
         while(
                 mThreadCounter.get() > 0 ||
-                (mDownloadedFilesCount.get() != mRemoteFilesToDownloadList.size())  ||
-                mDownloadedFiles.peek() != null) {    // Retrieves but doesn't remove from FIFO
-            try {
-                if (mDownloadedFiles.peek() != null) {      // Check if DownloadList has files to process
-                    String fileToProcess = mDownloadedFiles.poll();
-                    processed = scaleRotateAndSave(fileToProcess);
-                    if (processed) {    // if rotate, scale and move worked, delete from list, and delete src file
-                        if (DEBUG) Log.i(TAG, "rot/scaled/saved >" + fileToProcess + "<");
-                        File fileToDelete = new File(fileToProcess);
-                        if (fileToDelete.exists() && fileToDelete.isFile()) {
-                            deleted = fileToDelete.delete();
-                            if (deleted)
-                                if (DEBUG) Log.i(TAG, "deleted >" + fileToProcess + "<");
+                        (mDownloadedFilesCount.get() != mRemoteFilesToDownloadList.size())  ||
+                        mDownloadedFiles.peek() != null) {    // Retrieves but doesn't remove from FIFO
+            if (mDownloadedFiles.peek() != null) {      // Check if DownloadList has files to process
+                String fileToProcess = mDownloadedFiles.poll();
+                processed = scaleRotateAndSave(fileToProcess);
+                if (processed) {    // if rotate, scale and move worked, delete from list, and delete src file
+                    if (DEBUG) Log.i(TAG, "rot/scaled/saved >" + fileToProcess + "<");
+                    File fileToDelete = new File(fileToProcess);
+                    if (fileToDelete.exists() && fileToDelete.isFile()) {
+                        deleted = fileToDelete.delete();
+                        if (deleted)
+                            if (DEBUG) Log.i(TAG, "deleted >" + fileToProcess + "<");
                             else
-                                if (DEBUG) Log.e(TAG, "couldn't delete >" + fileToProcess + "<");
-                        }
-                    } else {
-                        if (DEBUG) Log.e(TAG, "Failure while processing file. (scaleRotateAndSave");
+                            if (DEBUG) Log.e(TAG, "couldn't delete >" + fileToProcess + "<");
                     }
+                } else {
+                    if (DEBUG) Log.e(TAG, "Failure while processing file[" + fileToProcess + "]. (scaleRotateAndSave");
                 }
-                // if cancelled, process downloaded pictures and then stop
-                if (isCancelled()) {
-                    if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: doInBackground - downloadFiles");
-                    if (mDownloadedFiles.peek() == null)
-                        return null;
-                    Thread.sleep(200);
-                }  else {
-                    if (mRemoteFilesToDownloadList.size() > 0 &&
-                            mDownloadedFilesCount.get() < mRemoteFilesToDownloadList.size()) {
-                        // download here
-                        if (cacheFolderExists
-                                && mThreadCounter.get() < 2
-                                && fileIndex < mRemoteFilesToDownloadList.size()) {
-                            RemoteFile remoteFile = mRemoteFilesToDownloadList.get(fileIndex);
-                            if (15 * 1024 * 1024 < GlobalPhoneFuncs.getSdCardFreeBytes() - remoteFile.getLength()) {
-                                if (DEBUG) Log.i(TAG, "Starting download: " + remoteFile.getRemotePath());
-                                mThreadCounter.getAndIncrement();
-                                DownloadRemoteFileOperation downloadOperation =
-                                        new DownloadRemoteFileOperation(remoteFile.getRemotePath(), mExtFolderCacheObject.getAbsolutePath());
-                                downloadOperation.execute( mClient, this, mHandler);
-                                fileIndex++;
-                            } else {
-                                if (DEBUG) Log.e(TAG, "No more space available on the sd card!");
-                                publishProgress(-1.5f);
-                                this.cancel(true);
-                            }
+            }
+            // if cancelled, process downloaded pictures and then stop
+            if (isInterrupted()) {
+                if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: doInBackground - downloadFiles");
+                if (mDownloadedFiles.peek() == null)
+                    interruptDownload();
+                    return;
+            }  else {
+                if (mRemoteFilesToDownloadList.size() > 0 &&
+                        mDownloadedFilesCount.get() < mRemoteFilesToDownloadList.size()) {
+                    // download here (but check every six files, if still connected to wifi
+                    if ((fileIndex % 6) == 0) {
+                        if (!wifiConnected()) {
+                            Thread.currentThread().interrupt();
+                            continue;
                         }
                     }
-                    Thread.sleep(200);
+                    if (cacheFolderExists
+                            && mThreadCounter.get() < 2
+                            && fileIndex < mRemoteFilesToDownloadList.size()) {
+                        RemoteFile remoteFile = mRemoteFilesToDownloadList.get(fileIndex);
+                        if (15 * 1024 * 1024 < GlobalPhoneFuncs.getSdCardFreeBytes() - remoteFile.getLength()) {
+                            if (DEBUG) Log.i(TAG, "Starting download: " + remoteFile.getRemotePath());
+                            mThreadCounter.getAndIncrement();
+                            DownloadRemoteFileOperation downloadOperation =
+                                    new DownloadRemoteFileOperation(remoteFile.getRemotePath(), mExtFolderCacheObject.getAbsolutePath());
+                            downloadOperation.execute( mClient, this, mHandler);
+                            fileIndex++;
+                        } else {
+                            if (DEBUG) Log.e(TAG, "No more space available on the sd card!");
+                            publishProgress(-1.5f, false);
+                            Thread.currentThread().interrupt();
+                        }
+                    }
                 }
-            } catch (InterruptedException e) {
+            }
+            /* catch (InterruptedException e) {            // no interrupted exception anymore, due to no Thread.sleeps
                 if (DEBUG) Log.e(TAG, "Exception happened while trying to await end of remote downloads");
                 //e.printStackTrace();
-            }
+            }*/
         }
-        return null;
+
+        finishedDownload();
+        // END OF THREAD!
     }
 
     private void remoteReadAnyFolder(String path) {
-        if (isCancelled()) {
+        if (isInterrupted()) {
             if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: remoteReadAnyFolder");
+            interruptDownload();
             return;
         }
         mThreadCounter.getAndIncrement();
@@ -225,8 +232,7 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
                     e.printStackTrace();
                 }
                 mDownloadedFilesCount.getAndIncrement();
-                publishProgress( (float)            // is between 0 and 1
-                        ( (float)mDownloadedFilesCount.get() / (float)mRemoteFilesToDownloadList.size() ));
+                publishProgress((float)mDownloadedFilesCount.get() / (float)mRemoteFilesToDownloadList.size(), false);  // is between 0 and 1
             } else {
                 if (DEBUG) Log.e(TAG, "Download: FAILURE -- info:" + result.getFilename() + " = " + result.getLogMessage());
             }
@@ -245,7 +251,7 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
             }
         } else {
             if (DEBUG) Log.i(TAG, "Display folder not empty, checking files...");
-            addFilepathsToList(mLocalFilesInDisplayFolder);  // save names (with relative path) of all files in local folder
+            addFilepathsToLocalFileList(mLocalFilesInDisplayFolder);  // save names (with relative path) of all files in local folder
             // For every remote file, check if it already exists locally
             for (RemoteFile remoteFile : remoteFileList) {
                 if (mLocalFileList.contains(remoteFile.getRemotePath())) {
@@ -258,17 +264,17 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
             }
             if (mRemoteFilesToDownloadList.size() == 0) {
                 if (DEBUG) Log.i(TAG, "No file needs to be downloaded!");
-                publishProgress(-1f);
+                publishProgress(-1f, false);
+            } else {
+                if (DEBUG) Log.i(TAG, "Starting download of missing files shortly");
             }
-            else
-            if (DEBUG) Log.i(TAG, "Starting download of missing files shortly");
         }
     }
 
-    private void addFilepathsToList(File[] files){
+    private void addFilepathsToLocalFileList(File[] files){
         for (File file : files) {
             if (file.isDirectory()) {
-                addFilepathsToList(file.listFiles());
+                addFilepathsToLocalFileList(file.listFiles());
             } else {
                 // substring to get the relative path
                 String fileRelPath = file.getPath().substring(mExtFolderDisplayPath.length());
@@ -278,14 +284,10 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
         }
     }
 
-    @Override
-    protected void onProgressUpdate(Float... values) {
-        super.onProgressUpdate(values);
-        float percent = values[0];
-        if (percent > 0)
-            percent *= 100;
-        if (DEBUG) Log.i(TAG, "% update: " + percent);
-        //MainActivity.updateDownloadProgress(percent, false); TODO
+    private boolean wifiConnected() {
+        ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        return wifi != null && wifi.isConnected();
     }
 
     @Override
@@ -363,22 +365,34 @@ public class OC_DownloadTask extends AsyncTask<Object, Float, Object>
         return true;
     }
 
-    @Override
-    protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        //MainActivity.updateFileList();
-        if (DEBUG) Log.i(TAG, "###### FINISHED OWNCLOUD TASK #####");
+
+    /*  CALLBACKS TO SERVICE */
+
+    private void publishProgress(float f, boolean b) {
+        if (serviceCallbacks != null) {
+            if (f > 0)
+                f *= 100;
+            serviceCallbacks.publishProgress(f, b);
+            if (DEBUG) Log.i(TAG, "% update: " + f);
+        } else {
+            if (DEBUG)  Log.d(TAG, "couldn't publish progress, event object is null");
+        }
     }
-    @Override
-    protected void onCancelled() {
-        handleCancelled();
+
+    private void finishedDownload() {
+        if (serviceCallbacks != null) {
+            if (DEBUG) Log.i(TAG, "###### FINISHED OWNCLOUD TASK #####");
+            serviceCallbacks.finishedDownload(mDownloadedFilesCount.get());
+        } else {
+            if (DEBUG)  Log.d(TAG, "couldn't 'finish' download, event obj.is null");
+        }
     }
-    @Override
-    protected void onCancelled(Object o) {
-        handleCancelled();
-    }
-    private void handleCancelled() {
-        publishProgress(0f);
-        if (DEBUG) Log.e(TAG, "Thread 'successfully' cancelled.");
+
+    private void interruptDownload() {
+        if (serviceCallbacks != null) {
+            serviceCallbacks.interruptedDownload();
+        } else {
+            if (DEBUG)  Log.d(TAG, "couldn't 'interrupt' download, event obj.is null");
+        }
     }
 }

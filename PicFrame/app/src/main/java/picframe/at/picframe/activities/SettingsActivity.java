@@ -84,7 +84,7 @@ public class SettingsActivity extends PreferenceActivity {
                 if (key.contains("SrcType")) {
                     setCorrectSrcPathField();
                     if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-                        settingsObj.setDownloadNow(true);
+                        // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }
                 }
                 updateTitlePrefsWithValues(sharedPreferences, key);
@@ -261,7 +261,7 @@ public class SettingsActivity extends PreferenceActivity {
         String titleStr = null;
         //String summStr = null;
         String keyValue = sharedPreferences.getString(key, "-1");
-        if (keyValue != null && keyValue.equals("-1")) {
+        if (keyValue.equals("-1")) {
             keyValue = null;
         }
         //System.out.println("mprefs- key: " +key + " -- value: " +mPrefs.getString(key,"-1"));       // sharedPrefs and mprefs values = the same
@@ -417,12 +417,9 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ("-1".equals(String.valueOf(newValue))) {
-                    settingsObj.setDownloadNow(true);
-                    return false;
+                    // clicked "never" .. remove alarm here TODO
+                    return true;
                 } else {
-                    // if user clicks "now" and then other value, should now be executed anyway?
-                    // current it is
-//                    settingsObj.setDownloadNow(false);
                     return true;
                 }
             }

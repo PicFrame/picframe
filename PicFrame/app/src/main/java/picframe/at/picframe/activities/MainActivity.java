@@ -20,15 +20,14 @@
 package picframe.at.picframe.activities;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.PageTransformer;
@@ -42,9 +41,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.content.Intent;
 import android.view.ViewGroup;
-import android.view.ViewPropertyAnimator;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -54,20 +51,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.owncloud.android.lib.common.OwnCloudClient;
-import com.owncloud.android.lib.common.OwnCloudClientFactory;
-import com.owncloud.android.lib.common.OwnCloudCredentialsFactory;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import picframe.at.picframe.R;
-import picframe.at.picframe.helper.owncloud.OC_ConnectionCheck;
-import picframe.at.picframe.helper.owncloud.OC_DownloadTask;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
 import picframe.at.picframe.helper.viewpager.BackgroundToForegroundTransformer;
 import picframe.at.picframe.helper.viewpager.CubeOutTransformer;
@@ -84,16 +73,20 @@ import picframe.at.picframe.helper.viewpager.RotateDownTransformer;
 import picframe.at.picframe.helper.viewpager.StackTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomInTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomOutPageTransformer;
+import picframe.at.picframe.service_broadcast.DownloadService;
+import picframe.at.picframe.service_broadcast.Keys;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends ActionBarActivity{
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private ResponseReceiver receiver;
     public static final String mySettingsFilename = "PicFrameSettings";
     private SharedPreferences mPrefs = null;
     public static AppData settingsObj = null;
+    LocalBroadcastManager broadcastManager;
 
-   // private RelativeLayout playPauseBtn;
+    private ImageView pauseIcon;
     private static DisplayImages setUp;
     private static Context mContext;
     private static CustomViewPager pager;
@@ -106,14 +99,14 @@ public class MainActivity extends ActionBarActivity{
     private boolean paused;
     private int remainingDisplayTime; // in seconds
 
-    public static ProgressBar mProgressBar;
-    private static OwnCloudClient mClientOwnCloud;
-    private static Object[] mParamsOwnCloud;
-    private static AsyncTask<Object, Float, Object> mBackgroundTask;
-    private static Animation mFadeInAnim, mFadeOutAnim;
     private static final int nbOfExamplePictures = 6;
     private static boolean showExamplePictures = false;
     private boolean showTutorial = true;
+
+    public static ProgressBar mProgressBar;                             //TODO still needed?
+    private static Object[] mParamsOwnCloud;                            //TODO still needed?
+    private static AsyncTask<Object, Float, Object> mBackgroundTask;    //TODO still needed?
+    private static Animation mFadeInAnim, mFadeOutAnim;                 //TODO still needed?
 
     private ArrayList<PageTransformer> transformers;
     private static List<String> mFilePaths;
@@ -124,7 +117,7 @@ public class MainActivity extends ActionBarActivity{
     private ImageView mPause;
     private LinearLayout mRemainingTimeLayout;
 
-    public static boolean mConnCheckOC, mConnCheckSMB;
+    //public static boolean mConnCheckOC, mConnCheckSMB; //TODO still needed?
     public boolean mDoubleBackToExitPressedOnce;
 
     private final static boolean DEBUG = true;
@@ -134,14 +127,15 @@ public class MainActivity extends ActionBarActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        pauseIcon = (ImageView) findViewById(R.id.pauseIcon);
+        //mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
         mPause = (ImageView) findViewById(R.id.pauseIcon);
         mRemainingTimeLayout = (LinearLayout) findViewById(R.id.remaining_time);
         mFadeInAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         mFadeOutAnim = AnimationUtils.loadAnimation(this, R.anim.fade_out);
-        mConnCheckOC = false;
-        mConnCheckSMB = false;
+        //mConnCheckOC = false;
+        //mConnCheckSMB = false;
         toggleDirection = false;
         paused = false;
         enableGestures();
@@ -188,6 +182,7 @@ public class MainActivity extends ActionBarActivity{
 
     protected void onResume() {
         super.onResume();
+        supportInvalidateOptionsMenu();
         loadSettings();
         showTutorial = settingsObj.getTutorial();
         if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
@@ -201,9 +196,17 @@ public class MainActivity extends ActionBarActivity{
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         // if the user choose "download NOW", download pictures; then set timer as usual
-        if(settingsObj.getdownloadNow()){
-            downloadPictures();
-            settingsObj.setDownloadNow(false);
+      
+        // get localBroadcastManager instance to receive localBroadCasts
+        if (broadcastManager == null) {
+            broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        }
+        // register broadcast receiver for UI update from service
+        if (receiver == null) {
+            IntentFilter filter = new IntentFilter(Keys.ACTION_DOWNLOAD_FINISHED);
+            filter.addCategory(Intent.CATEGORY_DEFAULT);
+            receiver = new ResponseReceiver();
+            broadcastManager.registerReceiver(receiver, filter);
         }
 
         if(settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
@@ -240,10 +243,17 @@ public class MainActivity extends ActionBarActivity{
         slideShow();
     }
 
-    private void downloadPictures(){
-        // set to false again every time
-        mConnCheckOC = false;
-        checkForProblemsAndShowToasts();  // check for connection or file reading problems
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (menu == null || !menu.hasVisibleItems())
+            return super.onPrepareOptionsMenu(menu);
+
+        if (settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
+            menu.findItem(R.id.action_download).setVisible(true);
+        } else {
+            menu.findItem(R.id.action_download).setVisible(false);
+        }
+        return true;
     }
 
     @Override
@@ -260,6 +270,12 @@ public class MainActivity extends ActionBarActivity{
             case R.id.action_settings:
                 myIntent = new Intent(this, SettingsActivity.class);
                 break;
+            case R.id.action_download:
+                Log.d(TAG, "dowdnload now clicked");
+                Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
+                startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
+                startService(startDownloadIntent);
+                return true;
             case R.id.action_about:
                 myIntent = new Intent(this, AboutActivity.class);
                 break;
@@ -279,6 +295,10 @@ public class MainActivity extends ActionBarActivity{
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        // unregister receiver, because if the activity is not in focus, we want no UI updates
+        broadcastManager.unregisterReceiver(receiver);
+        receiver = null;
 
         currentPageSaved = pager.getCurrentItem();
         showExamplePictures = false;
@@ -363,7 +383,7 @@ public class MainActivity extends ActionBarActivity{
             runOnUiThread(new Runnable() {
                 public void run() {
                     // set to false again every time
-                    mConnCheckOC = false;
+                    //mConnCheckOC = false;
                     checkForProblemsAndShowToasts();  // check for connection or file reading problems
                 }
             });
@@ -457,6 +477,7 @@ public class MainActivity extends ActionBarActivity{
                 public void onTap() {
                     if (settingsObj.getSlideshow()) {
                         paused = !paused;
+
                         if (paused) {
                             mPause.setVisibility(View.VISIBLE);
                             remainingDisplayTime = 4; // TODO: actual remaining time instead of hardcoded value
@@ -522,7 +543,7 @@ public class MainActivity extends ActionBarActivity{
         }
     }
 
-    public static void updateFileList() {
+    public void updateFileList() {
         mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
         setSize(); // size is count of images in folder, or constant if example pictures are used
         setUp.notifyDataSetChanged();
@@ -558,12 +579,6 @@ public class MainActivity extends ActionBarActivity{
         });
     }
 
-    private boolean wifiConnected() {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        return wifi != null && wifi.isConnected();
-    }
-
     private boolean checkForProblemsAndShowToasts() {
         // OwnCloud or Samba selected
         if (!settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)) {
@@ -576,26 +591,17 @@ public class MainActivity extends ActionBarActivity{
                     Toast.makeText(this, R.string.main_toast_noUsernameSet, Toast.LENGTH_SHORT).show();
                 } else {
                     if (DEBUG) Log.i(TAG, "username and pw set");
-                    // Wifi connected?
-                    if (!wifiConnected()) {
-                        Toast.makeText(this, R.string.main_toast_noWifiConnection, Toast.LENGTH_LONG).show();
-                    } else {
-                        if (DEBUG) Log.i(TAG, "wifi connected");
-                        if (!initializedFolders()) {
-                            Toast.makeText(this, R.string.main_toast_folderInitFailure, Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Try to connect & login to selected source server
-                            if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-                                if (!mConnCheckOC) {
-                                    if (DEBUG) Log.i(TAG, "trying OC check");
-                                    startConnectionCheck();
-                                    return true;
-                                }
-                            }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
-                            {
-                                // TODO: Samba checks go here
-                            }
-                        }
+                    // Try to connect & login to selected source server
+                    if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
+                        if (DEBUG) Log.i(TAG, "trying OC check");
+                        //startConnectionCheck();
+                        Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
+                        startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
+                        startService(startDownloadIntent);
+                        return true;
+                    }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
+                    {
+                        // TODO: Samba checks go here
                     }
                 }
             }
@@ -614,184 +620,6 @@ public class MainActivity extends ActionBarActivity{
         }
         return false;
     }
-
-    private static void setUpOcClient() {
-        Handler mHandler = new Handler();
-        Uri serverUri = Uri.parse(settingsObj.getSrcPath());
-        if (DEBUG) Log.i(TAG, "OwnCloud serverUri: " + serverUri);
-        // Create client object to perform remote operations
-        mClientOwnCloud = OwnCloudClientFactory.createOwnCloudClient(serverUri, mContext , true);
-        mClientOwnCloud.setCredentials(
-                OwnCloudCredentialsFactory.newBasicCredentials(
-                        settingsObj.getUserName(),
-                        settingsObj.getUserPassword()
-                )
-        );
-        mParamsOwnCloud = new Object[4];
-        mParamsOwnCloud[0] = mClientOwnCloud;
-        mParamsOwnCloud[1] = mHandler;
-        mParamsOwnCloud[2] = mContext;
-        mParamsOwnCloud[3] = settingsObj.getExtFolderAppRoot();
-    }
-
-    private void startConnectionCheck() {
-        if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-            if (mClientOwnCloud == null || mParamsOwnCloud == null ||
-                    !mClientOwnCloud.getCredentials().getUsername().equals(settingsObj.getUserName()) ||
-                    !mClientOwnCloud.getCredentials().getAuthToken().equals(settingsObj.getUserPassword()) ||
-                    !mClientOwnCloud.getBaseUri().toString().equals(settingsObj.getSrcPath()) ) {
-
-               setUpOcClient();
-           }
-            mBackgroundTask = new OC_ConnectionCheck();
-            mBackgroundTask.execute(mParamsOwnCloud);       // OwnCloud connection check
-        }
-    }
-
-    private static void startOwnCloudDownloadTask() {
-        if (mClientOwnCloud == null || mParamsOwnCloud == null ||
-                !mClientOwnCloud.getCredentials().getUsername().equals(settingsObj.getUserName()) ||
-                !mClientOwnCloud.getCredentials().getAuthToken().equals(settingsObj.getUserPassword()) ||
-                !mClientOwnCloud.getBaseUri().toString().equals(settingsObj.getSrcPath()) ) {
-            setUpOcClient();
-        }
-        mBackgroundTask = new OC_DownloadTask();
-        mBackgroundTask.execute(mParamsOwnCloud);
-    }
-
-    public static void startFileDownload() {
-        if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
-            if (mConnCheckOC) {
-                startOwnCloudDownloadTask();
-            }
-        }       /**
-                 *  else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba)) {
-                 *      if (mConnCheckSMB) {
-                 *      TODO    Start samba download task here
-                 *      }
-                 *  }
-                 */
-    }
-
-    public static boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                        return false;
-                    }
-                }
-            }
-        }
-        if (delRoot) {
-            return dir.delete();
-        }
-        // Comment to remove warning xD
-        return true;
-    }
-
-    private static boolean initializedFolders() {
-        // mExtFolderCachePath + mExtFolderDisplayPath
-        boolean dirCreated;
-        // check if folders exist, if not, create them
-        ArrayList<String> folderList = new ArrayList<>();
-        folderList.add(settingsObj.getExtFolderAppRoot());
-        folderList.add(settingsObj.getExtFolderCachePath());
-        folderList.add(settingsObj.getExtFolderDisplayPath());
-        for (String folder : folderList) {
-            File dir = new File(folder);
-            if (dir.exists() && dir.isDirectory())
-                continue;
-            dirCreated = dir.mkdir();
-            if (dirCreated)
-                if (DEBUG) Log.i(TAG, "Creating folder: >" +dir+ "< successful");
-            else {
-                if (DEBUG) Log.i(TAG, "Creating folder: >" +dir+ "< FAILED!");
-                return false;
-            }
-        }
-        File folder = new File(folderList.get(1));
-        if (DEBUG) Log.i(TAG, "deleting files in cache dir before downloading");
-        if (!recursiveDelete(folder, false)) {    // delete all files and folders in cache folder
-            return false;
-        }
-        File nomedia = new File(folderList.get(1) + File.separator + ".nomedia");
-        if (!nomedia.exists()) {
-            try {
-                if (nomedia.createNewFile()) {
-                    if (DEBUG) Log.i(TAG, "Created .nomedia file successfully");
-                }
-            } catch (IOException e) {
-                if (DEBUG) Log.e(TAG, "Couldn't create .nomedia file");
-            }
-        }
-        return true;
-    }
-
-    public static void updateDownloadProgress(Float percent, boolean indeterminate) {
-        if (percent == -1f) {
-            Toast.makeText(mContext, R.string.main_toast_noNewFiles, Toast.LENGTH_SHORT).show();
-            return;
-        } else if (percent == -1.5f) {
-            Toast.makeText(mContext, R.string.main_toast_notEnoughStorage, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (mProgressBar != null && !percent.isNaN() && !percent.isInfinite()) {
-            mProgressBar.setIndeterminate(indeterminate);
-            if (percent == 0) {
-                mProgressBar.setProgress(0);
-                progressAnimate(false);
-
-            } else if (percent > 0 && percent <= 0.2) {
-                mProgressBar.setProgress(0);
-                progressAnimate(true);
-            } else if (percent > 0.2 && percent < 99.8) {
-                mProgressBar.setProgress(Math.round(percent));
-                if (mProgressBar.getVisibility() == View.INVISIBLE)
-                    progressAnimate(true);
-            } else if (percent >= 99.8) {
-                mProgressBar.setProgress(100);
-                progressAnimate(false);
-            }
-        }
-    }
-
-
-    private static void progressAnimate(boolean fadeIn) {
-        // FADEIN
-        if (fadeIn) {
-            if (mProgressBar.getVisibility() == View.GONE ||
-                    mProgressBar.getVisibility() == View.INVISIBLE) {
-                mProgressBar.setVisibility(View.VISIBLE);
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
-                ViewPropertyAnimator i = mProgressBar.animate();
-                i.setDuration(500).alphaBy(0).alpha(1).setInterpolator(new AccelerateInterpolator());
-
-            } else {
-                mProgressBar.startAnimation(mFadeInAnim);
-            }
-        // FADEOUT
-        } else {
-            if (mProgressBar.getProgress() == 0) {
-                mProgressBar.setVisibility(View.INVISIBLE);
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
-                ViewPropertyAnimator i = mProgressBar.animate();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-                    i.setStartDelay(1000);
-                i.setDuration(1000).alphaBy(1).alpha(0).setInterpolator(new AccelerateInterpolator());
-
-            } else {
-                mProgressBar.startAnimation(mFadeOutAnim);
-            }
-        }
-    }
-
 
     public void selectTransformer(){
         if(settingsObj.getSlideshow() && settingsObj.getTransitionType() == 11){
@@ -861,6 +689,28 @@ public class MainActivity extends ActionBarActivity{
         if(showTutorial){
             click_on_settings_dialog.show();
             showActionBar();
+        }
+    }
+
+
+    public class ResponseReceiver extends BroadcastReceiver {
+        public static final String BOOTED_MSG = "booted";
+        private float percent;
+        private boolean indeterminate;
+
+        // to prevent instantiation
+        private ResponseReceiver() {
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null) {
+                // received an intent to update the viewpager
+                if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
+                    if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
+                    updateFileList();
+                }
+            }
         }
     }
 }
