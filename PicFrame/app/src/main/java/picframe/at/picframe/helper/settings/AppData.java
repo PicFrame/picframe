@@ -112,6 +112,7 @@ public class AppData {
         this.scaling = prefs.getBoolean((ctx.getString(R.string.sett_key_scaling)), false);
         this.randomize = prefs.getBoolean((ctx.getString(R.string.sett_key_randomize)), false);
         this.recursiveSearch = prefs.getBoolean((ctx.getString(R.string.sett_key_recursiveSearch)), false);
+        this.tutorial = prefs.getBoolean("tutorial", false);
         this.transitionType = Integer.parseInt(prefs.getString(ctx.getString(R.string.sett_key_transition), "0"));
         this.updateInterval = Integer.parseInt(prefs.getString(ctx.getString(R.string.sett_key_updateInterval), "12"));
     }
@@ -179,11 +180,5 @@ public class AppData {
     }
     public int getUpdateIntervalInHours() {
         return this.updateInterval;
-    }
-    public boolean getTutorial() {
-        return this.tutorial;
-    }
-    public void setTutorial(boolean showTutorial) {
-        tutorial = showTutorial;
     }
 }
