@@ -11,7 +11,7 @@
     <item
         android:id="@+id/action_download"
         android:icon="@android:drawable/stat_notify_sync_noanim"
-        android:title="Download now"
+        android:title="@string/action_downloadNow"
         android:orderInCategory="150"
         android:visible="false"
         app:showAsAction="ifRoom" />

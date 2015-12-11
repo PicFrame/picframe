@@ -1,5 +1,6 @@
 <resources>
     <!-- MAIN STRINGS -->
+    <string name="action_downloadNow">Jetzt herunterladen</string>
     <string name="main_toast_noUsernameSet">Benutzername oder Passwort für die Netzwerkressource wurden nicht gesetzt.</string>
     <string name="main_toast_noSDReadRights">Von externer SD-Karte konnte nicht gelesen werden.</string>
     <string name="main_toast_noSDWriteRights">Auf externe SD-Karte konnte nicht geschrieben werden.</string>
@@ -71,14 +72,12 @@
     <string name="title_activity_about">Über uns</string>
     <string name="about_license_button">Lizenzen</string>
     <!-- ABOUT STRINGS END -->
-    <string name="deleteMe">deleteMe</string>
     <string name="main_toast_folderInitFailure">Konnte download Ordner nicht erstellen.</string>
     <string name="main_toast_noFolderPathSet">Sie haben noch keinen Ordner Bilder-Ornder ausgewählt! </string>
     <string name="main_dialog_tutorial_text">Bitte nach unter swipen und die Einstellungen Icon antippen, oder den Menu-Button drücken, um die Einstellungen zu öffnen</string>
     <string name="main_dialog_tutorial_okButton">OK</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Diese Nachricht nicht mehr anzeigen</string>
     <string name="main_dialog_tutorial_openSettingsNowButton">Einstellungen jetzt öffnen</string>
-    <string name="about_line1"></string>
-    <string name="about_developpedBy">Entwickelt von:</string>
+    <string name="about_developedBy">Entwickelt von:</string>
     <string name="about_photosBy">Fotos von:</string>
 </resources>

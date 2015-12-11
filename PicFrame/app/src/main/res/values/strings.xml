@@ -4,6 +4,7 @@
     <string name="app_name" translatable="false">PicFrame</string>
     <string name="app_version" translatable="false">1.2</string>
     <string name="app_key_firstRun" translatable="false">FirstStart</string>
+    <string name="action_downloadNow">Download now</string>
     <string name="main_toast_noUsernameSet">No Username or Password set for network resource.</string>
     <string name="main_toast_noSDReadRights">Can\'t read from external SD card.</string>
     <string name="main_toast_noSDWriteRights">Can\'t write to external SD card.</string>
@@ -99,7 +100,7 @@
     <!-- ABOUT STRINGS -->
     <string name="action_about">About</string>
     <string name="title_activity_about">About</string>
-    <string name="about_developpedBy">Developed by:</string>
+    <string name="about_developedBy">Developed by:</string>
     <string name="about_myra" translatable="false">Fuchs Myra</string>
     <string name="about_clemens" translatable="false">Hlawacek Clemens</string>
     <string name="about_linda" translatable="false">Spindler Linda</string>
@@ -112,7 +113,6 @@
     <string name="about_zaczek" translatable="false">Zaczek Arthur</string>
     <string name="about_esraa" translatable="false">AlHafidh Esraa</string>
     <string name="about_rights_reserved" translatable="false">All Rights Reserved</string>
-    <string name="deleteMe">deleteMe</string>
     <string name="about_license_button">Licenses</string>
     <string name="about_licenses_dialog_button_1" translatable="false">Full GNU General Public License</string>
     <string name="about_licenses_dialog_button_2" translatable="false">Third party library licenses</string>
