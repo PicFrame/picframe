@@ -255,8 +255,10 @@ public class SettingsActivity extends PreferenceActivity {
                 return;
             }
         }
+        if(key.equals("tutorial")){
+            return;
+        }
         // UNTIL HERE ARE CHECKS FOR SWITCH-PREFERENCES, APP WOULD CRASH OTHERWISE
-
         boolean loadAll = false;
         String titleStr = null;
         //String summStr = null;

@@ -184,7 +184,7 @@ public class MainActivity extends ActionBarActivity{
         super.onResume();
         supportInvalidateOptionsMenu();
         loadSettings();
-        showTutorial = settingsObj.getTutorial();
+        showTutorial = mPrefs.getBoolean("tutorial", true);
         if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
             mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
             showTutorial = true;
@@ -302,7 +302,7 @@ public class MainActivity extends ActionBarActivity{
 
         currentPageSaved = pager.getCurrentItem();
         showExamplePictures = false;
-        settingsObj.setTutorial(showTutorial);
+        mPrefs.edit().putBoolean("tutorial", showTutorial).commit();
     }
 
     public void onBackPressed() {
