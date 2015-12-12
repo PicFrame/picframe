@@ -47,6 +47,7 @@ import android.widget.Toast;
 
 import java.io.File;
 
+import picframe.at.picframe.MainApp;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.settings.SimpleFileDialog;
@@ -67,11 +68,11 @@ public class SettingsActivity extends PreferenceActivity {
         super.onCreate(savedInstanceState);
 
         PreferenceManager prefMgr = getPreferenceManager();
-        prefMgr.setSharedPreferencesName(MainActivity.mySettingsFilename);
+        prefMgr.setSharedPreferencesName(AppData.mySettingsFilename);
         prefMgr.setSharedPreferencesMode(MODE_PRIVATE);
 
         settingsObj = AppData.getINSTANCE();
-        mPrefs = this.getSharedPreferences(MainActivity.mySettingsFilename, MODE_PRIVATE);
+        mPrefs = this.getSharedPreferences(AppData.mySettingsFilename, MODE_PRIVATE);
 /*
         Map<String, ?> keyMap = mPrefs.getAll();
         for (String e : keyMap.keySet()) {
@@ -80,10 +81,9 @@ public class SettingsActivity extends PreferenceActivity {
 */
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                settingsObj.loadConfig(getApplicationContext(), sharedPreferences);
-                if (key.contains("SrcType")) {
+                if (MainApp.getINSTANCE().getApplicationContext().getString(R.string.sett_key_srctype).equals(key)) {
                     setCorrectSrcPathField();
-                    if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
+                    if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
                         // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }
                 }
@@ -93,7 +93,6 @@ public class SettingsActivity extends PreferenceActivity {
         mPrefs.registerOnSharedPreferenceChangeListener(listener);
 
         addPreferencesFromResource(R.xml.settings);
-        settingsObj.loadConfig(getApplicationContext(), mPrefs);
         setCorrectSrcPathField();
         updateTitlePrefsWithValues(mPrefs, "all");
         //System.out.println(settingsObj.toString());
@@ -139,7 +138,7 @@ public class SettingsActivity extends PreferenceActivity {
         Preference mySrcPathPref = null;
         String[] SrcPaths = { getString(R.string.sett_key_srcpath_sd),
                 getString(R.string.sett_key_srcpath_owncloud),
-                getString(R.string.sett_key_srcpath_samba),
+                getString(R.string.sett_key_srcpath_dropbox),
                 getString(R.string.sett_key_recursiveSearch),
                 getString(R.string.sett_key_updateInterval),
                 getString(R.string.sett_key_deleteData)};
@@ -217,12 +216,12 @@ public class SettingsActivity extends PreferenceActivity {
                     return true;
                 }
             });
-        } else if (srcType == AppData.sourceTypes.Samba.ordinal()) {
+        } else if (srcType == AppData.sourceTypes.Dropbox.ordinal()) {
             mySrcPathPref = new Preference(this);
-            mySrcPathPref.setTitle("Placeholder for Samba Dir Field");
+            mySrcPathPref.setTitle("Placeholder for Dropbox Dir Field");
             mySrcPathPref.setSummary("According summary text");
             mySrcPathPref.setDefaultValue("MySambaShare");
-            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_samba));
+            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_dropbox));
         }
         if (mySrcPathPref != null && myCategory != null) {
 //            mySrcPathPref.setKey("SrcPath");
@@ -246,19 +245,19 @@ public class SettingsActivity extends PreferenceActivity {
             if (findPreference(key) instanceof CheckBoxPreference ||
                     findPreference(key) instanceof TwoStatePreference) return;
         }
-        String[] SwitchPrefs = { getString(R.string.sett_key_slideshow),
+        String[] SwitchPrefsAndOthersToSkip = { getString(R.string.sett_key_slideshow),    // TODO: add the custom-sett-keys too (like tutorial), else app dies at [String keyValue = sharedPreferences.getString(key, "-1");]
                 getString(R.string.sett_key_scaling),
                 getString(R.string.sett_key_randomize),
+                getString(R.string.sett_key_tutorial),
+                getString(R.string.sett_key_firstStart),
                 getString(R.string.sett_key_recursiveSearch)};
-        for (String path : SwitchPrefs) {
+        for (String path : SwitchPrefsAndOthersToSkip) {
             if (key.contains(path)) {
                 return;
             }
         }
-        if(key.equals("tutorial")){
-            return;
-        }
         // UNTIL HERE ARE CHECKS FOR SWITCH-PREFERENCES, APP WOULD CRASH OTHERWISE
+
         boolean loadAll = false;
         String titleStr = null;
         //String summStr = null;
@@ -282,7 +281,7 @@ public class SettingsActivity extends PreferenceActivity {
                 titleStr = getString(R.string.sett_password);
                 break;
             case "SrcType":
-                keyValue = settingsObj.getSrcType().toString();
+                keyValue = settingsObj.getSourceType().toString();
                 // String was number => to correct string (like External SD/Externe SD Karte)
                 //keyValue = getResources().getStringArray(R.array.srcTypeEntries)[settingsObj.getSrcTypeInt()];
                 //System.err.println("KeyValue after: " + keyValue);
@@ -303,7 +302,7 @@ public class SettingsActivity extends PreferenceActivity {
             //    summStr = getString(R.string.sett_srcPath_externalSDSumm);
                 break;
             case "SrcPath_owncloud":
-                titleStr = settingsObj.getSrcType().toString() + " URL";
+                titleStr = settingsObj.getSourceType().toString() + " URL";
              //   titleStr = getResources().getStringArray(R.array.srcTypeEntries)[settingsObj.getSrcTypeInt()] + " URL";
              //   summStr = getString((R.string.sett_srcPath_OwnCloudSumm));
                 break;
@@ -342,7 +341,7 @@ public class SettingsActivity extends PreferenceActivity {
             Preference mySrcPathPref;
             String[] SrcPaths = { getString(R.string.sett_key_srcpath_sd),
                     getString(R.string.sett_key_srcpath_owncloud),
-                    getString(R.string.sett_key_srcpath_samba)};
+                    getString(R.string.sett_key_srcpath_dropbox)};
             for (String path : SrcPaths) {
                 mySrcPathPref = findPreference(path);
                 if (mySrcPathPref != null) {

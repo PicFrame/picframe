@@ -1,4 +1,4 @@
-package picframe.at.picframe.service_broadcast;
+package picframe.at.picframe;
 
 public class Keys {
 
@@ -31,6 +31,8 @@ public class Keys {
     public static final String ACTION_STOPDOWNLOAD = "picframe.at.picframe.service.STOPDOWNLOAD";
     // FROM SERVICE TO ACTIVITY/RECEIVER
     public static final String ACTION_DOWNLOAD_FINISHED = "picframe.at.picframe.service.DOWNLOAD_FINISHED";
+    // FROM SERVICE TO ACTIVITY
+    public static final String ACTION_PROGRESSUPDATE = "picframe.at.picframe.service.PROGRESSUPDATE";
     public static final String MSG_PROGRESSUPDATE_PERCENT = "progressUpdatePercent";
     public static final String MSG_PROGRESSUPDATE_INDITERMINATE = "progressUpdateInditerminate";
     public static final String MSG_FAILURE = "failure";

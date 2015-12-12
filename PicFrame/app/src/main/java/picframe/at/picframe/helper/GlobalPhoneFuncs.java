@@ -51,11 +51,11 @@ public class GlobalPhoneFuncs {
     // returns a List with all files in given directory
     public static List<String> getFileList(String path){
         List<String> fileArray = new ArrayList<>();
-        if (MainActivity.settingsObj.getSrcType() == AppData.sourceTypes.ExternalSD) {
+        if (MainActivity.settingsObj.getSourceType() == AppData.sourceTypes.ExternalSD) {
             fileArray = readSdDirectory(path);
-        } else if (MainActivity.settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
+        } else if (MainActivity.settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
             fileArray = readSdDirectory(path);
-        } else if (MainActivity.settingsObj.getSrcType() == AppData.sourceTypes.Samba) {
+        } else if (MainActivity.settingsObj.getSourceType() == AppData.sourceTypes.Dropbox) {
             fileArray = readSdDirectory(path);
         }
         if (fileArray.isEmpty()) return fileArray;

@@ -23,7 +23,7 @@
     <string-array name="srcTypeEntries">
         <item name="0">SD-Karte</item>
         <item name="1">OwnCloud</item>
-        <!--item name="2">Samba</item-->
+        <!--item name="2">Dropbox</item-->
     </string-array>
 
     <string-array name="updateIntervalEntries">

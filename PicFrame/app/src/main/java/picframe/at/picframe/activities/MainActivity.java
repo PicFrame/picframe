@@ -23,23 +23,21 @@ import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.PageTransformer;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.content.Intent;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Animation;
@@ -56,43 +54,40 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import picframe.at.picframe.Keys;
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.GlobalPhoneFuncs;
+import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
 import picframe.at.picframe.helper.viewpager.BackgroundToForegroundTransformer;
 import picframe.at.picframe.helper.viewpager.CubeOutTransformer;
 import picframe.at.picframe.helper.viewpager.CustomViewPager;
-import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.viewpager.DrawFromBackTransformer;
 import picframe.at.picframe.helper.viewpager.EXIF_helper;
 import picframe.at.picframe.helper.viewpager.FadeInFadeOutTransformer;
 import picframe.at.picframe.helper.viewpager.FlipVerticalTransformer;
 import picframe.at.picframe.helper.viewpager.ForegroundToBackgroundTransformer;
 import picframe.at.picframe.helper.viewpager.Gestures;
-import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.viewpager.RotateDownTransformer;
 import picframe.at.picframe.helper.viewpager.StackTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomInTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomOutPageTransformer;
 import picframe.at.picframe.service_broadcast.DownloadService;
-import picframe.at.picframe.service_broadcast.Keys;
 
-@SuppressWarnings("deprecation")
-public class MainActivity extends ActionBarActivity{
+public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private ResponseReceiver receiver;
-    public static final String mySettingsFilename = "PicFrameSettings";
-    private SharedPreferences mPrefs = null;
-    public static AppData settingsObj = null;
+    public static AppData settingsObj = AppData.getINSTANCE();
     LocalBroadcastManager broadcastManager;
 
-    private ImageView pauseIcon;
     private static DisplayImages setUp;
-    private static Context mContext;
     private static CustomViewPager pager;
     private Timer timer;
     private Timer downloadTimer;
     private int page;
+
+    private static Context mContext;
     private String mOldPath;
     private boolean mOldRecursive;
     private RelativeLayout mainLayout;
@@ -101,11 +96,8 @@ public class MainActivity extends ActionBarActivity{
 
     private static final int nbOfExamplePictures = 6;
     private static boolean showExamplePictures = false;
-    private boolean showTutorial = true;
 
     public static ProgressBar mProgressBar;                             //TODO still needed?
-    private static Object[] mParamsOwnCloud;                            //TODO still needed?
-    private static AsyncTask<Object, Float, Object> mBackgroundTask;    //TODO still needed?
     private static Animation mFadeInAnim, mFadeOutAnim;                 //TODO still needed?
 
     private ArrayList<PageTransformer> transformers;
@@ -117,7 +109,6 @@ public class MainActivity extends ActionBarActivity{
     private ImageView mPause;
     private LinearLayout mRemainingTimeLayout;
 
-    //public static boolean mConnCheckOC, mConnCheckSMB; //TODO still needed?
     public boolean mDoubleBackToExitPressedOnce;
 
     private final static boolean DEBUG = true;
@@ -127,7 +118,6 @@ public class MainActivity extends ActionBarActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        pauseIcon = (ImageView) findViewById(R.id.pauseIcon);
         //mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
         mPause = (ImageView) findViewById(R.id.pauseIcon);
@@ -139,13 +129,11 @@ public class MainActivity extends ActionBarActivity{
         toggleDirection = false;
         paused = false;
         enableGestures();
-        mPrefs = getSharedPreferences(mySettingsFilename, MODE_PRIVATE);
         //deletePreferences();
         //createSettingsIfInexistent();
         if(getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
-        loadSettings();
         deleteTimerz();
         initializeTransitions();
 
@@ -158,10 +146,13 @@ public class MainActivity extends ActionBarActivity{
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
 
-        pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            public void onPageScrollStateChanged(int state) {}
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrollStateChanged(int state) { }
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
 
+            @Override
             public void onPageSelected(int position) {
                 selectTransformer();
             }
@@ -176,24 +167,21 @@ public class MainActivity extends ActionBarActivity{
 
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
-        startActivity(new Intent(this, SettingsActivity.class));
+        //startActivity(new Intent(this, SettingsActivity.class));
         return super.onMenuOpened(featureId, menu);
     }
 
     protected void onResume() {
         super.onResume();
         supportInvalidateOptionsMenu();
-        loadSettings();
-        showTutorial = mPrefs.getBoolean("tutorial", true);
-        if (mPrefs.getBoolean(getString(R.string.app_key_firstRun), true)) {
-            mPrefs.edit().putBoolean(getString(R.string.app_key_firstRun), false).commit();
-            showTutorial = true;
+        if (settingsObj.getFirstAppStart()) {
+            settingsObj.setFirstAppStart(false);
+            settingsObj.setTutorial(true);
             showExamplePictures = true;
         }
 
-        if(showTutorial) {
-            tutorial();
-        }
+        tutorial();
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         // if the user choose "download NOW", download pictures; then set timer as usual
       
@@ -209,7 +197,7 @@ public class MainActivity extends ActionBarActivity{
             broadcastManager.registerReceiver(receiver, filter);
         }
 
-        if(settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
+        if(settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
             Log.d(TAG,"new timer");
             deleteTimerz(true);
             this.downloadTimer = new Timer();
@@ -220,11 +208,12 @@ public class MainActivity extends ActionBarActivity{
             deleteTimerz(true);
         }
 
-        if("-1".equals(mPrefs.getString(this.getString(R.string.sett_key_srcpath_sd), "-1"))
-            &&
-            settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)){
+        if ("".equals(settingsObj.getSourcePath())
+                && AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
             showExamplePictures = true;
-            if(!showTutorial) Toast.makeText(this,R.string.main_toast_noFolderPathSet, Toast.LENGTH_SHORT).show();
+            if(!settingsObj.getTutorial()) {
+                Toast.makeText(this,R.string.main_toast_noFolderPathSet, Toast.LENGTH_SHORT).show();
+            }
         }
 
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
@@ -248,7 +237,7 @@ public class MainActivity extends ActionBarActivity{
         if (menu == null || !menu.hasVisibleItems())
             return super.onPrepareOptionsMenu(menu);
 
-        if (settingsObj.getSrcType() == AppData.sourceTypes.OwnCloud) {
+        if (settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
             menu.findItem(R.id.action_download).setVisible(true);
         } else {
             menu.findItem(R.id.action_download).setVisible(false);
@@ -288,9 +277,6 @@ public class MainActivity extends ActionBarActivity{
 
     protected void onPause() {
         super.onPause();
-        if (mBackgroundTask != null && mBackgroundTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mBackgroundTask.cancel(true);
-        }
         deleteTimerz();
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
@@ -302,22 +288,14 @@ public class MainActivity extends ActionBarActivity{
 
         currentPageSaved = pager.getCurrentItem();
         showExamplePictures = false;
-        mPrefs.edit().putBoolean("tutorial", showTutorial).commit();
     }
 
     public void onBackPressed() {
         if (mDoubleBackToExitPressedOnce) {
-            if (mBackgroundTask != null && mBackgroundTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mBackgroundTask.cancel(true);
-            }
             super.onBackPressed();
         } else {
             this.mDoubleBackToExitPressedOnce = true;
-            if (mBackgroundTask != null && mBackgroundTask.getStatus() == AsyncTask.Status.RUNNING) {
-                Toast.makeText(this, R.string.main_toast_download_interrupted, Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, R.string.main_toast_exitmsg, Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(this, R.string.main_toast_exitmsg, Toast.LENGTH_SHORT).show();
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -325,11 +303,6 @@ public class MainActivity extends ActionBarActivity{
                 }
             }, 2000);
         }
-    }
-
-    private void loadSettings() {
-        settingsObj = AppData.getINSTANCE();
-        settingsObj.loadConfig(getApplicationContext(), mPrefs);
     }
 
     public void showActionBar() {
@@ -461,7 +434,6 @@ public class MainActivity extends ActionBarActivity{
                 imgDisplay.setImageResource(currentImageID);
             }
             imgDisplay.setOnTouchListener(new Gestures(getApplicationContext()) {
-                AlertDialog click_on_settings_dialog;
                 @Override
                 public void onSwipeBottom() {
                     showActionBar();
@@ -580,28 +552,28 @@ public class MainActivity extends ActionBarActivity{
     }
 
     private boolean checkForProblemsAndShowToasts() {
-        // OwnCloud or Samba selected
-        if (!settingsObj.getSrcType().equals(AppData.sourceTypes.ExternalSD)) {
+        // OwnCloud or Dropbox selected
+        if (!AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
             // if no write rights, we don't need to download
             if (!GlobalPhoneFuncs.isExternalStorageWritable()) {
                 Toast.makeText(this, R.string.main_toast_noSDWriteRights, Toast.LENGTH_SHORT).show();
             } else {
                 // If no Username set although source is not SD Card
-                if (settingsObj.getUserName().equals("") || settingsObj.getUserPassword().equals("")) {
+                if ("".equals(settingsObj.getUserName()) || "".equals(settingsObj.getUserPassword())) {
                     Toast.makeText(this, R.string.main_toast_noUsernameSet, Toast.LENGTH_SHORT).show();
                 } else {
                     if (DEBUG) Log.i(TAG, "username and pw set");
                     // Try to connect & login to selected source server
-                    if (settingsObj.getSrcType().equals(AppData.sourceTypes.OwnCloud)) {
+                    if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
                         if (DEBUG) Log.i(TAG, "trying OC check");
                         //startConnectionCheck();
                         Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
                         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
                         startService(startDownloadIntent);
                         return true;
-                    }// else if (settingsObj.getSrcType().equals(AppData.sourceTypes.Samba))
+                    }// else if (settingsObj.getSourceType().equals(AppData.sourceTypes.Dropbox))
                     {
-                        // TODO: Samba checks go here
+                        // TODO: Dropbox checks go here
                     }
                 }
             }
@@ -622,10 +594,10 @@ public class MainActivity extends ActionBarActivity{
     }
 
     public void selectTransformer(){
-        if(settingsObj.getSlideshow() && settingsObj.getTransitionType() == 11){
+        if(settingsObj.getSlideshow() && settingsObj.getTransitionStyle() == 11){
             pager.setPageTransformer(true,transformers.get(random()));
         } else if(settingsObj.getSlideshow()){
-            pager.setPageTransformer(true,transformers.get(settingsObj.getTransitionType()));
+            pager.setPageTransformer(true,transformers.get(settingsObj.getTransitionStyle()));
         } else {
             pager.setPageTransformer(true,new ZoomOutPageTransformer());
         }
@@ -663,21 +635,26 @@ public class MainActivity extends ActionBarActivity{
     }
 
     private void tutorial (){
+        if (!settingsObj.getTutorial()) {
+            return;
+        }
         AlertDialog.Builder click_on_settings_dialog_builder = new AlertDialog.Builder(MainActivity.this);
         click_on_settings_dialog_builder
             .setMessage(R.string.main_dialog_tutorial_text)
-            .setPositiveButton(R.string.main_dialog_tutorial_okButton, new DialogInterface.OnClickListener() {
+            .setPositiveButton(R.string.main_dialog_tutorial_okButton,
+                    new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) { }
+            })
+            .setNeutralButton(R.string.main_dialog_tutorial_dontShowAgainButton,
+                    new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
+                    settingsObj.setTutorial(false);
                 }
             })
-            .setNeutralButton(R.string.main_dialog_tutorial_dontShowAgainButton, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    showTutorial = false;
-                }
-            })
-            .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton, new DialogInterface.OnClickListener() {
+            .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
+                    new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     startActivity(getSettingsActivityIntent());
@@ -686,10 +663,8 @@ public class MainActivity extends ActionBarActivity{
         AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();
         click_on_settings_dialog.getWindow().setGravity(Gravity.TOP | Gravity.START);
 
-        if(showTutorial){
-            click_on_settings_dialog.show();
-            showActionBar();
-        }
+        click_on_settings_dialog.show();
+        showActionBar();
     }
 
 

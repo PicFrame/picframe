@@ -1,8 +1,10 @@
 package picframe.at.picframe;
 
 import android.app.Application;
-import org.acra.*;
-import org.acra.annotation.*;
+
+import org.acra.ACRA;
+import org.acra.ReportField;
+import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender;
 
 /**
@@ -25,10 +27,18 @@ import org.acra.sender.HttpSender;
         reportType= HttpSender.Type.JSON
 )
 public class MainApp extends Application {
+    private static MainApp INSTANCE = null;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        if (INSTANCE == null) {
+            INSTANCE = this;
+        }
         ACRA.init(this);
+    }
+
+    public static MainApp getINSTANCE() {
+        return INSTANCE;
     }
 }

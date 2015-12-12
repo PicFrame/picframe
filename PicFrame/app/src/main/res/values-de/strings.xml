@@ -6,8 +6,8 @@
     <string name="main_toast_noSDWriteRights">Auf externe SD-Karte konnte nicht geschrieben werden.</string>
     <string name="main_toast_noFileFound">Keine Bilder im angegebenen Ordner gefunden.</string>
     <string name="main_toast_noNewFiles">Keine neuen Dateien am Server gefunden.</string>
-    <string name="main_toast_noWifiConnection">Konnte sich nicht mit WIFI verbinden.\nBilder werden nicht heruntergeladen.</string>
-    <string name="main_toast_notEnoughStorage">Es steht nicht genug Speicher auf der SD Karte zu Verfügung.</string>
+    <string name="service_notif_failureNoWifi">Nicht mit WLAN verbunden. Bilder werden nicht heruntergeladen.</string>
+    <string name="service_notif_failureNotEnoughStorage">Es steht nicht genug Speicher auf der SD Karte zu Verfügung.</string>
     <string name="main_toast_loginFailedSMB">Verbindung/Anmeldung zu Samba nicht möglich.\nBitte überprüfen sie ihre Einstellungen.</string>
     <string name="main_toast_download_interrupted">Zum Verlassen und beenden des Downloads erneut \'zurück\' drücken.</string>
     <string name="main_toast_exitmsg">Zum Verlassen erneut \'zurück\' drücken.</string>
@@ -72,12 +72,28 @@
     <string name="title_activity_about">Über uns</string>
     <string name="about_license_button">Lizenzen</string>
     <!-- ABOUT STRINGS END -->
-    <string name="main_toast_folderInitFailure">Konnte download Ordner nicht erstellen.</string>
+    <string name="service_notif_failureFolderInitFailure">Konnte download Ordner nicht erstellen.</string>
     <string name="main_toast_noFolderPathSet">Sie haben noch keinen Ordner Bilder-Ornder ausgewählt! </string>
-    <string name="main_dialog_tutorial_text">Bitte nach unter swipen und die Einstellungen Icon antippen, oder den Menu-Button drücken, um die Einstellungen zu öffnen</string>
+    <string name="main_dialog_tutorial_text">Um die Einstellungen zu öffnen, drücken Sie bitte den Menu-Button oder swipen Sie nach unten und tippen das Einstellungen Icon an.</string>
     <string name="main_dialog_tutorial_okButton">OK</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Diese Nachricht nicht mehr anzeigen</string>
     <string name="main_dialog_tutorial_openSettingsNowButton">Einstellungen jetzt öffnen</string>
     <string name="about_developedBy">Entwickelt von:</string>
     <string name="about_photosBy">Fotos von:</string>
+    <string name="service_notif_startDownloadTicker">download gestartet</string>
+    <string name="service_notif_startDownloadText">Suche nach neuen Dateien zum Herunterladen.</string>
+    <string name="service_notif_actionStop">Download abbrechen</string>
+    <string name="service_notif_progressText">Download Status:</string>
+    <string name="service_notif_failureTicker">download fehlgeschlagen</string>
+    <string name="service_notif_interruptTicker">download abgebrochen</string>
+    <string name="service_notif_interruptText">Download wurde abgebrochen.</string>
+    <string name="service_notif_stoppedSubText">Tippen um PicFrame zu öffnen.</string>
+    <string name="service_notif_finishedTicker">download abgeschlossen</string>
+    <string name="service_notif_finishedText">Download fertig:</string>
+    <string name="service_notif_stoppedTicker">download gestoppt</string>
+    <string name="service_notif_stoppedText">Download gestoppt.</string>
+    <string name="service_notif_finishedNoNewFiles">Keine neuen Dateien gefunden.</string>
+    <string name="service_notif_finishedTextFiles">Dateien heruntergeladen.</string>
+    <string name="service_notif_failureLogin">Verbindung/Anmeldung fehlgeschlagen, bitte überprüfen Sie ihre Einstellungen.</string>
+    <string name="service_notif_failureText">Download fehlgeschlagen.</string>
 </resources>

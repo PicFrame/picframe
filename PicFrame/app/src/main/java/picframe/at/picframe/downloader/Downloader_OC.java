@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.viewpager.EXIF_helper;
-import picframe.at.picframe.service_broadcast.Keys;
+import picframe.at.picframe.Keys;
 import picframe.at.picframe.service_broadcast.ServiceCallbacks;
 
 
@@ -58,6 +58,7 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
     public LinkedBlockingQueue<String> mDownloadedFiles;        // files downloaded successfully - empty after processed all files
     private AtomicInteger mDownloadedFilesCount;                // total count of sucessfully downloaded files
     private AtomicInteger mThreadCounter;                       // Count active threads so task only finishes once all threads are done
+    private boolean loginFailed = false;
 
 
     public Downloader_OC(HashMap<String, Object> args) {
@@ -103,10 +104,16 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
                 interruptDownload();
                 return;
             }
+            if (loginFailed) {
+                return;
+            }
         }
 
         // check which files aren't in the picture folder yet
         compareLocalAndRemoteFolder();
+        if (mRemoteFilesToDownloadList.size() == 0) {
+            return;
+        }
 
         boolean processed, deleted;
         int fileIndex = 0;
@@ -195,6 +202,11 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
 
     @Override
     public void onRemoteOperationFinish(RemoteOperation operation, RemoteOperationResult result) {
+        if (!result.isSuccess()) {
+            if (DEBUG)  Log.d(TAG, "operation unsuccessful, login/connection failed");
+            this.loginFailed();
+            return;
+        }
         if (operation instanceof ReadRemoteFolderOperation) {
             if (result.isSuccess()) {
                 ArrayList files = (ArrayList)result.getData();
@@ -393,6 +405,15 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
             serviceCallbacks.interruptedDownload();
         } else {
             if (DEBUG)  Log.d(TAG, "couldn't 'interrupt' download, event obj.is null");
+        }
+    }
+
+    private void loginFailed() {
+        loginFailed = true;
+        if (serviceCallbacks != null) {
+            serviceCallbacks.loginFailed();
+        } else {
+            if (DEBUG)  Log.d(TAG, "couldn't fire 'loginFailed' , event obj.is null");
         }
     }
 }

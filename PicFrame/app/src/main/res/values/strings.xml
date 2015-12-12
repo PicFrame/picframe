@@ -1,21 +1,39 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- SERVICE/NOTIFICATION STRINGS -->
+    <string name="service_notif_startDownloadTicker">download started.</string>
+    <string name="service_notif_startDownloadText">Checking for new files to download.</string>
+    <string name="service_notif_actionStop">Stop download</string>
+    <string name="service_notif_progressText">Download Status:</string>
+    <string name="service_notif_failureTicker">download failed</string>
+    <string name="service_notif_failureText">Download failed.</string>
+    <string name="service_notif_failureLogin">Connection/Login failed, please check your Settings.</string>
+    <string name="service_notif_failureNotEnoughStorage">Not enough storage available on external SD card.</string>
+    <string name="service_notif_failureNoWifi">Can\'t connect to WIFI. No files will be downloaded.</string>
+    <string name="service_notif_failureFolderInitFailure">Couldn\'t create download folder.</string>
+    <string name="service_notif_finishedTicker">download finished</string>
+    <string name="service_notif_finishedText">Download finished:</string>
+    <string name="service_notif_finishedTextFiles">files downloaded.</string>
+    <string name="service_notif_finishedNoNewFiles">No new files found.</string>
+    <string name="service_notif_interruptTicker">download interrupted</string>
+    <string name="service_notif_interruptText">Download got interrupted.</string>
+    <string name="service_notif_stoppedTicker">download stopped</string>
+    <string name="service_notif_stoppedText">Download stopped.</string>
+    <string name="service_notif_stoppedSubText">Tap to open PicFrame.</string>
+    <!-- SERVICE/NOTIFICATION STRINGS END -->
+
     <!-- MAIN STRINGS -->
     <string name="app_name" translatable="false">PicFrame</string>
     <string name="app_version" translatable="false">1.2</string>
-    <string name="app_key_firstRun" translatable="false">FirstStart</string>
     <string name="action_downloadNow">Download now</string>
     <string name="main_toast_noUsernameSet">No Username or Password set for network resource.</string>
     <string name="main_toast_noSDReadRights">Can\'t read from external SD card.</string>
     <string name="main_toast_noSDWriteRights">Can\'t write to external SD card.</string>
     <string name="main_toast_noFileFound">No image files were found in given directory.</string>
     <string name="main_toast_noNewFiles">No new files found on server.</string>
-    <string name="main_toast_noWifiConnection">Can\'t connect to WIFI.\nNo files will be downloaded.</string>
     <string name="main_toast_loginFailedSMB">Couldn\'t connect/login to samba server.\nPlease check your samba settings again.</string>
     <string name="main_toast_download_interrupted">Press back again to stop the download and leave.</string>
     <string name="main_toast_exitmsg">Press back again to leave.</string>
-    <string name="main_toast_notEnoughStorage">Not enough storage available on external SD card.</string>
-    <string name="main_toast_folderInitFailure">Couldn\'t create download folder.</string>
     <string name="main_toast_noFolderPathSet">You have not set a picture source folder yet!</string>
     <string name="main_dialog_tutorial_text">To access the settings, please swipe down and click on the settings icon, or press the menu button.</string>
     <string name="main_dialog_tutorial_openSettingsNowButton">Open settings now</string>
@@ -90,11 +108,13 @@
     <string name="sett_key_srctype" translatable="false">SrcType</string>
     <string name="sett_key_srcpath_sd" translatable="false">SrcPath_sd</string>
     <string name="sett_key_srcpath_owncloud" translatable="false">SrcPath_owncloud</string>
-    <string name="sett_key_srcpath_samba" translatable="false">SrcPath_samba</string>
+    <string name="sett_key_srcpath_dropbox" translatable="false">SrcPath_dropbox</string>
     <string name="sett_key_recursiveSearch" translatable="false">RecursiveSearch</string>
     <string name="sett_key_deleteData" translatable="false">DeleteData</string>
     <string name="sett_key_transition" translatable="false">Transition</string>
     <string name="sett_key_updateInterval" translatable="false">UpdateInterval</string>
+    <string name="sett_key_firstStart" translatable="false">FirstStart</string>
+    <string name="sett_key_tutorial" translatable="false">Tutorial</string>
     <!-- SETTINGS STRINGS END -->
 
     <!-- ABOUT STRINGS -->
@@ -802,6 +822,5 @@
         Apache JackRabbit depends on Commons HTTPClient version 3.1 and SLF4j version 1.7.5.\n
         Copyright © 2004-2010 The Apache Software Foundation. Licensed under Apache License,
         Version 2.0."</string>
-
     <!-- ABOUT STRINGS END -->
 </resources>

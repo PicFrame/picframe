@@ -25,16 +25,22 @@ import android.os.Environment;
 
 import java.io.File;
 
+import picframe.at.picframe.MainApp;
 import picframe.at.picframe.R;
 
 /**
  * Stores App Settings, to get and load easily
+ * Stores App Settings, to get and load easily
  * Created by ClemensH on 04.04.2015.
  */
 public class AppData {
+    private static AppData INSTANCE;
+    private SharedPreferences mPrefs;
+    public static final String mySettingsFilename = "PicFrameSettings";
 
+    // enums for available source types (like images from SD-Card, OwnCloud or Dropbox)
     public enum sourceTypes {
-        ExternalSD, OwnCloud, Samba ;
+        ExternalSD, OwnCloud, Dropbox;
         private static sourceTypes[] allValues = values();
         public static sourceTypes getSourceTypesForInt(int num){
             try{
@@ -44,25 +50,10 @@ public class AppData {
             }
         }
     }
-    private int transitionType;
-    private sourceTypes srcType;
-    private String srcPath;
-    private int displayTime;
-    private boolean slideshow;
-    private String userName;
-    private String userPassword;
-    private boolean scaling;
-    private boolean randomize;
-    private boolean recursiveSearch;
-    private String imagePath;
-    private int updateInterval;
-    private boolean tutorial;
 
     private String extFolderAppRoot;        // sc-card-dir/Pictures/picframe
     private String extFolderDisplayPath;    // sc-card-dir/Pictures/picframe/pictures
     private String extFolderCachePath;      // sc-card-dir/Pictures/picframe/cache
-
-    private static AppData INSTANCE;
 
     public static AppData getINSTANCE() {
         if (INSTANCE == null) {
@@ -71,20 +62,8 @@ public class AppData {
         return INSTANCE;
     }
 
-    private AppData () {
-        this.srcType = sourceTypes.ExternalSD;
-        this.srcPath = "./";
-        this.displayTime = 2;
-        this.slideshow = true;
-        this.userName = "";
-        this.userPassword = "";
-        this.scaling = false;
-        this.randomize = false;
-        this.recursiveSearch = false;
-        this.imagePath = srcPath;
-        this.transitionType = 2;
-        this.updateInterval = 12;
-        this.tutorial = true;
+    private AppData() {
+        mPrefs = MainApp.getINSTANCE().getSharedPreferences(mySettingsFilename, Context.MODE_PRIVATE);
 
         extFolderAppRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
                 File.separator + "picframe";
@@ -92,80 +71,116 @@ public class AppData {
         extFolderCachePath = extFolderAppRoot + File.separator + "cache";
     }
 
-    public void loadConfig(Context ctx, SharedPreferences prefs) {
-        // set AppData to Shared Pref Data
-        this.userName = prefs.getString(ctx.getString(R.string.sett_key_username), "");
-        this.userPassword = prefs.getString(ctx.getString(R.string.sett_key_password), "");
-        this.slideshow = prefs.getBoolean(ctx.getString(R.string.sett_key_slideshow), true);
-        this.displayTime = Integer.parseInt(prefs.getString(ctx.getString(R.string.sett_key_displaytime), "2"));
-        this.srcType = sourceTypes.getSourceTypesForInt(Integer.parseInt(prefs.getString("SrcType", "0")));
-        if (srcType == sourceTypes.ExternalSD) {
-            this.srcPath = prefs.getString(ctx.getString(R.string.sett_key_srcpath_sd), "");
-            this.imagePath = this.srcPath;
-        } else if (srcType == sourceTypes.OwnCloud) {
-            this.srcPath = prefs.getString((ctx.getString(R.string.sett_key_srcpath_owncloud)), "");
-            this.imagePath = extFolderDisplayPath;
-        } else if (srcType == sourceTypes.Samba) {
-            this.srcPath = prefs.getString((ctx.getString(R.string.sett_key_srcpath_samba)), "");
-            this.imagePath = extFolderDisplayPath;
-        }
-        this.scaling = prefs.getBoolean((ctx.getString(R.string.sett_key_scaling)), false);
-        this.randomize = prefs.getBoolean((ctx.getString(R.string.sett_key_randomize)), false);
-        this.recursiveSearch = prefs.getBoolean((ctx.getString(R.string.sett_key_recursiveSearch)), false);
-        this.tutorial = prefs.getBoolean("tutorial", false);
-        this.transitionType = Integer.parseInt(prefs.getString(ctx.getString(R.string.sett_key_transition), "0"));
-        this.updateInterval = Integer.parseInt(prefs.getString(ctx.getString(R.string.sett_key_updateInterval), "12"));
-    }
-
-    @Override
-    public String toString() {
-        return(
-            "┌----AppData----*\n" +
-            " | Username: " + this.userName + "\n" +
-            " | Password: " + this.userPassword + "\n" +
-            " | Slideshow: " + this.slideshow + "\n" +
-            " | Scaling: " + this.scaling + "\n" +
-            " | Randomize: " + this.randomize + "\n" +
-            " | Displaytime: " + this.displayTime + "\n" +
-            " | SrcType: " + this.srcType + "\n" +
-            " | SrcPath: " + this.srcPath + "\n" +
-            " | Recursive: " + this.recursiveSearch + "\n" +
-            "└---------------*");
-    }
-
-    public int getDisplayTime() {
-        return displayTime;
-    }
-    public int getSrcTypeInt() {
-        return srcType.ordinal();
-    }
-    public sourceTypes getSrcType () {
-        return srcType;
-    }
-    // Returns selected SD-Card directory, or URL to owncloud or samba server
-    public String getSrcPath() {
-        return srcPath;
-    }
-    // Always returns the path to the img folder of current src type
-    public String getImagePath() { return imagePath; }
-    public String getUserName() {
-        return userName;
-    }
-    public String getUserPassword() {
-        return userPassword;
-    }
+// ONLY TO BE MODIFIED BY SETTINGS ACTIVITY
+    // flag whether slideshow is selected(on=true) or not(off=false)
     public boolean getSlideshow() {
-        return slideshow;
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_slideshow), true);
     }
+
+    // holds the time to display each picture in seconds
+    public int getDisplayTime() {
+        return Integer.parseInt(mPrefs.getString(getAppContext().getString(R.string.sett_key_displaytime), "2"));
+    }
+
+    // holds the int of the transitionStyle - @res.values.arrays.transitionTypeValues
+    public int getTransitionStyle(){
+        return Integer.parseInt(
+                mPrefs.getString(getAppContext().getString(R.string.sett_key_transition), "0"));
+    }
+
+    // flag whether to randomize the order of the displayed images (on=true)
     public boolean getRandomize() {
-        return randomize;
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_randomize), false);
     }
+
+    // flag whether to scale the displayed image (on=true)
     public boolean getScaling() {
-        return scaling;
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_scaling), false);
     }
+
+    // holds the type of the selected source as int
+    public int getSrcTypeInt() {
+        return Integer.parseInt(
+                mPrefs.getString(getAppContext().getString(R.string.sett_key_srctype), "0"));
+    }
+    // holds the type of the selected source
+    public sourceTypes getSourceType() {
+        return sourceTypes.getSourceTypesForInt(Integer.parseInt(
+                mPrefs.getString(getAppContext().getString(R.string.sett_key_srctype), "0")));
+    }
+
+    // holds the username to log into the owncloud account
+    public String getUserName() {
+        return mPrefs.getString(getAppContext().getString(R.string.sett_key_username), "");
+    }
+
+    // holds the password to log into the owncloud account
+    public String getUserPassword() {
+        return mPrefs.getString(getAppContext().getString(R.string.sett_key_password), "");
+    }
+
+    // Returns selected SD-Card directory, or URL to owncloud or samba server
+    // holds the path to the image source (from where to (down)-load them
+    public String getSourcePath() {
+        sourceTypes tmpType = getSourceType();
+        if (sourceTypes.ExternalSD.equals(tmpType)) {
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd), "");
+        } else if (sourceTypes.OwnCloud.equals(tmpType)) {
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_owncloud), "");
+        } else if (sourceTypes.Dropbox.equals(tmpType)) {
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_dropbox), "");
+        } else {
+            return null;
+        }
+    }
+
+    // holds the time-interval to initiate the next download of images in hours
+    public int getUpdateIntervalInHours() {
+        return Integer.parseInt(mPrefs.getString(getAppContext().getString(R.string.sett_key_updateInterval), "12"));
+    }
+
+    // flag whether to include images in subfolders (on=true)
     public boolean getRecursiveSearch() {
-        return recursiveSearch;
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_recursiveSearch), false);
     }
+
+    // Always returns the path to the img folder of current src type
+    // holds the root-path to the displayed images
+    public String getImagePath() {
+        sourceTypes tmpType = getSourceType();
+        if (sourceTypes.ExternalSD.equals(tmpType)) {
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd), "");
+        } else {
+            return extFolderDisplayPath;
+        }
+    }
+
+// CAN ALWAYS BE MODIFIED
+    // flag whether this is the first app start
+    public boolean getFirstAppStart() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_firstStart), true);
+    }
+    public void setFirstAppStart(boolean firstAppStart) {
+        mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_firstStart), firstAppStart).commit();
+    }
+
+    // flag whether to display the tutorial-dialog (on=true)
+    public boolean getTutorial() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_tutorial), true);
+    }
+    public void setTutorial(boolean showTutorial) {
+        mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_tutorial), showTutorial).commit();
+    }
+/* TODO
+    // holds the remaining time to display the current image
+    public int getRemainingDisplayTime() {
+        return mPrefs.getInt(getAppContext().getString(R.string.sett_key_), 0);
+    }
+    public void setRemainingDisplayTime(int remainingDisplayTime) {
+        mPrefs.edit().putInt(getAppContext().getString(R.string.sett_key_), remainingDisplayTime).commit();
+    }
+*/
+// CAN NEVER BE MODIFIED!   (holds local paths, desc at vars)
     public String getExtFolderAppRoot() {
         return extFolderAppRoot;
     }
@@ -175,10 +190,24 @@ public class AppData {
     public String getExtFolderDisplayPath() {
         return extFolderDisplayPath;
     }
-    public int getTransitionType(){
-        return this.transitionType;
+
+    private Context getAppContext() {
+        return MainApp.getINSTANCE().getApplicationContext();
     }
-    public int getUpdateIntervalInHours() {
-        return this.updateInterval;
+
+    @Override
+    public String toString() {
+        return(
+                "┌----AppData----*\n" +
+                " | Username: " +   this.getUserName() + "\n" +
+                " | Password: " +   this.getUserPassword() + "\n" +
+                " | Slideshow: " +  this.getSlideshow() + "\n" +
+                " | Scaling: " +    this.getScaling() + "\n" +
+                " | Randomize: " +  this.getRandomize() + "\n" +
+                " | Displaytime: "+ this.getDisplayTime() + "\n" +
+                " | SrcType: " +    this.getSourceType() + "\n" +
+                " | SrcPath: " +    this.getSourcePath() + "\n" +
+                " | Recursive: " +  this.getRecursiveSearch() + "\n" +
+                "└---------------*");
     }
 }
