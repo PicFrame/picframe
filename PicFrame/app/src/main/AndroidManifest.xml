@@ -53,7 +53,12 @@
         </activity>
 
         <!-- Register the Alarm Receiver -->
-        <receiver android:name=".downloader.AlarmReceiver"/>
+        <receiver android:name=".downloader.AlarmReceiver">
+            <intent-filter>
+                <action android:name="ACTION_UPDATE_ALARM">
+                </action>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

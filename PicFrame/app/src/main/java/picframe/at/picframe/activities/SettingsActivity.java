@@ -19,8 +19,11 @@
 
 package picframe.at.picframe.activities;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Environment;
@@ -34,6 +37,7 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
 import android.preference.TwoStatePreference;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
@@ -48,9 +52,11 @@ import android.widget.Toast;
 import java.io.File;
 
 import picframe.at.picframe.R;
+import picframe.at.picframe.downloader.AlarmReceiver;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.settings.SimpleFileDialog;
 import picframe.at.picframe.helper.settings.MySwitchPref;
+import picframe.at.picframe.service_broadcast.Keys;
 
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity {
@@ -255,9 +261,18 @@ public class SettingsActivity extends PreferenceActivity {
                 return;
             }
         }
+        // Needed so we can interate through the other keys
         if(key.equals("currentpage")){
             return;
         }
+        if(key.equals("alarmtime")){
+            return;
+        }
+        if(key.equals("toogledirection")){
+            return;
+        }
+
+
         // UNTIL HERE ARE CHECKS FOR SWITCH-PREFERENCES, APP WOULD CRASH OTHERWISE
 
         boolean loadAll = false;
@@ -420,9 +435,33 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ("-1".equals(String.valueOf(newValue))) {
-                    // clicked "never" .. remove alarm here TODO
+                    System.out.println(" DELETE ALARMS ");
+                    // clicked "never"
+                    AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+
+                    Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+                    PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+                    am.cancel(p);
+                    p.cancel();
+
                     return true;
                 } else {
+                    System.out.println(" UPDATE SETTINGS ACTIVITY ");
+                    int tmp = Integer.parseInt(String.valueOf(newValue));
+
+                    AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+
+                    Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+                    PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+                    am.cancel(p);
+                    p.cancel();
+
+                   //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
+                    Intent intent = new Intent();
+                    intent.setAction("ACTION_UPDATE_ALARM");
+                    sendBroadcast(intent);
+
+
                     return true;
                 }
             }

@@ -115,6 +115,9 @@ public class MainActivity extends ActionBarActivity{
     private static boolean toggleDirection;
     private Handler actionbarHideHandler;
 
+    //alarmtime
+    private Long time;
+
     //public static boolean mConnCheckOC, mConnCheckSMB; //TODO still needed?
     public boolean mDoubleBackToExitPressedOnce;
 
@@ -155,8 +158,11 @@ public class MainActivity extends ActionBarActivity{
         mOldRecursive = settingsObj.getRecursiveSearch();
 
         pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            public void onPageScrollStateChanged(int state) {}
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+            public void onPageScrollStateChanged(int state) {
+            }
+
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
 
             public void onPageSelected(int position) {
                 selectTransformer();
@@ -169,7 +175,20 @@ public class MainActivity extends ActionBarActivity{
             page = 1;
         }
 
-        scheduleAlarm();
+        System.out.println("STARTING PAGE  " + page);
+
+        toggleDirection = mPrefs.getBoolean("toogledirection", true);
+
+
+        time = mPrefs.getLong("alarmtime", -1);
+
+        System.out.println(" TIME SAVED " + time);
+
+        if(time == -1)
+            scheduleAlarm(-1);
+
+        //testing
+        //scheduleAlarm(-1);
     }
 
     // TODO: make download task a service (+react to wifi-connection broadcast)     !! C
@@ -211,7 +230,7 @@ public class MainActivity extends ActionBarActivity{
             deleteTimerz(true);
             this.downloadTimer = new Timer();
             int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
-            this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
+//            this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
         } else {
             System.out.println("no new timer");
             deleteTimerz(true);
@@ -387,19 +406,35 @@ public class MainActivity extends ActionBarActivity{
         }
     }
 
-    public void scheduleAlarm()
+    public void scheduleAlarm(long remainingTime)
     {
         System.out.println("Starting Alarm to go off " + settingsObj.getUpdateIntervalInHours());
         // The time at which the alarm will be scheduled. Here the alarm is scheduled for 1 day from the current time.
         // We fetch the current time in milliseconds and add 1 day's time
         // i.e. 24*60*60*1000 = 86,400,000 milliseconds in a day.
         //  Long time = new GregorianCalendar().getTimeInMillis()+24*60*60*1000;
-
+        Long calendar =  new GregorianCalendar().getTimeInMillis();
 
        // Long time = new GregorianCalendar().getTimeInMillis()+settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
 
-        Long time = new GregorianCalendar().getTimeInMillis()+ 2 * 60 * 1000;
+        if(remainingTime > 0){
+            if(remainingTime + settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000 < calendar){
+                // Time is small or negativ download after 1 minute
+                time = calendar + 1 * 60 * 1000;
+            }else{
+                time = time + settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
+            }
+        }else{
+            time = calendar + 2 * 60 * 1000;
+        }
 
+
+        // Save starttime of the alarm so we can compare after the app shutsdown if the interval gets switched
+        Long startTime = calendar;
+
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putLong("alarmtime", startTime);
+        editor.commit();
 
 
         // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
@@ -410,15 +445,19 @@ public class MainActivity extends ActionBarActivity{
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         // Set the alarm for a particular time.
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, time, time * 100, PendingIntent.getBroadcast(this, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
+        alarmManager.set(AlarmManager.RTC_WAKEUP, time, PendingIntent.getBroadcast(this, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
 
         //Testing purpose
         Date date = new Date(time);
         DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
         String dateFormatted = formatter.format(date);
-        System.out.println("Start time: " + formatter.format(new GregorianCalendar().getTimeInMillis()) + " " + (new GregorianCalendar().getTimeInMillis()));
+        System.out.println("Start time: " + formatter.format(calendar) + " " + (calendar));
         System.out.println("Go OFF time: " + formatter.format(time) + " " + time);
         Toast.makeText(this, "Alarm Scheduled for " + dateFormatted, Toast.LENGTH_LONG).show();
+    }
+
+    public static Context getContext() {
+        return mContext;
     }
 
     @Override
@@ -428,6 +467,12 @@ public class MainActivity extends ActionBarActivity{
         // maybe not right here will test
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putInt("currentpage", page);
+        editor.commit();
+
+        System.out.println("SAVING PAGE  " + page);
+
+        // Save the direction of the pageviewer
+        editor.putBoolean("toogledirection", toggleDirection);
         editor.commit();
 
     }
