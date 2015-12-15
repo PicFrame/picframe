@@ -1,20 +1,22 @@
 # PicFrame #
-[![alt text][playstorelink]][playstoreimage]
+[![alt text][playstoreimage]][playstorelink]
 [playstorelink]: https://play.google.com/store/apps/details?id=picframe.at.picframe
 [playstoreimage]: https://developer.android.com/images/brand/en_app_rgb_wo_60.png (PicFrame on Google Play)
 
 ### Pre-requisites
-*Android SDK v21
-*Android build tools v21.1.2
+	Android SDK v21
+	Android build tools v21.1.2
 
 ### Getting started
-*Want to develop? - “Import Project” into Android Studio and you should be good to go.
-*Want to build a signed apk without developing? - Use the “build-picframe.bat” script in the folder where it’s located.
+* Want to develop? - “Import Project” into Android Studio and you should be good to go.
+* Want to build a signed apk without developing? - Use the “build-picframe.bat” script in the folder where it’s located.
 
 ### Branching strategy
 This repository holds two branches with an infinite lifetime:
-*__master__
-*__develop__
+
+* master
+
+* develop
 
 Branch **origin/master** is considered the main branch where the source code of HEAD always reflects the version of the released app on google play.
 Branch **origin/develop** is considered the main branch where the source code of HEAD always reflects a state with the latest delivered development changes for the next release.
@@ -22,13 +24,18 @@ Branch **origin/develop** is considered the main branch where the source code of
 When the source code in the develop branch reaches a stable point and is released as a new version on google play, all changes should be merged back into master somehow and then tagged with a release number (if possible, you should also use the version number as the commit message).
 
 Other branches are used to:
-*aid parallel development between team members
-*ease tracking of features
-*prepare for production releases
-*assist in quickly fixing live production problems
+
+* aid parallel development between team members
+
+* ease tracking of features
+
+* prepare for production releases
+
+* assist in quickly fixing live production problems
 Unlike the main branches, these branches always have a limited lifetime, since they will be removed eventually.
 The type of other branches used:
-*Branch __perNewFeature__
+
+* Branch __perNewFeature__
 It branches off from develop and must merge back into develop branch. Once it is merged, the US branch may be deleted.
 
 __Source:__ http://nvie.com/posts/a-successful-git-branching-model
