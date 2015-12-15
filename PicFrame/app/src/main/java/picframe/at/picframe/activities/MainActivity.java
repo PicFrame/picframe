@@ -200,7 +200,9 @@ public class MainActivity extends ActionBarActivity {
             deleteTimerz(true);
             this.downloadTimer = new Timer();
             int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
-            this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
+            if (downloadInterval > 0) {
+                this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
+            }
         } else {
             System.out.println("no new timer");
             deleteTimerz(true);
@@ -512,7 +514,9 @@ public class MainActivity extends ActionBarActivity {
         } else {
             mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
             showExamplePictures = mFilePaths.isEmpty() || mFilePaths.size() <= 0;
-            Toast.makeText(mContext,R.string.main_toast_noFileFound, Toast.LENGTH_SHORT).show();
+            if (showExamplePictures) {
+                Toast.makeText(mContext,R.string.main_toast_noFileFound, Toast.LENGTH_SHORT).show();
+            }
         }
         setSize(); // size is count of images in folder, or constant if example pictures are used
         setUp.notifyDataSetChanged();
