@@ -1,24 +1,42 @@
 # PicFrame #
+[![alt text][playstorelink]][playstoreimage]
+[playstorelink]: https://play.google.com/store/apps/details?id=picframe.at.picframe
+[playstoreimage]: https://developer.android.com/images/brand/en_app_rgb_wo_60.png (PicFrame on Google Play)
 
-https://play.google.com/store/apps/details?id=picframe.at.picframe
+### Pre-requisites
+*Android SDK v21
+*Android build tools v21.1.2
 
-### PicFrame
-PicFrame App source code.
+### Getting started
+*Want to develop? - “Import Project” into Android Studio and you should be good to go.
+*Want to build a signed apk without developing? - Use the “build-picframe.bat” script in the folder where it’s located.
 
+### Branching strategy
+This repository holds two branches with an infinite lifetime:
+*__master__
+*__develop__
 
-### Setup
+Branch **origin/master** is considered the main branch where the source code of HEAD always reflects the version of the released app on google play.
+Branch **origin/develop** is considered the main branch where the source code of HEAD always reflects a state with the latest delivered development changes for the next release.
 
-Clone this repository (https://github.com/PicFrame/picframe).
+When the source code in the develop branch reaches a stable point and is released as a new version on google play, all changes should be merged back into master somehow and then tagged with a release number (if possible, you should also use the version number as the commit message).
 
-Clone the edited android-library, as found here: https://github.com/PicFrame/android-library.
+Other branches are used to:
+*aid parallel development between team members
+*ease tracking of features
+*prepare for production releases
+*assist in quickly fixing live production problems
+Unlike the main branches, these branches always have a limited lifetime, since they will be removed eventually.
+The type of other branches used:
+*Branch __perNewFeature__
+It branches off from develop and must merge back into develop branch. Once it is merged, the US branch may be deleted.
 
-Copy the contents of the edited android-library into the following folder within picframe:
-PicFrame/owncloud-library
+__Source:__ http://nvie.com/posts/a-successful-git-branching-model
 
 
 ### License
 
-Copyright (C) 2015 Clemens Hlawacek, Myra Fuchs, Linda Spindler, Ebenezer Bonney Ussher
+Copyright (C) 2015 Martin Bayerl, Myra Fuchs, Clemens Hlawacek, Christoph Krasa, Linda Spindler, Ebenezer Bonney Ussher.
 
 PicFrame is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,5 +53,4 @@ along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Third party libraries
 PicFrame uses ownCloud Android Library (https://github.com/owncloud/android-library).
-For PicFrame, ownCloud Android Library source code was altered in two places, documented here:
-https://github.com/owncloud/android-library/issues/69
+For PicFrame, ownCloud Android Library source code was altered in two places, as seen in this commit https://github.com/PicFrame/android-library/commit/3d57985c2f041b07ae59d46146de9b2e567de951
