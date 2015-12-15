@@ -47,7 +47,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -167,7 +166,7 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
-        //startActivity(new Intent(this, SettingsActivity.class));
+        startActivity(new Intent(this, SettingsActivity.class));
         return super.onMenuOpened(featureId, menu);
     }
 
