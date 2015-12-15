@@ -201,8 +201,7 @@ public class MainActivity extends ActionBarActivity {
             deleteTimerz(true);
             this.downloadTimer = new Timer();
             int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
-            // TODO * 60 add back in!!
-            this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60, downloadInterval * 1000 * 60); // delay in hours
+            this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
         } else {
             System.out.println("no new timer");
             deleteTimerz(true);
