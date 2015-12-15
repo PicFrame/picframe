@@ -29,19 +29,19 @@
             android:entries="@array/transitionTypeEntries"
             android:entryValues="@array/transitionTypeValues" />
         <picframe.at.picframe.helper.settings.MySwitchPref
-            android:title="@string/sett_randomize"
-            android:summary="@string/sett_randomizeSumm"
-            android:summaryOff="@string/sett_randomizeSummOff"
-            android:summaryOn="@string/sett_randomizeSummOn"
-            android:key="@string/sett_key_randomize"
-            android:defaultValue="false" />
-        <picframe.at.picframe.helper.settings.MySwitchPref
             android:title="@string/sett_scaling"
             android:summary="@string/sett_scalingSumm"
             android:summaryOff="@string/sett_scalingSummOff"
             android:summaryOn="@string/sett_scalingSummOn"
             android:defaultValue="false"
             android:key="@string/sett_key_scaling" />
+        <picframe.at.picframe.helper.settings.MySwitchPref
+            android:title="@string/sett_randomize"
+            android:summary="@string/sett_randomizeSumm"
+            android:summaryOff="@string/sett_randomizeSummOff"
+            android:summaryOn="@string/sett_randomizeSummOn"
+            android:key="@string/sett_key_randomize"
+            android:defaultValue="false" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -54,7 +54,11 @@
             android:defaultValue="0"
             android:entries="@array/srcTypeEntries"
             android:entryValues="@array/srcTypeValues" />
-        <EditTextPreference
+        <PreferenceScreen
+            android:title="Details"
+            android:summary="set DetailStuff">
+
+            <EditTextPreference
             android:title="@string/sett_username"
             android:summary="@string/sett_usernameSumm"
             android:shouldDisableView="true"
@@ -70,6 +74,9 @@
             android:inputType="textNoSuggestions|textPassword|"
             android:imeOptions="flagNoExtractUi"
             android:key="@string/sett_key_password" />
+        </PreferenceScreen>
+
+
     </PreferenceCategory>
 
 </PreferenceScreen>
