@@ -180,7 +180,7 @@ public class SettingsActivity extends PreferenceActivity {
             mySrcPathPref = new EditTextPreference(this);
            // mySrcPathPref.setTitle(mPrefs.getString("SrcType", "-1") + " URL");
             mySrcPathPref.setSummary(R.string.sett_srcPath_OwnCloudSumm);
-            mySrcPathPref.setDefaultValue("www.owncloud.org");
+            mySrcPathPref.setDefaultValue(getString(R.string.sett_example_owncloud_path));
             // android:imeOptions="flagNoExtractUi"
             mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_owncloud));
             mySrcPathPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {

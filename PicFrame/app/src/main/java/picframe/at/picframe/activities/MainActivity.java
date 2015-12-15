@@ -97,7 +97,9 @@ public class MainActivity extends ActionBarActivity {
     private static final int nbOfExamplePictures = 6;
     private static boolean showExamplePictures = false;
 
+    @SuppressWarnings("unused")
     public static ProgressBar mProgressBar;                             //TODO still needed?
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static Animation mFadeInAnim, mFadeOutAnim;                 //TODO still needed?
 
     private ArrayList<PageTransformer> transformers;
@@ -159,11 +161,8 @@ public class MainActivity extends ActionBarActivity {
         });
     }
 
-    // TODO: make download task a service (+react to wifi-connection broadcast)     !! C
-    // TODO: Make download timer to alarm                                           !! L
-    // TODO: Use info of "include sub dirs" for file download                       -> later update
-    // TODO: folderpicker for owncloud server folder                                ! M
-        // TODO: Read operation for getting folder structure                        ! C
+    // TODO: Make download timer to alarm                                           !! M
+    // TODO: folderpicker for owncloud server folder                                ! L
 
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
@@ -177,7 +176,6 @@ public class MainActivity extends ActionBarActivity {
         if (settingsObj.getFirstAppStart()) {
             settingsObj.setFirstAppStart(false);
             settingsObj.setTutorial(true);
-            showExamplePictures = true;
         }
 
         tutorial();
@@ -198,22 +196,15 @@ public class MainActivity extends ActionBarActivity {
         }
 
         if(settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
-            Log.d(TAG,"new timer");
+            Log.d(TAG, "new timer");
             deleteTimerz(true);
             this.downloadTimer = new Timer();
             int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
-            this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
+            // TODO * 60 add back in!!
+            this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60, downloadInterval * 1000 * 60); // delay in hours
         } else {
             System.out.println("no new timer");
             deleteTimerz(true);
-        }
-
-        if ("".equals(settingsObj.getSourcePath())
-                && AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
-            showExamplePictures = true;
-            if(!settingsObj.getTutorial()) {
-                Toast.makeText(this,R.string.main_toast_noFolderPathSet, Toast.LENGTH_SHORT).show();
-            }
         }
 
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
@@ -287,7 +278,6 @@ public class MainActivity extends ActionBarActivity {
         receiver = null;
 
         currentPageSaved = pager.getCurrentItem();
-        showExamplePictures = false;
     }
 
     public void onBackPressed() {
@@ -381,7 +371,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onDestroy() {
         super.onDestroy();
         deleteTimerz();
-        showExamplePictures = false;
     }
 
     private class DisplayImages extends PagerAdapter {
@@ -428,6 +417,7 @@ public class MainActivity extends ActionBarActivity {
             if(!showExamplePictures){
                 imgDisplay.setImageBitmap(EXIF_helper.decodeFile(mFilePaths.get(this.localpage), mContext));
             } else {
+                Log.d(TAG, "localpage: "+this.localpage);
                 String currentImage = "ex" + this.localpage;
                 int currentImageID = mContext.getResources().getIdentifier(currentImage, "drawable", mContext.getPackageName());
                 Log.d(TAG, "currentImage: " + currentImage);
@@ -516,7 +506,12 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void updateFileList() {
-        mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
+        if(settingsObj.getImagePath().equals("")) {
+            showExamplePictures = true;
+        } else {
+            mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
+            showExamplePictures = mFilePaths.isEmpty() || mFilePaths.size() <= 0;
+        }
         setSize(); // size is count of images in folder, or constant if example pictures are used
         setUp.notifyDataSetChanged();
     }
@@ -612,7 +607,7 @@ public class MainActivity extends ActionBarActivity {
         if(!showExamplePictures)
             size = mFilePaths.size();
         else
-            size = nbOfExamplePictures; // TODO: don't hardcode this!
+            size = nbOfExamplePictures;
     }
 
     private Intent getSettingsActivityIntent(){
@@ -657,6 +652,7 @@ public class MainActivity extends ActionBarActivity {
                     new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
                     startActivity(getSettingsActivityIntent());
                 }
             });
@@ -682,10 +678,11 @@ public class MainActivity extends ActionBarActivity {
             if (intent != null) {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
-                    if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
+                    if (DEBUG) Log.d(TAG, "received 'download_finished' action via broadcast");
                     updateFileList();
                 }
             }
         }
     }
+
 }

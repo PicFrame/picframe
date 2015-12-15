@@ -73,6 +73,7 @@
     <string name="sett_srcPath_externalSD">Directory</string>
     <string name="sett_srcPath_externalSDSumm">Browse path to pictures</string>
     <string name="sett_srcPath_OwnCloudSumm">Set the URL for your OwnCloud Directory</string>
+    <string name="sett_example_owncloud_path" translatable="false">https://</string>
     <string name="sett_recursiveSearch">Include sub-directories</string>
     <string name="sett_recursiveSearchSumm">Whether pictures from sub-directories should be included</string>
     <string name="sett_recursiveSearchSummOff">Pictures from sub-directories will not be included</string>
