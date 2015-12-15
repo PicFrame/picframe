@@ -1,5 +1,6 @@
  /*
-    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher
+    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher,
+    Martin Bayerl, Christoph Krasa
 
     This file is part of PicFrame.
 
@@ -442,13 +443,14 @@ public class MainActivity extends ActionBarActivity {
 
                         if (paused) {
                             mPause.setVisibility(View.VISIBLE);
-                            remainingDisplayTime = 4; // TODO: actual remaining time instead of hardcoded value
-                            if(settingsObj.getDisplayTime() >= 60){
-                                String remainingTimeString = String.valueOf(remainingDisplayTime);
-                                TextView textView = (TextView) findViewById(R.id.remaining_time_value);
-                                textView.setText(remainingTimeString);
-                                mRemainingTimeLayout.setVisibility(View.VISIBLE);
-                            }
+                            //
+//                            remainingDisplayTime = 4; // TODO: comment in once we show remaing time
+//                            if(settingsObj.getDisplayTime() >= 60){
+//                                String remainingTimeString = String.valueOf(remainingDisplayTime);
+//                                TextView textView = (TextView) findViewById(R.id.remaining_time_value);
+//                                textView.setText(remainingTimeString);
+//                                mRemainingTimeLayout.setVisibility(View.VISIBLE);
+//                            }
                             showActionBar();
                         }
                         else {
@@ -508,9 +510,11 @@ public class MainActivity extends ActionBarActivity {
     public void updateFileList() {
         if(settingsObj.getImagePath().equals("")) {
             showExamplePictures = true;
+            Toast.makeText(mContext,R.string.main_toast_noFolderPathSet, Toast.LENGTH_SHORT).show();
         } else {
             mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
             showExamplePictures = mFilePaths.isEmpty() || mFilePaths.size() <= 0;
+            Toast.makeText(mContext,R.string.main_toast_noFileFound, Toast.LENGTH_SHORT).show();
         }
         setSize(); // size is count of images in folder, or constant if example pictures are used
         setUp.notifyDataSetChanged();

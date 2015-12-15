@@ -154,8 +154,7 @@ public class SettingsActivity extends PreferenceActivity {
             mySrcPathPref = new Preference(this);
             //mySrcPathPref.setTitle(R.string.sett_srcPath_externalSD);
             mySrcPathPref.setSummary(R.string.sett_srcPath_externalSDSumm);
-            mySrcPathPref.setDefaultValue(Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()  + File.separator + "Camera");
+            mySrcPathPref.setDefaultValue("");
 
             mySrcPathPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 String _chosenDir;
