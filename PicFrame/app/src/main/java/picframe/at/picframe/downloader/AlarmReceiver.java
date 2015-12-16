@@ -27,10 +27,10 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         System.out.println(" ALARMRECEIVER ");
 
-        if(intent.getAction().equals("ACTION_UPDATE_ALARM")){
+/*        if(intent.getAction().equals("ACTION_UPDATE_ALARM")){
             System.out.println(" UPDATE RECEIVED ");
         }
-
+*/
         Intent startDownloadIntent = new Intent(context, DownloadService.class);
         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
         context.startService(startDownloadIntent);
@@ -47,7 +47,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             // Time is small or negativ download after 1 minute
             time = calendar + 1 * 60 * 1000;
         } else {
-            time = time + settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
+            time = time + settingsObj.getUpdateIntervalInHours() * 60 * 60* 1000;
         }
 
         //testing
@@ -64,9 +64,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
         // specified AlarmReceiver in the Intent. The onReceive() method of this class will execute when the broadcast from your alarm is received.
         Intent intentAlarm = new Intent(context, AlarmReceiver.class);
-
-        // TODO: Remove (only for testing purposes)
-        time = time / 60;
 
         // Get the Alarm Service.
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

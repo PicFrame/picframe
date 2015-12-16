@@ -406,7 +406,7 @@ public class MainActivity extends ActionBarActivity {
        // Long time = new GregorianCalendar().getTimeInMillis()+settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
 
         if(remainingTime > 0){
-            if(remainingTime + settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000 < calendar){
+            if(remainingTime + settingsObj.getUpdateIntervalInHours() * 60 * 60* 1000 < calendar){
                 // Time is small or negativ download after 1 minute
                 time = calendar + 1 * 60 * 1000;
             }else{
