@@ -54,29 +54,7 @@
             android:defaultValue="0"
             android:entries="@array/srcTypeEntries"
             android:entryValues="@array/srcTypeValues" />
-        <PreferenceScreen
-            android:title="Details"
-            android:summary="set DetailStuff">
-
-            <EditTextPreference
-            android:title="@string/sett_username"
-            android:summary="@string/sett_usernameSumm"
-            android:shouldDisableView="true"
-            android:defaultValue=""
-            android:inputType="textNoSuggestions|textPersonName"
-            android:imeOptions="flagNoExtractUi"
-            android:key="@string/sett_key_username" />
-        <EditTextPreference
-            android:title="@string/sett_password"
-            android:summary="@string/sett_passwordSumm"
-            android:shouldDisableView="true"
-            android:defaultValue=""
-            android:inputType="textNoSuggestions|textPassword|"
-            android:imeOptions="flagNoExtractUi"
-            android:key="@string/sett_key_password" />
-        </PreferenceScreen>
-
-
+        <!-- remaining Preferences will be set programmatically in SettingsActivity -->
     </PreferenceCategory>
 
 </PreferenceScreen>

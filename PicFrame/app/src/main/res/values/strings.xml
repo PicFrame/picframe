@@ -98,6 +98,7 @@
         <!-- KEYS -->
     <string name="sett_key_cat1" translatable="false">sett_cat1</string>
     <string name="sett_key_cat2" translatable="false">sett_cat2</string>
+    <string name="sett_key_prefScreenDetails" translatable="false">sett_prefScreenDetails</string>
             <!-- SAVE KEYS -->
     <string name="sett_key_username" translatable="false">Username</string>
     <string name="sett_key_password" translatable="false">Password</string>
@@ -115,6 +116,7 @@
     <string name="sett_key_updateInterval" translatable="false">UpdateInterval</string>
     <string name="sett_key_firstStart" translatable="false">FirstStart</string>
     <string name="sett_key_tutorial" translatable="false">Tutorial</string>
+    <string name="sett_key_restoreDefaults" translatable="false">restoreDefaults</string>
     <!-- SETTINGS STRINGS END -->
 
     <!-- ABOUT STRINGS -->

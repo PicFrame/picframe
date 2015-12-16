@@ -19,12 +19,20 @@
 
 package picframe.at.picframe.activities;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
@@ -33,20 +41,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.helper.settings.MySwitchPref;
 
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
+    private PreferenceCategory myCat2;
+    private AppData settingsObj = AppData.getINSTANCE();
     @SuppressWarnings("FieldCanBeLocal")
     private SharedPreferences mPrefs;
     private ArrayList<String> editableTitleFields = new ArrayList<>();
+    private ArrayList<String> fieldsToRemove = new ArrayList<>();
     /*
             {
             getString(R.string.sett_key_displaytime),
@@ -66,8 +80,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         if (DEBUG)  printAllPreferences();
         addPreferencesFromResource(R.xml.settings);
+        myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
 
         populateEditableFieldsList();
+        populateFieldsToRemove();
         updateAllFieldTitles();
 
         // set all missing fields
@@ -124,9 +140,15 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         editableTitleFields.add(getString(R.string.sett_key_transition));
         editableTitleFields.add(getString(R.string.sett_key_srctype));
     }
+
+    private void populateFieldsToRemove() {
+        fieldsToRemove.add(getString(R.string.sett_key_recursiveSearch));
+        fieldsToRemove.add(getString(R.string.sett_key_deleteData));
+        fieldsToRemove.add(getString(R.string.sett_key_restoreDefaults));
+    }
 /*
     private void setCorrectSrcPathField() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
+        PreferenceCategory myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
         Preference mySrcPathPref = null;
         String[] SrcPaths = { getString(R.string.sett_key_srcpath_sd),
                 getString(R.string.sett_key_srcpath_owncloud),
@@ -137,7 +159,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         for (String path : SrcPaths) {
             mySrcPathPref = findPreference(path);
             if (mySrcPathPref != null) {
-                myCategory.removePreference(mySrcPathPref);
+                myCat2.removePreference(mySrcPathPref);
             }
         }
         // could also be an intent
@@ -215,16 +237,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             mySrcPathPref.setDefaultValue("MySambaShare");
             mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_dropbox));
         }
-        if (mySrcPathPref != null && myCategory != null) {
+        if (mySrcPathPref != null && myCat2 != null) {
 //            mySrcPathPref.setKey("SrcPath");
             if (mySrcPathPref instanceof EditTextPreference) {
                 EditTextPreference myEdTePref = (EditTextPreference) mySrcPathPref;
                 myEdTePref.getEditText().setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-                myCategory.addPreference(myEdTePref);
+                myCat2.addPreference(myEdTePref);
             } else {
-                myCategory.addPreference(mySrcPathPref);
+                myCat2.addPreference(mySrcPathPref);
             }
-            setRecursiveCheckbox();
+            setIncludeSubdirsSwitchPref();
             setUpdateDialogWithButton();
             setDeleteDataButton();
         }
@@ -336,7 +358,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             for (String path : SrcPaths) {
                 mySrcPathPref = findPreference(path);
                 if (mySrcPathPref != null) {
-                    //myCategory.removePreference(mySrcPathPref);
+                    //myCat2.removePreference(mySrcPathPref);
                     updateTitlePrefsWithValues(sharedPreferences, path);
                 }
             }
@@ -368,35 +390,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
     }
 
-    private void setRecursiveCheckbox() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            CheckBoxPreference myRecCheckbox = new CheckBoxPreference(this);
-            myRecCheckbox.setSummaryOff(R.string.sett_recursiveSearchSummOff);
-            myRecCheckbox.setSummaryOn(R.string.sett_recursiveSearchSummOn);
-            myRecCheckbox.setTitle(R.string.sett_recursiveSearch);
-            myRecCheckbox.setSummary(R.string.sett_recursiveSearchSumm);
-            myRecCheckbox.setDefaultValue(true);
-            myRecCheckbox.setKey(getString(R.string.sett_key_recursiveSearch));
-            if (myCategory != null) {
-                myCategory.addPreference(myRecCheckbox);
-            }
-        } else {
-            MySwitchPref myRecCheckbox = new MySwitchPref(this);
-            myRecCheckbox.setSummaryOff(R.string.sett_recursiveSearchSummOff);
-            myRecCheckbox.setSummaryOn(R.string.sett_recursiveSearchSummOn);
-            myRecCheckbox.setTitle(R.string.sett_recursiveSearch);
-            myRecCheckbox.setSummary(R.string.sett_recursiveSearchSumm);
-            myRecCheckbox.setDefaultValue(true);
-            myRecCheckbox.setKey(getString(R.string.sett_key_recursiveSearch));
-            if (myCategory != null) {
-                myCategory.addPreference(myRecCheckbox);
-            }
-        }
-    }
+
 
     private void setUpdateDialogWithButton() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
+        PreferenceCategory myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
         ListPreference myUpdatePref = new ListPreference(this);
         myUpdatePref.setTitle(R.string.sett_updateInterval);
         myUpdatePref.setSummary(R.string.sett_updateIntervalSumm);
@@ -416,13 +413,13 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 }
             }
         });
-        if (myCategory != null) {
-            myCategory.addPreference(myUpdatePref);
+        if (myCat2 != null) {
+            myCat2.addPreference(myUpdatePref);
         }
     }
 
     private void setDeleteDataButton() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
+        PreferenceCategory myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
         Preference myDelDataButton = new Preference(this);
         myDelDataButton.setTitle(R.string.sett_deleteData);
         myDelDataButton.setSummary(R.string.sett_deleteDataSumm);
@@ -451,29 +448,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 return true;
             }
         });
-        if (myCategory != null) {
-            myCategory.addPreference(myDelDataButton);
+        if (myCat2 != null) {
+            myCat2.addPreference(myDelDataButton);
         }
     }
 
-    public boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                    }
-                }
-            }
-        }
-        if (delRoot) {
-            return dir.delete();
-        }
-        // Comment to remove warning xD
-        return false;
-    }*/
+   */
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -484,17 +464,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             //update display/transition title
             updateListFieldTitle(key);
             if (getString(R.string.sett_key_srctype).equals(key)) {
-                // set correct Details field
-                // setCorrectSrcPathField();
+                createCat2Fields(key);
             }
         }
     }
-
-    public void createCat2Fields(String key) {
-        // add PreferenceScreens depending on which sourceType
-        // set remaining Fields like incl sub dirs
-    }
-
 
     public void updateAllFieldTitles() {
         for (String prefKey : editableTitleFields) {
@@ -520,6 +493,211 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             }
             mPref.setTitle(mPrefTitle + ": " + mPrefValue);
         }
+    }
+
+    public void createCat2Fields(String key) {
+        removeCat2Fields();
+        // add PreferenceScreens depending on which sourceType
+        setDetailsPrefScreen(key);
+        setIncludeSubdirsSwitchPref();
+        setDeleteDataButton();
+        setResetToDefaultButton();
+    }
+
+    private void removeCat2Fields() {
+        // remove the preference screen, before adding it again
+        PreferenceScreen removeScreen = (PreferenceScreen) findPreference(getString(R.string.sett_key_prefScreenDetails));
+        if (removeScreen != null) {
+            myCat2.removePreference(removeScreen);
+            debug("removed old Pref screen");
+        }
+        // remove the fields, before adding them again
+        Preference removePref;
+        for (String path : fieldsToRemove) {
+            removePref = findPreference(path);
+            if (removePref != null) {
+                myCat2.removePreference(removePref);
+                debug("removed:" + removePref.getTitle().toString());
+            }
+        }
+    }
+
+    public void setDetailsPrefScreen(String key) {
+        PreferenceScreen newDetailsScreen = getPreferenceManager().createPreferenceScreen(this);
+        newDetailsScreen.setKey(getString(R.string.sett_key_prefScreenDetails));
+        newDetailsScreen.setTitle(settingsObj.getSourceType().toString() + " Details"); //not the way it should be TODO
+        newDetailsScreen.setSummary("set detail-stuff");
+        Preference bla = new Preference(this);
+        bla.setTitle("bla test");
+        bla.setSummary("smth");
+        newDetailsScreen.addPreference(bla);
+        newDetailsScreen.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Toast.makeText(SettingsActivity.this, "Clicked the details-button!", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+        if (myCat2 != null) {
+            myCat2.addPreference(newDetailsScreen);
+        }
+        // TODO
+    }
+
+    private void setIncludeSubdirsSwitchPref() {
+        Preference myRecCheckbox;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            myRecCheckbox = new CheckBoxPreference(this);
+            ((CheckBoxPreference)myRecCheckbox).setSummaryOff(R.string.sett_recursiveSearchSummOff);
+            ((CheckBoxPreference)myRecCheckbox).setSummaryOn(R.string.sett_recursiveSearchSummOn);
+        } else {
+            myRecCheckbox = new MySwitchPref(this);
+            ((MySwitchPref)myRecCheckbox).setSummaryOff(R.string.sett_recursiveSearchSummOff);
+            ((MySwitchPref)myRecCheckbox).setSummaryOn(R.string.sett_recursiveSearchSummOn);
+        }
+        myRecCheckbox.setTitle(R.string.sett_recursiveSearch);
+        myRecCheckbox.setSummary(R.string.sett_recursiveSearchSumm);
+        myRecCheckbox.setDefaultValue(true);
+        myRecCheckbox.setKey(getString(R.string.sett_key_recursiveSearch));
+        if (myCat2 != null) {
+            myCat2.addPreference(myRecCheckbox);
+        }
+    }
+
+    private void setDeleteDataButton() {
+        Preference myDelDataButton = new Preference(this);
+        myDelDataButton.setTitle(R.string.sett_deleteData);
+        myDelDataButton.setSummary(R.string.sett_deleteDataSumm);
+        myDelDataButton.setKey(getString(R.string.sett_key_deleteData));
+        myDelDataButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                AlertDialog.Builder ensureDialogB = new AlertDialog.Builder(SettingsActivity.this);
+                ensureDialogB
+                        .setCancelable(false)
+                        .setMessage(R.string.sett_deleteDataDialog_msg)
+                        .setNegativeButton(R.string.sett_deleteDataDialog_negBtn, null)
+                        .setPositiveButton(R.string.sett_deleteDataDialog_posBtn, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Toast.makeText(SettingsActivity.this, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT).show();
+                                new Handler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        recursiveDelete(new File(settingsObj.getExtFolderAppRoot()), false);
+                                    }
+                                });
+                            }
+                        });
+                ensureDialogB.show();
+                return true;
+            }
+        });
+        if (myCat2 != null) {
+            myCat2.addPreference(myDelDataButton);
+        }
+    }
+
+    public boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
+        if (dir.exists()) {
+            for (File file : dir.listFiles()) {
+                if (file.isDirectory()) {
+                    recursiveDelete(new File(file.getAbsolutePath()), true);
+                } else {
+                    if (!file.delete()) {
+                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
+                    }
+                }
+            }
+        }
+        if (delRoot) {
+            return dir.delete();
+        }
+        // Comment to remove warning xD
+        return false;
+    }
+
+    public void setResetToDefaultButton() {
+        Preference myResetButton = new Preference(this);
+        myResetButton.setTitle("Restore default settings");
+        myResetButton.setSummary("Reset settings to default");
+        myResetButton.setKey(getString(R.string.sett_key_restoreDefaults));
+        myResetButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                AlertDialog.Builder ensureDialogB = new AlertDialog.Builder(SettingsActivity.this);
+                ensureDialogB
+                        .setCancelable(false)
+                        .setMessage("Do you really want to delete your settings information and reset everything to default?")
+                        .setNegativeButton("No", null)
+                        .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                resetSettingsToDefault();
+                                Toast.makeText(SettingsActivity.this, "Reset settings!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                ensureDialogB.show();
+                return true;
+            }
+        });
+        if (myCat2 != null) {
+            myCat2.addPreference(myResetButton);
+        }
+
+    }
+
+    public void resetSettingsToDefault() {
+        // TODO
+    }
+
+    @Override
+    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+        super.onPreferenceTreeClick(preferenceScreen, preference);
+        // If the user has clicked on a preference screen, set up the screen
+        if (preference instanceof PreferenceScreen) {
+            setUpNestedScreen((PreferenceScreen) preference);
+        }
+        return false;
+    }
+
+    /************************************************************************************
+    *   needed because else the nested preference screen don't have a actionbat/toolbar *
+    *   see the fix and the given problem here: http://stackoverflow.com/a/27455363     *
+    ************************************************************************************/
+    public void setUpNestedScreen(PreferenceScreen preferenceScreen) {
+        final Dialog dialog = preferenceScreen.getDialog();
+        Toolbar bar;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            LinearLayout root = (LinearLayout) dialog.findViewById(android.R.id.list).getParent();
+            bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
+            root.addView(bar, 0); // insert at top
+        } else {
+            ViewGroup root = (ViewGroup) dialog.findViewById(android.R.id.content);
+            ListView content = (ListView) root.getChildAt(0);
+            root.removeAllViews();
+            bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
+
+            int height;
+            TypedValue tv = new TypedValue();
+            if (getTheme().resolveAttribute(R.attr.actionBarSize, tv, true)) {
+                height = TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
+            }else{
+                height = bar.getHeight();
+            }
+
+            content.setPadding(0, height, 0, 0);
+
+            root.addView(content);
+            root.addView(bar);
+        }
+        bar.setTitle(preferenceScreen.getTitle());
+        bar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
     }
 
     private void debug(String msg) { if (DEBUG) { Log.d(TAG, msg); } }

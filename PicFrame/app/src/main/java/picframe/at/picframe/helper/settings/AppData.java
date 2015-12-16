@@ -171,6 +171,7 @@ public class AppData {
     public void setTutorial(boolean showTutorial) {
         mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_tutorial), showTutorial).commit();
     }
+
 /* TODO
     // holds the remaining time to display the current image
     public int getRemainingDisplayTime() {
