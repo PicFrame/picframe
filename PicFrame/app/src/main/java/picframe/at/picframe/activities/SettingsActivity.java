@@ -45,10 +45,13 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.helper.settings.DetailsPreferenceScreen;
 import picframe.at.picframe.helper.settings.MySwitchPref;
 
 @SuppressWarnings("deprecation")
@@ -84,6 +87,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         populateEditableFieldsList();
         populateFieldsToRemove();
+        createCat2Fields();
         updateAllFieldTitles();
 
         // set all missing fields
@@ -147,111 +151,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         fieldsToRemove.add(getString(R.string.sett_key_restoreDefaults));
     }
 /*
-    private void setCorrectSrcPathField() {
-        PreferenceCategory myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
-        Preference mySrcPathPref = null;
-        String[] SrcPaths = { getString(R.string.sett_key_srcpath_sd),
-                getString(R.string.sett_key_srcpath_owncloud),
-                getString(R.string.sett_key_srcpath_dropbox),
-                getString(R.string.sett_key_recursiveSearch),
-                getString(R.string.sett_key_updateInterval),
-                getString(R.string.sett_key_deleteData)};
-        for (String path : SrcPaths) {
-            mySrcPathPref = findPreference(path);
-            if (mySrcPathPref != null) {
-                myCat2.removePreference(mySrcPathPref);
-            }
-        }
-        // could also be an intent
-        int srcType = settingsObj.getSrcTypeInt();
-        if (srcType == AppData.sourceTypes.ExternalSD.ordinal()) {
-            mySrcPathPref = new Preference(this);
-            //mySrcPathPref.setTitle(R.string.sett_srcPath_externalSD);
-            mySrcPathPref.setSummary(R.string.sett_srcPath_externalSDSumm);
-            mySrcPathPref.setDefaultValue(Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()  + File.separator + "Camera");
-
-            mySrcPathPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                String _chosenDir;
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    SimpleFileDialog FolderChooseDialog =
-                            new SimpleFileDialog(SettingsActivity.this, new SimpleFileDialog.SimpleFileDialogListener() {
-                                @Override
-                                public void onChosenDir(String chosenDir) {   // The code in this function will be executed when the dialog OK button is pushed
-                                    _chosenDir = chosenDir;
-                                    SharedPreferences.Editor mPrefsE = mPrefs.edit();
-                                    mPrefsE.putString(getString(R.string.sett_key_srcpath_sd),_chosenDir);
-                                    mPrefsE.commit();
-                                }
-                            });
-                    FolderChooseDialog.chooseFile_or_Dir();
-                    return false;
-                }
-            });
-            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_sd));
-        } else if (srcType == AppData.sourceTypes.OwnCloud.ordinal()) {
-            mySrcPathPref = new EditTextPreference(this);
-           // mySrcPathPref.setTitle(mPrefs.getString("SrcType", "-1") + " URL");
-            mySrcPathPref.setSummary(R.string.sett_srcPath_OwnCloudSumm);
-            mySrcPathPref.setDefaultValue("www.owncloud.org");
-            // android:imeOptions="flagNoExtractUi"
-            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_owncloud));
-            mySrcPathPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    if (newValue.toString().endsWith(File.separator)) {
-                        Toast
-                            .makeText(SettingsActivity.this,
-                                    "forbidden character at end of url: \"" + File.separator + "\"",
-                                    Toast.LENGTH_SHORT)
-                            .show();
-                        return false;
-                        //newValue = newValue.toString().substring(0,newValue.toString().lastIndexOf(File.separator)-1); // not working
-                    }
-                    AlertDialog.Builder myDialQBuilder = new AlertDialog.Builder(SettingsActivity.this);
-                    myDialQBuilder.setMessage(R.string.sett_dialog_changedURL_message) //
-                            .setNegativeButton(R.string.sett_deleteDataDialog_negBtn, null)
-                            .setPositiveButton(R.string.sett_deleteDataDialog_posBtn,
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            Toast.makeText(SettingsActivity.this, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT).show();
-                                            new Handler().post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    recursiveDelete(new File(settingsObj.getExtFolderAppRoot()), false);
-                                                }
-                                            });
-                                        }
-                                    });
-                    myDialQBuilder.show();
-                    //AlertDialog myDialQuestion = myDialQBuilder.show();
-                    return true;
-                }
-            });
-        } else if (srcType == AppData.sourceTypes.Dropbox.ordinal()) {
-            mySrcPathPref = new Preference(this);
-            mySrcPathPref.setTitle("Placeholder for Dropbox Dir Field");
-            mySrcPathPref.setSummary("According summary text");
-            mySrcPathPref.setDefaultValue("MySambaShare");
-            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_dropbox));
-        }
-        if (mySrcPathPref != null && myCat2 != null) {
-//            mySrcPathPref.setKey("SrcPath");
-            if (mySrcPathPref instanceof EditTextPreference) {
-                EditTextPreference myEdTePref = (EditTextPreference) mySrcPathPref;
-                myEdTePref.getEditText().setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-                myCat2.addPreference(myEdTePref);
-            } else {
-                myCat2.addPreference(mySrcPathPref);
-            }
-            setIncludeSubdirsSwitchPref();
-            setUpdateDialogWithButton();
-            setDeleteDataButton();
-        }
-    }
-
     private void updateTitlePrefsWithValues(SharedPreferences sharedPreferences, String key) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             if (findPreference(key) instanceof CheckBoxPreference) return;
@@ -365,94 +264,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
     }
 
-    private void toggleUnusedFields(String key, String keyValue) {
-        switch (key) {
-            case "SrcType":
-                //System.err.println("trying to toggle fields");
-                EditTextPreference username = (EditTextPreference) findPreference("Username");
-                EditTextPreference password = (EditTextPreference) findPreference("Password");
-                ListPreference updateInterval = (ListPreference) findPreference(getString(R.string.sett_key_updateInterval));
-                if (username == null || password == null) return;
-                //if (keyValue.equals(String.valueOf(AppData.sourceTypes.ExternalSD.ordinal())))
-                if (keyValue.contains(AppData.sourceTypes.ExternalSD.toString()))
-                {
-                    username.setEnabled(false);
-                    password.setEnabled(false);
-                    updateInterval.setEnabled(false);
-                }
-                else {
-                    username.setEnabled(true);
-                    password.setEnabled(true);
-                    updateInterval.setEnabled(true);
-                }
-                break;
-            default:
-        }
-    }
-
-
-
-    private void setUpdateDialogWithButton() {
-        PreferenceCategory myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
-        ListPreference myUpdatePref = new ListPreference(this);
-        myUpdatePref.setTitle(R.string.sett_updateInterval);
-        myUpdatePref.setSummary(R.string.sett_updateIntervalSumm);
-        myUpdatePref.setKey(getString(R.string.sett_key_updateInterval));
-        myUpdatePref.setEntries(R.array.updateIntervalEntries);
-        myUpdatePref.setEntryValues(R.array.updateIntervalValues);
-        myUpdatePref.setShouldDisableView(true);
-        myUpdatePref.setDefaultValue("12");
-        myUpdatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                if ("-1".equals(String.valueOf(newValue))) {
-                    // clicked "never" .. remove alarm here TODO
-                    return true;
-                } else {
-                    return true;
-                }
-            }
-        });
-        if (myCat2 != null) {
-            myCat2.addPreference(myUpdatePref);
-        }
-    }
-
-    private void setDeleteDataButton() {
-        PreferenceCategory myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
-        Preference myDelDataButton = new Preference(this);
-        myDelDataButton.setTitle(R.string.sett_deleteData);
-        myDelDataButton.setSummary(R.string.sett_deleteDataSumm);
-        myDelDataButton.setKey(getString(R.string.sett_key_deleteData));
-        myDelDataButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                AlertDialog.Builder ensureDialogB = new AlertDialog.Builder(SettingsActivity.this);
-                ensureDialogB
-                        .setCancelable(false)
-                        .setMessage(R.string.sett_deleteDataDialog_msg)
-                        .setNegativeButton(R.string.sett_deleteDataDialog_negBtn, null)
-                        .setPositiveButton(R.string.sett_deleteDataDialog_posBtn, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Toast.makeText(SettingsActivity.this, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT).show();
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        recursiveDelete(new File(settingsObj.getExtFolderAppRoot()), false);
-                                    }
-                                });
-                            }
-                        });
-                ensureDialogB.show();
-                return true;
-            }
-        });
-        if (myCat2 != null) {
-            myCat2.addPreference(myDelDataButton);
-        }
-    }
-
    */
 
     @Override
@@ -464,7 +275,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             //update display/transition title
             updateListFieldTitle(key);
             if (getString(R.string.sett_key_srctype).equals(key)) {
-                createCat2Fields(key);
+                createCat2Fields();
             }
         }
     }
@@ -495,10 +306,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
     }
 
-    public void createCat2Fields(String key) {
+    public void createCat2Fields() {
         removeCat2Fields();
         // add PreferenceScreens depending on which sourceType
-        setDetailsPrefScreen(key);
+        setDetailsPrefScreen();
         setIncludeSubdirsSwitchPref();
         setDeleteDataButton();
         setResetToDefaultButton();
@@ -522,24 +333,15 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
     }
 
-    public void setDetailsPrefScreen(String key) {
-        PreferenceScreen newDetailsScreen = getPreferenceManager().createPreferenceScreen(this);
-        newDetailsScreen.setKey(getString(R.string.sett_key_prefScreenDetails));
-        newDetailsScreen.setTitle(settingsObj.getSourceType().toString() + " Details"); //not the way it should be TODO
-        newDetailsScreen.setSummary("set detail-stuff");
-        Preference bla = new Preference(this);
-        bla.setTitle("bla test");
-        bla.setSummary("smth");
-        newDetailsScreen.addPreference(bla);
-        newDetailsScreen.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                Toast.makeText(SettingsActivity.this, "Clicked the details-button!", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });
-        if (myCat2 != null) {
-            myCat2.addPreference(newDetailsScreen);
+    public void setDetailsPrefScreen() {
+        AppData.sourceTypes srcType = settingsObj.getSourceType();
+        String[] srcValueArray = getResources().getStringArray(R.array.srcTypeEntries);
+        String localizedSrcValue = Arrays.asList(srcValueArray).get(settingsObj.getSrcTypeInt());
+        PreferenceScreen preferenceScreenToAdd = new DetailsPreferenceScreen(
+                srcType, localizedSrcValue, getPreferenceManager().createPreferenceScreen(this))
+                    .getPreferenceScreen();
+        if (myCat2 != null && preferenceScreenToAdd != null) {
+            myCat2.addPreference(preferenceScreenToAdd);
         }
         // TODO
     }
@@ -584,7 +386,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                                 new Handler().post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        recursiveDelete(new File(settingsObj.getExtFolderAppRoot()), false);
+                                        GlobalPhoneFuncs.recursiveDelete(
+                                                new File(settingsObj.getExtFolderAppRoot()), false);
                                     }
                                 });
                             }
@@ -596,25 +399,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (myCat2 != null) {
             myCat2.addPreference(myDelDataButton);
         }
-    }
-
-    public boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                    }
-                }
-            }
-        }
-        if (delRoot) {
-            return dir.delete();
-        }
-        // Comment to remove warning xD
-        return false;
     }
 
     public void setResetToDefaultButton() {

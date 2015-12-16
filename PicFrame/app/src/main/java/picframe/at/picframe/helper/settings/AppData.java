@@ -156,6 +156,10 @@ public class AppData {
     }
 
 // CAN ALWAYS BE MODIFIED
+    public void setSdSourcePath(String path) {
+        mPrefs.edit().putString(getAppContext().getString(R.string.sett_key_srcpath_sd), path).commit();
+    }
+
     // flag whether this is the first app start
     public boolean getFirstAppStart() {
         return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_firstStart), true);

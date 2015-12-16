@@ -114,4 +114,24 @@ public class GlobalPhoneFuncs {
         System.err.println("GB avail: " + (float) (bytesAvail / (1024*1024*1024)));
         return bytesAvail;
     }
+
+    public static boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
+        if (dir.exists()) {
+            for (File file : dir.listFiles()) {
+                if (file.isDirectory()) {
+                    recursiveDelete(new File(file.getAbsolutePath()), true);
+                } else {
+                    if (!file.delete()) {
+                        System.err.println("RecursiveDelete | Couldn't delete >" + file.getName() + "<");
+                    }
+                }
+            }
+        }
+        if (delRoot) {
+            return dir.delete();
+        }
+        // Comment to remove warning xD
+        return false;
+    }
+
 }

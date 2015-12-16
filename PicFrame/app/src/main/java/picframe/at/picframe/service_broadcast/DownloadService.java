@@ -31,6 +31,7 @@ import picframe.at.picframe.R;
 import picframe.at.picframe.activities.MainActivity;
 import picframe.at.picframe.downloader.Downloader;
 import picframe.at.picframe.downloader.Downloader_OC;
+import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
 
 
@@ -192,7 +193,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
         File folder = new File(folderList.get(1));
         if (DEBUG) Log.i(TAG, "deleting files in cache dir before downloading");
         // delete all files and folders in cache folder
-        if (!recursiveDelete(folder, false)) {
+        if (!GlobalPhoneFuncs.recursiveDelete(folder, false)) {
             return false;
         }
         File nomedia = new File(folderList.get(1) + File.separator + ".nomedia");
@@ -204,26 +205,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
             } catch (IOException e) {
                 if (DEBUG) Log.e(TAG, "Couldn't create .nomedia file");
             }
-        }
-        return true;
-    }
-
-    public boolean recursiveDelete(File dir, boolean delRoot) {
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                        return false;
-                    }
-                }
-            }
-        }
-        //noinspection SimplifiableIfStatement
-        if (delRoot) {
-            return dir.delete();
         }
         return true;
     }

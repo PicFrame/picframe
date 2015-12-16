@@ -93,6 +93,8 @@
     <string name="sett_deleteDataDialog_msg">Do you really want to delete all downloaded image files?</string>
     <string name="sett_deleteDataDialog_posBtn">Yes</string>
     <string name="sett_deleteDataDialog_negBtn">No</string>
+    <string name="sett_detailsPrefScreen_title">Settings</string>
+    <string name="sett_detailsPrefScreen_summ">Set specific settings for</string>
 
 
         <!-- KEYS -->
