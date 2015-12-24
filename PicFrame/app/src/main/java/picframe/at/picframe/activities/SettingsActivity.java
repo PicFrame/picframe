@@ -89,7 +89,15 @@ public class SettingsActivity extends PreferenceActivity {
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 if (MainApp.getINSTANCE().getApplicationContext().getString(R.string.sett_key_srctype).equals(key)) {
                     setCorrectSrcPathField();
-                    if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
+                    if (AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
+                        Log.d(TAG, "SD-Card; delete alarm");
+                        deleteAlarm();
+                    } else if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
+                        // set new alarm when switching from sd-card to owncloud
+                        Log.d(TAG, "OwnCloud; set alarm");
+                        if(!(settingsObj.getUserName().equals("") && settingsObj.getUserPassword().equals(""))) {
+                        setAlarm();
+                        }
                         // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }
                 }
@@ -160,8 +168,7 @@ public class SettingsActivity extends PreferenceActivity {
             mySrcPathPref = new Preference(this);
             //mySrcPathPref.setTitle(R.string.sett_srcPath_externalSD);
             mySrcPathPref.setSummary(R.string.sett_srcPath_externalSDSumm);
-            mySrcPathPref.setDefaultValue(Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()  + File.separator + "Camera");
+            mySrcPathPref.setDefaultValue("");
 
             mySrcPathPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 String _chosenDir;
@@ -182,12 +189,12 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             });
             mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_sd));
-            deleteAlarm();
+//            deleteAlarm();
         } else if (srcType == AppData.sourceTypes.OwnCloud.ordinal()) {
             mySrcPathPref = new EditTextPreference(this);
            // mySrcPathPref.setTitle(mPrefs.getString("SrcType", "-1") + " URL");
             mySrcPathPref.setSummary(R.string.sett_srcPath_OwnCloudSumm);
-            mySrcPathPref.setDefaultValue("www.owncloud.org");
+            mySrcPathPref.setDefaultValue(getString(R.string.sett_example_owncloud_path));
             // android:imeOptions="flagNoExtractUi"
             mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_owncloud));
             mySrcPathPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -223,7 +230,6 @@ public class SettingsActivity extends PreferenceActivity {
                     return true;
                 }
             });
-            setAlarm();
         } else if (srcType == AppData.sourceTypes.Dropbox.ordinal()) {
             mySrcPathPref = new Preference(this);
             mySrcPathPref.setTitle("Placeholder for Dropbox Dir Field");

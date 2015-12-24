@@ -24,7 +24,7 @@
 
     <!-- MAIN STRINGS -->
     <string name="app_name" translatable="false">PicFrame</string>
-    <string name="app_version" translatable="false">1.2</string>
+    <string name="app_version" translatable="false">1.4</string>
     <string name="action_downloadNow">Download now</string>
     <string name="main_toast_noUsernameSet">No Username or Password set for network resource.</string>
     <string name="main_toast_noSDReadRights">Can\'t read from external SD card.</string>
@@ -73,6 +73,7 @@
     <string name="sett_srcPath_externalSD">Directory</string>
     <string name="sett_srcPath_externalSDSumm">Browse path to pictures</string>
     <string name="sett_srcPath_OwnCloudSumm">Set the URL for your OwnCloud Directory</string>
+    <string name="sett_example_owncloud_path" translatable="false">https://</string>
     <string name="sett_recursiveSearch">Include sub-directories</string>
     <string name="sett_recursiveSearchSumm">Whether pictures from sub-directories should be included</string>
     <string name="sett_recursiveSearchSummOff">Pictures from sub-directories will not be included</string>
