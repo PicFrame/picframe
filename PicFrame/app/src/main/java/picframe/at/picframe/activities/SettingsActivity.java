@@ -182,6 +182,7 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             });
             mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_sd));
+            deleteAlarm();
         } else if (srcType == AppData.sourceTypes.OwnCloud.ordinal()) {
             mySrcPathPref = new EditTextPreference(this);
            // mySrcPathPref.setTitle(mPrefs.getString("SrcType", "-1") + " URL");
@@ -222,6 +223,7 @@ public class SettingsActivity extends PreferenceActivity {
                     return true;
                 }
             });
+            setAlarm();
         } else if (srcType == AppData.sourceTypes.Dropbox.ordinal()) {
             mySrcPathPref = new Preference(this);
             mySrcPathPref.setTitle("Placeholder for Dropbox Dir Field");
@@ -436,31 +438,10 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ("-1".equals(String.valueOf(newValue))) {
-                    System.out.println(" DELETE ALARMS ");
-                    // clicked "never"
-                    AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
-
-                    Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
-                    PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
-                    am.cancel(p);
-                    p.cancel();
-
+                    deleteAlarm();
                     return true;
                 } else {
-                    System.out.println(" UPDATE SETTINGS ACTIVITY ");
-                    int tmp = Integer.parseInt(String.valueOf(newValue));
-
-                    AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
-
-                    Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
-                    PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
-                    am.cancel(p);
-                    p.cancel();
-
-                   //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
-                    Intent intent = new Intent();
-                    intent.setAction("ACTION_UPDATE_ALARM");
-                    sendBroadcast(intent);
+                    setAlarm();
                     return true;
                 }
             }
@@ -522,5 +503,31 @@ public class SettingsActivity extends PreferenceActivity {
         }
         // Comment to remove warning xD
         return false;
+    }
+
+    private void deleteAlarm(){
+        System.out.println(" DELETE ALARMS ");
+        // clicked "never"
+        AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+
+        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+        am.cancel(p);
+        p.cancel();
+    }
+    private void setAlarm(){
+        System.out.println(" UPDATE SETTINGS ACTIVITY ");
+
+        AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+
+        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+        am.cancel(p);
+        p.cancel();
+
+        //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
+        Intent intent = new Intent();
+        intent.setAction("ACTION_UPDATE_ALARM");
+        sendBroadcast(intent);
     }
 }
