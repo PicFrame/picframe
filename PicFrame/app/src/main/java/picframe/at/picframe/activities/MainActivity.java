@@ -185,13 +185,8 @@ public class MainActivity extends ActionBarActivity {
 
         System.out.println(" TIME SAVED " + alarmtime);
 
-        // Schedule alarm here for case where new version was installed
-        if(settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
-            Log.d(TAG, "yay owncloud!");
-        }
     }
 
-    // TODO: Make download timer to alarm                                           !! M
     // TODO: folderpicker for owncloud server folder                                ! L
 
     @Override
@@ -202,6 +197,9 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onResume() {
         super.onResume();
+
+        Log.d(TAG, "onResume");
+
         supportInvalidateOptionsMenu();
         if (settingsObj.getFirstAppStart()) {
             settingsObj.setFirstAppStart(false);
@@ -225,18 +223,7 @@ public class MainActivity extends ActionBarActivity {
             broadcastManager.registerReceiver(receiver, filter);
         }
 
-//        if(settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
-//            Log.d(TAG, "new timer");
-//            deleteTimerz(true);
-//            this.downloadTimer = new Timer();
-//            int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
-//            if (downloadInterval > 0) {
-//                this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
-//            }
-//        } else {
-            System.out.println("no new timer");
         deleteTimer();
-//        }
 
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
             if (!settingsObj.getImagePath().equals(mOldPath) || mOldRecursive != settingsObj.getRecursiveSearch()) {
@@ -752,6 +739,7 @@ public class MainActivity extends ActionBarActivity {
             });
         AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();
         click_on_settings_dialog.getWindow().setGravity(Gravity.TOP | Gravity.START);
+        click_on_settings_dialog.setCancelable(true);
 
         click_on_settings_dialog.show();
         showActionBar();
