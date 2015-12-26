@@ -180,12 +180,32 @@ public class MainActivity extends ActionBarActivity {
 
         toggleDirection = settingsObj.getDirection();
 
-
         alarmtime = settingsObj.getAlarmTime();
 
         System.out.println(" TIME SAVED " + alarmtime);
 
-    }
+        if(settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud && settingsObj.getUpdateIntervalInHours()!=-1)
+            scheduleAlarm(-1);
+
+
+/*        // if oncloud selected, start new alarm here
+        if (settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud && settingsObj.getAlarmTime() != -1) {
+            Log.d(TAG, "Start new alarm in onCCreate");
+            AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+
+            Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+            PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+            am.cancel(p);
+            p.cancel();
+
+            //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
+            Intent intent = new Intent();
+            intent.setAction("ACTION_UPDATE_ALARM");
+            sendBroadcast(intent);
+        }
+*/    }
+
+
 
     // TODO: folderpicker for owncloud server folder                                ! L
 
@@ -720,20 +740,21 @@ public class MainActivity extends ActionBarActivity {
             .setPositiveButton(R.string.main_dialog_tutorial_okButton,
                     new DialogInterface.OnClickListener() {
                 @Override
-                public void onClick(DialogInterface dialogInterface, int i) { }
-            })
-            .setNeutralButton(R.string.main_dialog_tutorial_dontShowAgainButton,
-                    new DialogInterface.OnClickListener() {
-                @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    settingsObj.setTutorial(false);
                 }
-            })
-            .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
-                    new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
+                    })
+                .setNeutralButton(R.string.main_dialog_tutorial_dontShowAgainButton,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                settingsObj.setTutorial(false);
+                            }
+                        })
+                .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
                     startActivity(getSettingsActivityIntent());
                 }
             });
