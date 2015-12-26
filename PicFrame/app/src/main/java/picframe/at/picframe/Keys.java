@@ -36,8 +36,4 @@ public class Keys {
     public static final String MSG_PROGRESSUPDATE_PERCENT = "progressUpdatePercent";
     public static final String MSG_PROGRESSUPDATE_INDITERMINATE = "progressUpdateInditerminate";
     public static final String MSG_FAILURE = "failure";
-
-    /* Key for slideshow timer types */
-    public static final String COUNTDOWN_FIRST_RUN = "1";
-    public static final String COUNTDOWN_FUTURE_RUNS = "2";
 }
