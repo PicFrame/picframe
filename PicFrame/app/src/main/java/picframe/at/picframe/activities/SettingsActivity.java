@@ -96,7 +96,7 @@ public class SettingsActivity extends PreferenceActivity {
                         // set new alarm when switching from sd-card to owncloud
                         Log.d(TAG, "OwnCloud; set alarm");
                         if(!(settingsObj.getUserName().equals("") && settingsObj.getUserPassword().equals(""))) {
-                        setAlarm();
+                            setAlarm();
                         }
                         // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }

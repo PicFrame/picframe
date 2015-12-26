@@ -31,6 +31,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import picframe.at.picframe.activities.MainActivity;
+import picframe.at.picframe.helper.TimeConverter;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.service_broadcast.DownloadService;
 import picframe.at.picframe.Keys;
@@ -40,45 +42,45 @@ import picframe.at.picframe.Keys;
  */
 
 public class AlarmReceiver extends BroadcastReceiver {
+
+    TimeConverter tc;
+
     @Override
     public void onReceive(Context context, Intent intent) {
 
+        tc = new TimeConverter();
 
         System.out.println(" ALARMRECEIVER ");
 
-/*        if(intent.getAction().equals("ACTION_UPDATE_ALARM")){
-            System.out.println(" UPDATE RECEIVED ");
-        }
-*/
+        // load settings
+        AppData settingsObj = AppData.getINSTANCE();
+
         Intent startDownloadIntent = new Intent(context, DownloadService.class);
         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
         context.startService(startDownloadIntent);
 
-        // SET NEW ALARM
-        SharedPreferences prefs = context.getSharedPreferences("PicFrameSettings", Context.MODE_PRIVATE);
-        Long time = prefs.getLong("alarmtime", -1);
+        // Set time for next alarm
+        Long alarmTime = settingsObj.getLastAlarmTime();
+        System.out.println(tc.millisecondsToDate(alarmTime));
 
         // loading settings
-        AppData settingsObj = AppData.getINSTANCE();
-        Long calendar = new GregorianCalendar().getTimeInMillis();
+        Long currentTime = new GregorianCalendar().getTimeInMillis();
 
-        if (time + settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000 < calendar) {
+        if (alarmTime + tc.hoursToMilliseconds(settingsObj.getUpdateIntervalInHours()) < currentTime) {
             // Time is small or negativ download after 1 minute
-            time = calendar + 1 * 60 * 1000;
+            alarmTime = currentTime + tc.minutesToMilliseconds(1);
         } else {
-            time = time + settingsObj.getUpdateIntervalInHours() * 60 * 60 * 1000;
+            alarmTime = alarmTime + tc.hoursToMilliseconds(settingsObj.getUpdateIntervalInHours());
         }
+
+        System.out.println(tc.millisecondsToDate(currentTime));
+        System.out.println(tc.millisecondsToDate(alarmTime));
 
         //testing
         //time = calendar + 1*60*1000;
 
         // Save starttime of the alarm so we can compare after the app shutsdown if the interval gets switched
-        Long startTime = calendar;
-
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong("alarmtime", startTime);
-        editor.commit();
-
+        settingsObj.setLastAlarmTime(currentTime);
 
         // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
         // specified AlarmReceiver in the Intent. The onReceive() method of this class will execute when the broadcast from your alarm is received.
@@ -88,12 +90,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         // Set the alarm for a particular time.
-        alarmManager.set(AlarmManager.RTC_WAKEUP, time, PendingIntent.getBroadcast(context, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
+        alarmManager.set(AlarmManager.RTC_WAKEUP, alarmTime, PendingIntent.getBroadcast(context, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
 
-        Date date = new Date(time);
-        DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-        String dateFormatted = formatter.format(date);
-        System.out.println("Start time: " + formatter.format(calendar) + " " + (calendar));
-        System.out.println("Go OFF time: " + formatter.format(time) + " " + time);
+        System.out.println("Start time: " + tc.millisecondsToDate(currentTime) + " " + (currentTime));
+        System.out.println("Go OFF time: " + tc.millisecondsToDate(alarmTime) + " " + alarmTime);
     }
 }

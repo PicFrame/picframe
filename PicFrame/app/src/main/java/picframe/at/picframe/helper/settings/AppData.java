@@ -189,11 +189,11 @@ public class AppData {
     }
 
     // alam time ??
-    public Long getAlarmTime() {
+    public Long getLastAlarmTime() {
         return mPrefs.getLong("alarmtime", -1);
     }
 
-    public void setAlarmTime (Long time) {
+    public void setLastAlarmTime (Long time) {
         mPrefs.edit().putLong("alarmtime", time).commit();
     }
 
