@@ -27,6 +27,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
@@ -85,6 +86,8 @@ public class MainActivity extends ActionBarActivity {
     private static CustomViewPager pager;
     private Timer timer;
     private Timer downloadTimer;
+    private CountDownTimer countDownTimer;
+    private CountDownTimer countDownTimer2;
     private int page;
 
     private static Context mContext;
@@ -92,7 +95,8 @@ public class MainActivity extends ActionBarActivity {
     private boolean mOldRecursive;
     private RelativeLayout mainLayout;
     private boolean paused;
-    private int remainingDisplayTime; // in seconds
+    private static long remainingDisplayTime = 0; // in seconds
+    private static int previousDisplyTime = settingsObj.getDisplayTime();
 
     private static final int nbOfExamplePictures = 6;
     private static boolean showExamplePictures = false;
@@ -136,6 +140,8 @@ public class MainActivity extends ActionBarActivity {
         if(getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
+
+
         deleteTimerz();
         initializeTransitions();
 
@@ -178,11 +184,10 @@ public class MainActivity extends ActionBarActivity {
             settingsObj.setTutorial(true);
         }
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         tutorial();
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        // if the user choose "download NOW", download pictures; then set timer as usual
-      
         // get localBroadcastManager instance to receive localBroadCasts
         if (broadcastManager == null) {
             broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
@@ -222,6 +227,8 @@ public class MainActivity extends ActionBarActivity {
             page=currentPageSaved;
         }
         slideShow();
+
+        startSlideshowCountDown();
     }
 
     @Override
@@ -269,7 +276,10 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onPause() {
         super.onPause();
+        countDownTimer.cancel();
+        Log.d(TAG, "remaing display time: "+remainingDisplayTime);
         deleteTimerz();
+        countDownTimer.cancel();
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -317,8 +327,10 @@ public class MainActivity extends ActionBarActivity {
         // At this line a new Thread will be created
         this.timer = new Timer();
         this.timer.scheduleAtFixedRate(new RemindTask(), 0, seconds * 1000); // delay
-
     }
+
+
+
     private class RemindTask extends TimerTask {
         @Override
         public void run() {
@@ -649,22 +661,22 @@ public class MainActivity extends ActionBarActivity {
             })
             .setNeutralButton(R.string.main_dialog_tutorial_dontShowAgainButton,
                     new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    settingsObj.setTutorial(false);
-                }
-            })
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            settingsObj.setTutorial(false);
+                        }
+                    })
             .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
                     new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    startActivity(getSettingsActivityIntent());
-                }
-            });
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                            startActivity(getSettingsActivityIntent());
+                        }
+                    });
         AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();
         click_on_settings_dialog.getWindow().setGravity(Gravity.TOP | Gravity.START);
-
+        click_on_settings_dialog.setCancelable(true);
         click_on_settings_dialog.show();
         showActionBar();
     }
@@ -691,4 +703,45 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    private void startSlideshowCountDown(){
+        long countdownIntervalInMilliseconds = 1*30*1000-50; //one tick every 9 minutes TODO:set back t0 9 mins!
+        /* Per default, set the coundowninterval to a relatively high value to avoid unnecessary frequent onTick updates.
+            However, if the slideshow interval is very short, shorten the interval to one second (possible alternative would be to
+            retain the high countdownIntervalInMilliseconds, and reset "remaingDisplayTime" to zero when display
+            time is lower than countdownIntervalInMilliseconds, eschewing the need for onTick to be called in those cases altogether).
+        */
+        if(settingsObj.getDisplayTime() < countdownIntervalInMilliseconds/1000){
+            Log.d(TAG, settingsObj.getDisplayTime()+" < "+countdownIntervalInMilliseconds/1000+"; 1s intervals");
+            countdownIntervalInMilliseconds = 1000;
+        }
+
+        if(remainingDisplayTime < settingsObj.getDisplayTime()){
+            Log.d(TAG, "remainingDisplayTime: "+remainingDisplayTime+" < "+settingsObj.getDisplayTime()+", displayTime");
+            CountDownTimer uniqueCountDownWithRemainingTime = new CountDownTimer((settingsObj.getDisplayTime()-remainingDisplayTime)*1000, countdownIntervalInMilliseconds) {
+                @Override
+                public void onTick(long l) {
+                    Log.d(TAG+" unique", "tick!"+l/1000);
+                    remainingDisplayTime = l;
+                }
+
+                @Override
+                public void onFinish() {
+                    Log.d(TAG,"done with this one!");
+                }
+            }.start();
+        }
+        countDownTimer = new CountDownTimer(settingsObj.getDisplayTime()*1000, countdownIntervalInMilliseconds) {
+            @Override
+            public void onTick(long l) {
+                remainingDisplayTime = l/1000;
+                Log.d(TAG, "tick!" + remainingDisplayTime);
+            }
+
+            @Override
+            public void onFinish() {
+                Log.d(TAG, "I'm done!");
+                countDownTimer.start();
+            }
+        }.start();
+    }
 }
