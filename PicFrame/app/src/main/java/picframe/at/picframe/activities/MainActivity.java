@@ -86,6 +86,7 @@ public class MainActivity extends ActionBarActivity {
     private static CustomViewPager pager;
     private Timer timer;
     private Timer downloadTimer;
+    private final long countdownIntervalInMilliseconds = 1*30*1000-50;
     private CountDownTimer countDownTimer;
     private CountDownTimer countDownTimer2;
     private int page;
@@ -149,7 +150,7 @@ public class MainActivity extends ActionBarActivity {
         mContext = getApplicationContext();
 
         loadAdapter();
-        slideShow();
+        setUpSlideShow();
 
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
@@ -226,7 +227,7 @@ public class MainActivity extends ActionBarActivity {
             pager.setCurrentItem(currentPageSaved);
             page=currentPageSaved;
         }
-        slideShow();
+        setUpSlideShow();
 
         startSlideshowCountDown();
     }
@@ -276,7 +277,7 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onPause() {
         super.onPause();
-        countDownTimer.cancel();
+        cancelSlideShowCoundown();
         Log.d(TAG, "remaing display time: "+remainingDisplayTime);
         deleteTimerz();
         countDownTimer.cancel();
@@ -323,10 +324,19 @@ public class MainActivity extends ActionBarActivity {
         }, 2500);
     }
 
-    public void pageSwitcher(int seconds) {
-        // At this line a new Thread will be created
-        this.timer = new Timer();
-        this.timer.scheduleAtFixedRate(new RemindTask(), 0, seconds * 1000); // delay
+    private void pageSwitcher() {
+        if (setUp.getCount() > 0 && !paused) {
+            pager.setCurrentItem(page, true);
+            if(!toggleDirection) {
+                page++;
+            }
+            else {
+                page--;
+            }
+            if(page == setUp.getCount()-1 || page == 0){
+                toggleDirection = !toggleDirection;
+            }
+        }
     }
 
 
@@ -367,11 +377,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-    public void slideShow(){
+    private void setUpSlideShow(){
         if (settingsObj.getSlideshow()){
             pager.setScrollDurationFactor(8);
             pager.setPagingEnabled(false);
-            pageSwitcher(settingsObj.getDisplayTime());
         }
         else{
             pager.setScrollDurationFactor(3);
@@ -704,20 +713,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void startSlideshowCountDown(){
-        long countdownIntervalInMilliseconds = 1*30*1000-50; //one tick every 9 minutes TODO:set back t0 9 mins!
-        /* Per default, set the coundowninterval to a relatively high value to avoid unnecessary frequent onTick updates.
-            However, if the slideshow interval is very short, shorten the interval to one second (possible alternative would be to
-            retain the high countdownIntervalInMilliseconds, and reset "remaingDisplayTime" to zero when display
-            time is lower than countdownIntervalInMilliseconds, eschewing the need for onTick to be called in those cases altogether).
-        */
-        if(settingsObj.getDisplayTime() < countdownIntervalInMilliseconds/1000){
-            Log.d(TAG, settingsObj.getDisplayTime()+" < "+countdownIntervalInMilliseconds/1000+"; 1s intervals");
-            countdownIntervalInMilliseconds = 1000;
-        }
-
-        if(remainingDisplayTime < settingsObj.getDisplayTime()){
+        Log.d(TAG, "startSlideshowCountDown");
+        if(remainingDisplayTime != 0 && remainingDisplayTime < settingsObj.getDisplayTime()){
             Log.d(TAG, "remainingDisplayTime: "+remainingDisplayTime+" < "+settingsObj.getDisplayTime()+", displayTime");
-            CountDownTimer uniqueCountDownWithRemainingTime = new CountDownTimer((settingsObj.getDisplayTime()-remainingDisplayTime)*1000, countdownIntervalInMilliseconds) {
+            countDownTimer = new CountDownTimer((settingsObj.getDisplayTime()-remainingDisplayTime)*1000, countdownIntervalInMilliseconds) {
                 @Override
                 public void onTick(long l) {
                     Log.d(TAG+" unique", "tick!"+l/1000);
@@ -727,9 +726,18 @@ public class MainActivity extends ActionBarActivity {
                 @Override
                 public void onFinish() {
                     Log.d(TAG,"done with this one!");
+                    pageSwitcher();
+                    startRepeatingCountDowns();
                 }
             }.start();
+        } else {
+            startRepeatingCountDowns();
         }
+
+    }
+
+    private void startRepeatingCountDowns(){
+        Log.d(TAG, "startRepeatingCountDowns");
         countDownTimer = new CountDownTimer(settingsObj.getDisplayTime()*1000, countdownIntervalInMilliseconds) {
             @Override
             public void onTick(long l) {
@@ -740,8 +748,24 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onFinish() {
                 Log.d(TAG, "I'm done!");
+                pageSwitcher();
                 countDownTimer.start();
             }
         }.start();
+    }
+
+    private void cancelSlideShowCoundown(){
+        /* remaing display time is always imprecise, the real value located somewhere between
+            0 and countdownIntervalInMilliseconds.
+            If the display time is smaller than countdownIntervalInMilliseconds/1000,
+            then the value of countdownIntervalInMilliseconds will never change, and resetting
+            the value will be more accurate.
+         */
+        if(settingsObj.getDisplayTime() < countdownIntervalInMilliseconds/1000){
+            Log.d(TAG, settingsObj.getDisplayTime()+" < "+countdownIntervalInMilliseconds/1000);
+            remainingDisplayTime = 0;
+        }
+        if(countDownTimer != null)
+            countDownTimer.cancel();
     }
 }
