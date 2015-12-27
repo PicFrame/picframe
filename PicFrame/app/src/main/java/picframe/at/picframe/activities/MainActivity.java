@@ -800,9 +800,9 @@ public class MainActivity extends ActionBarActivity {
 
         TimeConverter tc = new TimeConverter();
 
-        long nextAlarmTime;
-        long currentTime = new GregorianCalendar().getTimeInMillis();
-        long nextScheduledAlarm = settingsObj.getLastAlarmTime() + tc.hoursToMilliseconds(settingsObj.getUpdateIntervalInHours());
+        Long nextAlarmTime;
+        Long currentTime = new GregorianCalendar().getTimeInMillis();
+        Long nextScheduledAlarm = settingsObj.getLastAlarmTime() + settingsObj.getUpdateIntervalInHours() * 1000 * 60 * 60;
 
         Log.d(TAG, "currentTime : "+tc.millisecondsToDate(currentTime));
         Log.d(TAG, "previousAlarm: "+tc.millisecondsToDate(settingsObj.getLastAlarmTime()));
@@ -811,7 +811,7 @@ public class MainActivity extends ActionBarActivity {
         // If the time for the next scheduled alarm is passed, download immediately
         if(nextScheduledAlarm <= currentTime){
             Log.d(TAG, "set off next alarm in 2 minutes: "+nextScheduledAlarm);
-            nextAlarmTime = currentTime + tc.minutesToMilliseconds(2);
+            nextAlarmTime = currentTime + 2 * 1000 * 60;
         } else {
             nextAlarmTime = nextScheduledAlarm;
         }

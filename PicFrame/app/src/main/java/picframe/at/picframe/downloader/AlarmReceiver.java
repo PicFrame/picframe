@@ -36,12 +36,16 @@ import picframe.at.picframe.helper.TimeConverter;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.service_broadcast.DownloadService;
 import picframe.at.picframe.Keys;
+import android.util.Log;
+
 
 /**
  * Created by Martin on 05.12.2015.
  */
 
 public class AlarmReceiver extends BroadcastReceiver {
+    private static final String TAG = AlarmReceiver.class.getSimpleName();
+    private static AppData settingsObj = AppData.getINSTANCE();
 
     TimeConverter tc;
 
@@ -53,7 +57,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         System.out.println(" ALARMRECEIVER ");
 
         // load settings
-        AppData settingsObj = AppData.getINSTANCE();
 
         Intent startDownloadIntent = new Intent(context, DownloadService.class);
         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
@@ -61,26 +64,29 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         // Set time for next alarm
         Long alarmTime = settingsObj.getLastAlarmTime();
-        System.out.println(tc.millisecondsToDate(alarmTime));
+        Log.d(TAG, "Last Alarm" + tc.millisecondsToDate(alarmTime));
 
         // loading settings
         Long currentTime = new GregorianCalendar().getTimeInMillis();
 
-        if (alarmTime + tc.hoursToMilliseconds(settingsObj.getUpdateIntervalInHours()) < currentTime) {
+        settingsObj.setLastAlarmTime(currentTime);
+
+        if (alarmTime + settingsObj.getUpdateIntervalInHours() * 1000 * 60 * 60 < currentTime) {
             // Time is small or negativ download after 1 minute
-            alarmTime = currentTime + tc.minutesToMilliseconds(1);
+            Log.d(TAG, "Short");
+            alarmTime = currentTime + 1 * 60 * 1000;
         } else {
-            alarmTime = alarmTime + tc.hoursToMilliseconds(settingsObj.getUpdateIntervalInHours());
+            Log.d(TAG, "long");
+            alarmTime = alarmTime + settingsObj.getUpdateIntervalInHours() * 1000 * 60 *60;
         }
 
-        System.out.println(tc.millisecondsToDate(currentTime));
-        System.out.println(tc.millisecondsToDate(alarmTime));
+        Log.d(TAG, "Current Time"+tc.millisecondsToDate(currentTime));
+        Log.d(TAG, "Next Alarm"+tc.millisecondsToDate(alarmTime));
 
         //testing
         //time = calendar + 1*60*1000;
 
         // Save starttime of the alarm so we can compare after the app shutsdown if the interval gets switched
-        settingsObj.setLastAlarmTime(currentTime);
 
         // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
         // specified AlarmReceiver in the Intent. The onReceive() method of this class will execute when the broadcast from your alarm is received.

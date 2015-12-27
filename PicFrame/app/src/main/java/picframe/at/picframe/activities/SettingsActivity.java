@@ -68,6 +68,7 @@ public class SettingsActivity extends PreferenceActivity {
     private final static boolean DEBUG = false;
     @SuppressWarnings("FieldCanBeLocal")
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private boolean switchedToOwnCloudFlag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,10 +95,8 @@ public class SettingsActivity extends PreferenceActivity {
                         deleteAlarm();
                     } else if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
                         // set new alarm when switching from sd-card to owncloud
-                        Log.d(TAG, "OwnCloud; set alarm");
-                        if(!(settingsObj.getUserName().equals("") && settingsObj.getUserPassword().equals(""))) {
-                            setAlarm();
-                        }
+                        Log.d(TAG, "OwnCloud");
+                        switchedToOwnCloudFlag = true;
                         // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }
                 }
@@ -524,6 +523,8 @@ public class SettingsActivity extends PreferenceActivity {
     private void setAlarm(){
         System.out.println(" UPDATE SETTINGS ACTIVITY ");
 
+        switchedToOwnCloudFlag = false; // void starting alarm twice
+
         AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
 
         Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
@@ -535,5 +536,20 @@ public class SettingsActivity extends PreferenceActivity {
         Intent intent = new Intent();
         intent.setAction("ACTION_UPDATE_ALARM");
         sendBroadcast(intent);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (switchedToOwnCloudFlag) {
+            if (!settingsObj.getUserName().equals("") && !settingsObj.getUserPassword().equals("") && settingsObj.getUpdateIntervalInHours()!=-1) {
+                Log.d(TAG, "Owncloud newly selected; starting alarm");
+                setAlarm();
+            } else {
+                Log.d(TAG, "Owncloud newly selected, but username & password not set; not starting alarm");
+                /* TODO Note: case where alarm was previously not started because of missing Username/Password,
+                    but Username/Password was later added is ignored! */
+            }
+        }
     }
 }
