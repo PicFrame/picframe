@@ -444,12 +444,12 @@ public class SettingsActivity extends PreferenceActivity {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ("-1".equals(String.valueOf(newValue))) {
                     deleteAlarm();
-                    return true;
-                } else {
+                }
+                return true;
+               } /* else {
                     setAlarm();
                     return true;
-                }
-            }
+                }*/
         });
         if (myCategory != null) {
             myCategory.addPreference(myUpdatePref);
@@ -520,7 +520,7 @@ public class SettingsActivity extends PreferenceActivity {
         am.cancel(p);
         p.cancel();
     }
-    private void setAlarm(){
+/*    private void setAlarm(){
         System.out.println(" UPDATE SETTINGS ACTIVITY ");
 
         switchedToOwnCloudFlag = false; // void starting alarm twice
@@ -536,20 +536,5 @@ public class SettingsActivity extends PreferenceActivity {
         Intent intent = new Intent();
         intent.setAction("ACTION_UPDATE_ALARM");
         sendBroadcast(intent);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (switchedToOwnCloudFlag) {
-            if (!settingsObj.getUserName().equals("") && !settingsObj.getUserPassword().equals("") && settingsObj.getUpdateIntervalInHours()!=-1) {
-                Log.d(TAG, "Owncloud newly selected; starting alarm");
-                setAlarm();
-            } else {
-                Log.d(TAG, "Owncloud newly selected, but username & password not set; not starting alarm");
-                /* TODO Note: case where alarm was previously not started because of missing Username/Password,
-                    but Username/Password was later added is ignored! */
-            }
-        }
-    }
+    }*/
 }

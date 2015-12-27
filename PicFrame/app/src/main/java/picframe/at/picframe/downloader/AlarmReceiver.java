@@ -55,19 +55,17 @@ public class AlarmReceiver extends BroadcastReceiver {
         tc = new TimeConverter();
 
         System.out.println(" ALARMRECEIVER ");
-
-        // load settings
+        Long alarmTime = settingsObj.getLastAlarmTime();
+        Log.d(TAG, "Last Alarm" + tc.millisecondsToDate(alarmTime));
+        Long currentTime = new GregorianCalendar().getTimeInMillis();
 
         Intent startDownloadIntent = new Intent(context, DownloadService.class);
         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
         context.startService(startDownloadIntent);
 
         // Set time for next alarm
-        Long alarmTime = settingsObj.getLastAlarmTime();
-        Log.d(TAG, "Last Alarm" + tc.millisecondsToDate(alarmTime));
 
         // loading settings
-        Long currentTime = new GregorianCalendar().getTimeInMillis();
 
         settingsObj.setLastAlarmTime(currentTime);
 

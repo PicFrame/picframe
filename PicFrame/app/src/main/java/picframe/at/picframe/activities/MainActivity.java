@@ -187,24 +187,8 @@ public class MainActivity extends ActionBarActivity {
 
         // Restart a download alarm if the scheduled alarm was in the future; else trigger alarm right away.
         // Only do this if owncloud is selected and update intervall is not set to "never"
-        setUpAlarmIfApplicable();
-
-/*        // if oncloud selected, start new alarm here
-        if (settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud && settingsObj.getAlarmTime() != -1) {
-            Log.d(TAG, "Start new alarm in onCCreate");
-            AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
-
-            Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
-            PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
-            am.cancel(p);
-            p.cancel();
-
-            //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
-            Intent intent = new Intent();
-            intent.setAction("ACTION_UPDATE_ALARM");
-            sendBroadcast(intent);
-        }
-*/    }
+//        setUpAlarmIfApplicable();
+    }
 
 
 
@@ -245,6 +229,7 @@ public class MainActivity extends ActionBarActivity {
         }
 
         deleteTimer();
+        setUpAlarmIfApplicable();
 
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
             if (!settingsObj.getImagePath().equals(mOldPath) || mOldRecursive != settingsObj.getRecursiveSearch()) {
@@ -791,7 +776,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void setUpAlarmIfApplicable() {
-        if (settingsObj.getSourceType() != AppData.sourceTypes.OwnCloud || settingsObj.getUpdateIntervalInHours() == -1) {
+        if (settingsObj.getSourceType() != AppData.sourceTypes.OwnCloud
+                || settingsObj.getUpdateIntervalInHours() == -1
+                || settingsObj.getUserName().equals("")
+                || settingsObj.getUserPassword().equals("")) {
             Log.d(TAG, "no new alarm");
             return;
         }
@@ -806,7 +794,7 @@ public class MainActivity extends ActionBarActivity {
 
         Log.d(TAG, "currentTime : "+tc.millisecondsToDate(currentTime));
         Log.d(TAG, "previousAlarm: "+tc.millisecondsToDate(settingsObj.getLastAlarmTime()));
-        Log.d(TAG, "nextScheduledAlarm: "+tc.millisecondsToDate(nextScheduledAlarm));
+        Log.d(TAG, "nextScheduledAlarm: " + tc.millisecondsToDate(nextScheduledAlarm));
 
         // If the time for the next scheduled alarm is passed, download immediately
         if(nextScheduledAlarm <= currentTime){
@@ -829,5 +817,24 @@ public class MainActivity extends ActionBarActivity {
         System.out.println("Start time: " + tc.millisecondsToDate(currentTime) + " " + (currentTime));
         System.out.println("Go OFF time: " + tc.millisecondsToDate(nextAlarmTime) + " " + nextAlarmTime);
         Toast.makeText(this, "Alarm Scheduled for " + tc.millisecondsToDate(nextAlarmTime), Toast.LENGTH_LONG).show();
+    }
+
+    private void deleteAlarm(){
+        Log.d(TAG, " DELETE ALARMS ");
+
+        AlarmManager am = (AlarmManager) getSystemService(getContext().ALARM_SERVICE);
+
+        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+        am.cancel(p);
+        p.cancel();
+    }
+
+    private void setAlarm(){
+        deleteAlarm();
+        //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
+        Intent intent = new Intent();
+        intent.setAction("ACTION_UPDATE_ALARM");
+        sendBroadcast(intent);
     }
 }
