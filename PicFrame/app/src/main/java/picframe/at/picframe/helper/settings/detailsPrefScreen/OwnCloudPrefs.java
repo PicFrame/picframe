@@ -3,81 +3,61 @@ package picframe.at.picframe.helper.settings.detailsPrefScreen;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.Handler;
+import android.content.Intent;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import picframe.at.picframe.MainApp;
+import picframe.at.picframe.Keys;
 import picframe.at.picframe.R;
+import picframe.at.picframe.activities.SettingsActivity;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
 
 public class OwnCloudPrefs implements IDetailsPreferenceScreen {
     private ArrayList<Preference> allPrefs = new ArrayList<>();
-    private Context mContext = MainApp.getINSTANCE().getApplicationContext();
-    private AppData settObj = AppData.getINSTANCE();
+    private Context mSettAct;
 
-    public OwnCloudPrefs() {
+    public OwnCloudPrefs(SettingsActivity mSettAct) {
+        this.mSettAct = mSettAct;
+
         //createStatusView();
         createUrlPref();
         createUsernamePref();
         createPasswordPref();
-        //createUpdateIntervalPref();
+        createDownloadIntervalPref();
         //createLoginCheckButton();
     }
 
     /*
-    private void setUpdateDialogWithButton() {
-        PreferenceCategory myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
-        ListPreference myUpdatePref = new ListPreference(this);
-        myUpdatePref.setTitle(R.string.sett_updateInterval);
-        myUpdatePref.setSummary(R.string.sett_updateIntervalSumm);
-        myUpdatePref.setKey(getString(R.string.sett_key_updateInterval));
-        myUpdatePref.setEntries(R.array.updateIntervalEntries);
-        myUpdatePref.setEntryValues(R.array.updateIntervalValues);
-        myUpdatePref.setShouldDisableView(true);
-        myUpdatePref.setDefaultValue("12");
-        myUpdatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                if ("-1".equals(String.valueOf(newValue))) {
-                    // clicked "never" .. remove alarm here TODO
-                    return true;
-                } else {
-                    return true;
-                }
-            }
-        });
-        if (myCat2 != null) {
-            myCat2.addPreference(myUpdatePref);
-        }
-    }
+
     */
 
     private void createUrlPref() {
-        EditTextPreference mySrcPathPref = new EditTextPreference(mContext);
-        mySrcPathPref.setTitle(settObj.getSourceType().toString() + " URL");
+        EditTextPreference mySrcPathPref = new EditTextPreference(mSettAct);
+        mySrcPathPref.setTitle(R.string.sett_srcPath_OwnCloud);
         mySrcPathPref.setSummary(R.string.sett_srcPath_OwnCloudSumm);
         mySrcPathPref.setDefaultValue("www.owncloud.org");  // TODO change to resource
-        mySrcPathPref.setKey(mContext.getString(R.string.sett_key_srcpath_owncloud));
+        mySrcPathPref.setKey(mSettAct.getString(R.string.sett_key_srcpath_owncloud));
         mySrcPathPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if (newValue.toString().endsWith(File.separator)) {
                     Toast
                         .makeText(
-                                mContext,
-                                "forbidden character at end of url: \"" + File.separator + "\"",
+                                mSettAct,
+                                "forbidden character at end of url: \"" + File.separator + "\"",    //TODO
                                 Toast.LENGTH_SHORT)
                         .show();
                     return false;
                 }
-                AlertDialog.Builder myDialQBuilder = new AlertDialog.Builder(mContext);
+                AlertDialog.Builder myDialQBuilder = new AlertDialog.Builder(mSettAct);
                 myDialQBuilder.setMessage(R.string.sett_dialog_changedURL_message) //
                         .setNegativeButton(R.string.sett_deleteDataDialog_negBtn, null)
                         .setPositiveButton(R.string.sett_deleteDataDialog_posBtn,
@@ -85,20 +65,11 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         Toast
-                                            .makeText(
-                                                    mContext,
-                                                    R.string.sett_toast_delFiles,
-                                                    Toast.LENGTH_SHORT)
+                                            .makeText(mSettAct, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT)
                                             .show();
-                                        new Handler().post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                GlobalPhoneFuncs.recursiveDelete(
-                                                        new File(
-                                                            settObj.getExtFolderAppRoot()),
-                                                            false);
-                                            }
-                                        });
+                                        GlobalPhoneFuncs.recursiveDeletionInBackgroundThread(
+                                                new File(AppData.getExtFolderAppRoot()),
+                                                false);
                                     }
                                 });
                 myDialQBuilder.show();
@@ -110,10 +81,10 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
     }
 
     private void createUsernamePref() {
-        EditTextPreference userPref = new EditTextPreference(mContext);
-        userPref.setTitle(mContext.getString(R.string.sett_username));
-        userPref.setSummary(mContext.getString(R.string.sett_usernameSumm));
-        userPref.setKey(mContext.getString(R.string.sett_key_username));
+        EditTextPreference userPref = new EditTextPreference(mSettAct);
+        userPref.setTitle(mSettAct.getString(R.string.sett_username));
+        userPref.setSummary(mSettAct.getString(R.string.sett_usernameSumm));
+        userPref.setKey(mSettAct.getString(R.string.sett_key_username));
         userPref.setDefaultValue("");
         userPref.getEditText().setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         userPref.getEditText().setInputType(EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS | EditorInfo.TYPE_TEXT_VARIATION_PERSON_NAME);
@@ -121,14 +92,43 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
     }
 
     private void createPasswordPref() {
-        EditTextPreference passordPref = new EditTextPreference(mContext);
-        passordPref.setTitle(mContext.getString(R.string.sett_password));
-        passordPref.setSummary(mContext.getString(R.string.sett_passwordSumm));
-        passordPref.setKey(mContext.getString(R.string.sett_key_password));
+        EditTextPreference passordPref = new EditTextPreference(mSettAct);
+        passordPref.setTitle(mSettAct.getString(R.string.sett_password));
+        passordPref.setSummary(mSettAct.getString(R.string.sett_passwordSumm));
+        passordPref.setKey(mSettAct.getString(R.string.sett_key_password));
         passordPref.setDefaultValue("");
         passordPref.getEditText().setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         passordPref.getEditText().setInputType(EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS | EditorInfo.TYPE_TEXT_VARIATION_PASSWORD);
         allPrefs.add(passordPref);
+    }
+
+    private void createDownloadIntervalPref() {
+        ListPreference myUpdatePref = new ListPreference(mSettAct);
+        myUpdatePref.setTitle(R.string.sett_downloadInterval);
+        myUpdatePref.setSummary(R.string.sett_downloadIntervalSumm);
+        myUpdatePref.setKey(mSettAct.getString(R.string.sett_key_downloadInterval));
+        myUpdatePref.setEntries(R.array.downloadIntervalEntries);
+        myUpdatePref.setEntryValues(R.array.downloadIntervalValues);
+        myUpdatePref.setDefaultValue("12");
+        myUpdatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if ("-1".equals(String.valueOf(newValue))) {
+                    // "-1" = download never -> deleteAlarm
+                    sendBroadcast(Keys.ACTION_DELETEALARM);
+                } else {
+                    sendBroadcast(Keys.ACTION_SETALARM);
+                }
+                return true;
+            }
+        });
+        allPrefs.add(myUpdatePref);
+    }
+
+    public void sendBroadcast(String alarmAction) {
+        LocalBroadcastManager
+                .getInstance(mSettAct)
+                .sendBroadcast(new Intent().setAction(alarmAction));
     }
 
     @Override

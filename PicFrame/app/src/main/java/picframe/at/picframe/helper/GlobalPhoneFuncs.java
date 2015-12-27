@@ -20,6 +20,7 @@
 package picframe.at.picframe.helper;
 
 import android.os.Environment;
+import android.os.Handler;
 import android.os.StatFs;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public class GlobalPhoneFuncs {
             if (allowedExts.contains(filename.toLowerCase())) {
                 return true;
             }
-            return MainActivity.settingsObj.getRecursiveSearch() && tempfile.isDirectory();
+            return MainActivity.AppData.getRecursiveSearch() && tempfile.isDirectory();
 
         }
     };
@@ -51,15 +52,15 @@ public class GlobalPhoneFuncs {
     // returns a List with all files in given directory
     public static List<String> getFileList(String path){
         List<String> fileArray = new ArrayList<>();
-        if (MainActivity.settingsObj.getSourceType() == AppData.sourceTypes.ExternalSD) {
+        if (MainActivity.AppData.getSourceType() == AppData.sourceTypes.ExternalSD) {
             fileArray = readSdDirectory(path);
-        } else if (MainActivity.settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
+        } else if (MainActivity.AppData.getSourceType() == AppData.sourceTypes.OwnCloud) {
             fileArray = readSdDirectory(path);
-        } else if (MainActivity.settingsObj.getSourceType() == AppData.sourceTypes.Dropbox) {
+        } else if (MainActivity.AppData.getSourceType() == AppData.sourceTypes.Dropbox) {
             fileArray = readSdDirectory(path);
         }
         if (fileArray.isEmpty()) return fileArray;
-        if (MainActivity.settingsObj.getRandomize()) {
+        if (MainActivity.AppData.getRandomize()) {
             Collections.shuffle(fileArray);
         } else {
             Collections.sort(fileArray);
@@ -84,7 +85,7 @@ public class GlobalPhoneFuncs {
 
     // Checks whether the given directory has allowed files
     public static boolean hasAllowedFiles() {
-        List<String> files = readSdDirectory(MainActivity.settingsObj.getImagePath());
+        List<String> files = readSdDirectory(MainActivity.AppData.getImagePath());
         return !(files.isEmpty());
     }
 
@@ -115,9 +116,19 @@ public class GlobalPhoneFuncs {
         return bytesAvail;
     }
 
-    public static boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
+    public static void recursiveDeletionInBackgroundThread(final File directory, final boolean deleteRoot) {
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                recursiveDelete(directory, deleteRoot);
+            }
+        });
+    }
+
+    private static boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
         if (dir.exists()) {
-            for (File file : dir.listFiles()) {
+            File[] list = dir.listFiles();
+            for (File file : list) {
                 if (file.isDirectory()) {
                     recursiveDelete(new File(file.getAbsolutePath()), true);
                 } else {
@@ -126,12 +137,12 @@ public class GlobalPhoneFuncs {
                     }
                 }
             }
+            if (delRoot) {
+                return dir.delete();
+            }
         }
-        if (delRoot) {
-            return dir.delete();
-        }
-        // Comment to remove warning xD
-        return false;
+        // Comment to remove warning
+        return true;
     }
 
 }

@@ -25,8 +25,8 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -45,7 +45,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 
 import picframe.at.picframe.R;
@@ -59,7 +58,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
     private PreferenceCategory myCat2;
-    private AppData settingsObj = AppData.getINSTANCE();
     @SuppressWarnings("FieldCanBeLocal")
     private SharedPreferences mPrefs;
     private ArrayList<String> editableTitleFields = new ArrayList<>();
@@ -78,7 +76,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         PreferenceManager prefMgr = getPreferenceManager();
         prefMgr.setSharedPreferencesName(AppData.mySettingsFilename);
         prefMgr.setSharedPreferencesMode(MODE_PRIVATE);
-        mPrefs = this.getSharedPreferences(AppData.mySettingsFilename, MODE_PRIVATE);
+        mPrefs = AppData.getSharedPreferences();
         mPrefs.registerOnSharedPreferenceChangeListener(this);
 
         if (DEBUG)  printAllPreferences();
@@ -94,7 +92,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
 //        setCorrectSrcPathField();
 //        updateTitlePrefsWithValues(mPrefs, "all");
-        //System.out.println(settingsObj.toString());
+        //System.out.println(AppData.toString());
     }
 
     private void printAllPreferences() {
@@ -143,6 +141,11 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         editableTitleFields.add(getString(R.string.sett_key_displaytime));
         editableTitleFields.add(getString(R.string.sett_key_transition));
         editableTitleFields.add(getString(R.string.sett_key_srctype));
+        editableTitleFields.add(getString(R.string.sett_key_srcpath_sd));
+        editableTitleFields.add(getString(R.string.sett_key_username));
+        editableTitleFields.add(getString(R.string.sett_key_password));
+        editableTitleFields.add(getString(R.string.sett_key_srcpath_owncloud));
+        editableTitleFields.add(getString(R.string.sett_key_downloadInterval));
     }
 
     private void populateFieldsToRemove() {
@@ -150,121 +153,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         fieldsToRemove.add(getString(R.string.sett_key_deleteData));
         fieldsToRemove.add(getString(R.string.sett_key_restoreDefaults));
     }
-/*
-    private void updateTitlePrefsWithValues(SharedPreferences sharedPreferences, String key) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            if (findPreference(key) instanceof CheckBoxPreference) return;
-        } else {
-            if (findPreference(key) instanceof CheckBoxPreference ||
-                    findPreference(key) instanceof TwoStatePreference) return;
-        }
-        String[] SwitchPrefsAndOthersToSkip = { getString(R.string.sett_key_slideshow),    // TODO: add the custom-sett-keys too (like tutorial), else app dies at [String keyValue = sharedPreferences.getString(key, "-1");]
-                getString(R.string.sett_key_scaling),
-                getString(R.string.sett_key_randomize),
-                getString(R.string.sett_key_tutorial),
-                getString(R.string.sett_key_firstStart),
-                getString(R.string.sett_key_recursiveSearch)};
-        for (String path : SwitchPrefsAndOthersToSkip) {
-            if (key.contains(path)) {
-                return;
-            }
-        }
-        // UNTIL HERE ARE CHECKS FOR SWITCH-PREFERENCES, APP WOULD CRASH OTHERWISE
-
-        boolean loadAll = false;
-        String titleStr = null;
-        //String summStr = null;
-        String keyValue = sharedPreferences.getString(key, "-1");
-        if (keyValue.equals("-1")) {
-            keyValue = null;
-        }
-        //System.out.println("mprefs- key: " +key + " -- value: " +mPrefs.getString(key,"-1"));       // sharedPrefs and mprefs values = the same
-
-        switch (key) {
-            case "all":
-                loadAll = true;
-                break;
-            case "Username":
-                titleStr = getString(R.string.sett_username);
-                break;
-            case "Password":
-                if (keyValue != null)
-                    //noinspection ReplaceAllDot
-                    keyValue = keyValue.replaceAll(".", "*");
-                titleStr = getString(R.string.sett_password);
-                break;
-            case "SrcType":
-                keyValue = settingsObj.getSourceType().toString();
-                // String was number => to correct string (like External SD/Externe SD Karte)
-                //keyValue = getResources().getStringArray(R.array.srcTypeEntries)[settingsObj.getSrcTypeInt()];
-                //System.err.println("KeyValue after: " + keyValue);
-                titleStr = getString(R.string.sett_srcType);
-                toggleUnusedFields(key, keyValue);
-                break;
-            case "DisplayTime":
-                ListPreference tmp = (ListPreference) findPreference(key);
-                if (tmp != null) {
-                    if (tmp.getEntry() != null) {
-                        keyValue = tmp.getEntry().toString();
-                    }
-                }
-                titleStr = getString(R.string.sett_displayTime);
-                break;
-            case "SrcPath_sd":
-                titleStr = getString(R.string.sett_srcPath_externalSD);
-            //    summStr = getString(R.string.sett_srcPath_externalSDSumm);
-                break;
-            case "SrcPath_owncloud":
-                titleStr = settingsObj.getSourceType().toString() + " URL";
-             //   titleStr = getResources().getStringArray(R.array.srcTypeEntries)[settingsObj.getSrcTypeInt()] + " URL";
-             //   summStr = getString((R.string.sett_srcPath_OwnCloudSumm));
-                break;
-            case "SrcPath_samba":
-
-                break;
-            default:
-                //System.out.println("Default?! => " + key);
-                return;
-        }
-        if (loadAll) {
-            //System.out.println("Seems like u want to update everything now.");
-            updateTitlePrefsWithValues(sharedPreferences, "Username");
-            updateTitlePrefsWithValues(sharedPreferences, "Password");
-            updateTitlePrefsWithValues(sharedPreferences, "SrcType");
-            updateTitlePrefsWithValues(sharedPreferences, "DisplayTime");
-            return;
-        }
-        Preference connPref = SettingsActivity.this.findPreference(key);
-        if (connPref == null)
-            return;
-        //System.out.println("VALUE CHECK:\ntitleString: " + titleStr +  "\nkeyValue: " + keyValue);
-        if (titleStr != null) {
-            if (keyValue == null) {
-                connPref.setTitle(titleStr);
-            } else {
-                connPref.setTitle(titleStr + ": " +keyValue);
-                //System.out.println("Title changed. Trigger: >" +key + "< Value: >" + titleStr + ": " + keyValue +"<");
-                //if (summStr != null) {
-                 //   connPref.setSummary(summStr);
-               // }
-            }
-        }
-        if (key.contains("SrcType")) {
-            Preference mySrcPathPref;
-            String[] SrcPaths = { getString(R.string.sett_key_srcpath_sd),
-                    getString(R.string.sett_key_srcpath_owncloud),
-                    getString(R.string.sett_key_srcpath_dropbox)};
-            for (String path : SrcPaths) {
-                mySrcPathPref = findPreference(path);
-                if (mySrcPathPref != null) {
-                    //myCat2.removePreference(mySrcPathPref);
-                    updateTitlePrefsWithValues(sharedPreferences, path);
-                }
-            }
-        }
-    }
-
-   */
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -273,7 +161,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         if (editableTitleFields.contains(key)) {
             //update display/transition title
-            updateListFieldTitle(key);
+            updateFieldTitle(key);
             if (getString(R.string.sett_key_srctype).equals(key)) {
                 createCat2Fields();
             }
@@ -282,25 +170,47 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     public void updateAllFieldTitles() {
         for (String prefKey : editableTitleFields) {
-            updateListFieldTitle(prefKey);
+            updateFieldTitle(prefKey);
         }
     }
 
-    public void updateListFieldTitle(String key) {
-        ListPreference mPref = (ListPreference) findPreference(key);
+    public void updateFieldTitle(String key) {
+        Preference mPref = findPreference(key);
         String mPrefTitle = "";
         String mPrefValue = "";
 
         if (mPref != null) {
-            if (mPref.getEntry() != null) {
-                mPrefValue = mPref.getEntry().toString();
+            if (mPref instanceof ListPreference) {
+                mPrefValue = ((ListPreference)mPref).getEntry() == null ? "" :  ((ListPreference)mPref).getEntry().toString();
+            } else if (mPref instanceof EditTextPreference) {
+                mPrefValue = ((EditTextPreference)mPref).getText();
+                if (getString(R.string.sett_key_password).equals(key) && mPrefValue != null && !mPrefValue.equals("")) {
+                    //noinspection ReplaceAllDot
+                    mPrefValue = mPrefValue.replaceAll(".", "*");
+                }
+            } else {
+                if (getString(R.string.sett_key_srcpath_sd).equals(mPref.getKey()) &&
+                        AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
+                    mPrefValue = AppData.getSourcePath();
+                }
             }
+
             if (getString(R.string.sett_key_displaytime).equals(key)) {
                 mPrefTitle = getString(R.string.sett_displayTime);
             } else if (getString(R.string.sett_key_transition).equals(key)) {
                 mPrefTitle = getString(R.string.sett_transition);
             } else if (getString(R.string.sett_key_srctype).equals(key)) {
                 mPrefTitle = getString(R.string.sett_srcType);
+            } else if (getString(R.string.sett_key_srcpath_sd).equals(key)) {
+                mPrefTitle = getString(R.string.sett_srcPath_externalSD);
+            } else if (getString(R.string.sett_key_username).equals(key)) {
+                mPrefTitle = getString(R.string.sett_username);
+            } else if (getString(R.string.sett_key_password).equals(key)) {
+                mPrefTitle = getString(R.string.sett_password);
+            } else if (getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
+                mPrefTitle = getString(R.string.sett_srcPath_OwnCloud);
+            } else if (getString(R.string.sett_key_downloadInterval).equals(key)) {
+                mPrefTitle = getString(R.string.sett_downloadInterval);
             }
             mPref.setTitle(mPrefTitle + ": " + mPrefValue);
         }
@@ -334,16 +244,14 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
 
     public void setDetailsPrefScreen() {
-        AppData.sourceTypes srcType = settingsObj.getSourceType();
-        String[] srcValueArray = getResources().getStringArray(R.array.srcTypeEntries);
-        String localizedSrcValue = Arrays.asList(srcValueArray).get(settingsObj.getSrcTypeInt());
         PreferenceScreen preferenceScreenToAdd = new DetailsPreferenceScreen(
-                srcType, localizedSrcValue, getPreferenceManager().createPreferenceScreen(this))
-                    .getPreferenceScreen();
+                    AppData.getSrcTypeInt(),
+                    getPreferenceManager().createPreferenceScreen(this),
+                    SettingsActivity.this)
+                .getPreferenceScreen();
         if (myCat2 != null && preferenceScreenToAdd != null) {
             myCat2.addPreference(preferenceScreenToAdd);
         }
-        // TODO
     }
 
     private void setIncludeSubdirsSwitchPref() {
@@ -383,13 +291,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 Toast.makeText(SettingsActivity.this, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT).show();
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        GlobalPhoneFuncs.recursiveDelete(
-                                                new File(settingsObj.getExtFolderAppRoot()), false);
-                                    }
-                                });
+                                GlobalPhoneFuncs.recursiveDeletionInBackgroundThread(
+                                        new File(AppData.getExtFolderAppRoot()),
+                                        false);
                             }
                         });
                 ensureDialogB.show();
@@ -432,7 +336,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
 
     public void resetSettingsToDefault() {
-        // TODO
+        AppData.resetSettings();
     }
 
     @Override

@@ -53,8 +53,8 @@
     <string name="sett_deleteDataSumm">Alle heruntergeladenen Bilder im picframe-Ordner werden gelöscht</string>
     <string name="sett_transition">Übergänge</string>
     <string name="sett_transitionSumm">Wählen Sie, welche Bildübergänge Sie bei der Slideshow haben wollen.</string>
-    <string name="sett_updateInterval">Aktualisierungsintervall</string>
-    <string name="sett_updateIntervalSumm">Wählen Sie aus, in welchem Intervall neue Bilder von der Quelle heruntergeladen werden sollen.</string>
+    <string name="sett_downloadInterval">Downloadintervall</string>
+    <string name="sett_downloadIntervalSumm">Wählen Sie aus, in welchem Intervall neue Bilder von der Quelle heruntergeladen werden sollen.</string>
     <!-- Settings Dialog Strings -->
     <string name="sett_dialog_title">Ordner auswählen</string>
     <string name="sett_dialog_posBtn">Ok</string>

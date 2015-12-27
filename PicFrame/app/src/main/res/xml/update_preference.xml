@@ -1,8 +1,0 @@
-<ListPreference xmlns:android="http://schemas.android.com/apk/res/android"
-    android:title="@string/sett_updateInterval"
-    android:summary="@string/sett_updateIntervalSumm"
-    android:key="@string/sett_key_updateInterval"
-    android:defaultValue="0"
-    android:entries="@array/updateIntervalEntries"
-    android:entryValues="@array/updateIntervalValues" >
-</ListPreference>

@@ -78,7 +78,6 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private ResponseReceiver receiver;
-    public static AppData settingsObj = AppData.getINSTANCE();
     LocalBroadcastManager broadcastManager;
 
     private static DisplayImages setUp;
@@ -143,8 +142,8 @@ public class MainActivity extends ActionBarActivity {
         loadAdapter();
         slideShow();
 
-        mOldPath = settingsObj.getImagePath();
-        mOldRecursive = settingsObj.getRecursiveSearch();
+        mOldPath = AppData.getImagePath();
+        mOldRecursive = AppData.getRecursiveSearch();
 
         pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -173,17 +172,16 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onResume() {
         super.onResume();
+        // refresh toolbar options (hide/show downloadNow)
         supportInvalidateOptionsMenu();
-        if (settingsObj.getFirstAppStart()) {
-            settingsObj.setFirstAppStart(false);
-            settingsObj.setTutorial(true);
+        if (AppData.getFirstAppStart()) {
+            AppData.setFirstAppStart(false);
+            AppData.setTutorial(true);
             showExamplePictures = true;
         }
 
         tutorial();
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        // if the user choose "download NOW", download pictures; then set timer as usual
       
         // get localBroadcastManager instance to receive localBroadCasts
         if (broadcastManager == null) {
@@ -191,33 +189,35 @@ public class MainActivity extends ActionBarActivity {
         }
         // register broadcast receiver for UI update from service
         if (receiver == null) {
-            IntentFilter filter = new IntentFilter(Keys.ACTION_DOWNLOAD_FINISHED);
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Keys.ACTION_DOWNLOAD_FINISHED);
+            filter.addAction(Keys.ACTION_PROGRESSUPDATE);
             filter.addCategory(Intent.CATEGORY_DEFAULT);
             receiver = new ResponseReceiver();
             broadcastManager.registerReceiver(receiver, filter);
         }
 
-        if(settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
+        if(AppData.getSourceType() == AppData.sourceTypes.OwnCloud) {
             Log.d(TAG,"new timer");
             deleteTimerz(true);
             this.downloadTimer = new Timer();
-            int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
+            int downloadInterval = AppData.getUpdateIntervalInHours(); // number of hours to wait for next download
             this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
         } else {
             System.out.println("no new timer");
             deleteTimerz(true);
         }
 
-        if ("".equals(settingsObj.getSourcePath())
-                && AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
+        if ("".equals(AppData.getSourcePath())
+                && AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
             showExamplePictures = true;
-            if(!settingsObj.getTutorial()) {
+            if(!AppData.getTutorial()) {
                 Toast.makeText(this,R.string.main_toast_noFolderPathSet, Toast.LENGTH_SHORT).show();
             }
         }
 
-        if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
-            if (!settingsObj.getImagePath().equals(mOldPath) || mOldRecursive != settingsObj.getRecursiveSearch()) {
+        if(GlobalPhoneFuncs.getFileList(AppData.getImagePath()).size() > 0) {
+            if (!AppData.getImagePath().equals(mOldPath) || mOldRecursive != AppData.getRecursiveSearch()) {
                 loadAdapter();
             }
         }
@@ -237,7 +237,7 @@ public class MainActivity extends ActionBarActivity {
         if (menu == null || !menu.hasVisibleItems())
             return super.onPrepareOptionsMenu(menu);
 
-        if (settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
+        if (AppData.getSourceType() == AppData.sourceTypes.OwnCloud) {
             menu.findItem(R.id.action_download).setVisible(true);
         } else {
             menu.findItem(R.id.action_download).setVisible(false);
@@ -278,8 +278,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onPause() {
         super.onPause();
         deleteTimerz();
-        mOldPath = settingsObj.getImagePath();
-        mOldRecursive = settingsObj.getRecursiveSearch();
+        mOldPath = AppData.getImagePath();
+        mOldRecursive = AppData.getRecursiveSearch();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // unregister receiver, because if the activity is not in focus, we want no UI updates
@@ -365,10 +365,10 @@ public class MainActivity extends ActionBarActivity {
 
 
     public void slideShow(){
-        if (settingsObj.getSlideshow()){
+        if (AppData.getSlideshow()){
             pager.setScrollDurationFactor(8);
             pager.setPagingEnabled(false);
-            pageSwitcher(settingsObj.getDisplayTime());
+            pageSwitcher(AppData.getDisplayTime());
         }
         else{
             pager.setScrollDurationFactor(3);
@@ -419,7 +419,7 @@ public class MainActivity extends ActionBarActivity {
 
             imgDisplay = (ImageView) viewLayout.findViewById(R.id.photocontainer);
 
-            if (settingsObj.getScaling()) {
+            if (AppData.getScaling()) {
                 imgDisplay.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } else {
                 imgDisplay.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -447,13 +447,13 @@ public class MainActivity extends ActionBarActivity {
 
                 @Override
                 public void onTap() {
-                    if (settingsObj.getSlideshow()) {
+                    if (AppData.getSlideshow()) {
                         paused = !paused;
 
                         if (paused) {
                             mPause.setVisibility(View.VISIBLE);
                             remainingDisplayTime = 4; // TODO: actual remaining time instead of hardcoded value
-                            if(settingsObj.getDisplayTime() >= 60){
+                            if(AppData.getDisplayTime() >= 60){
                                 String remainingTimeString = String.valueOf(remainingDisplayTime);
                                 TextView textView = (TextView) findViewById(R.id.remaining_time_value);
                                 textView.setText(remainingTimeString);
@@ -481,7 +481,7 @@ public class MainActivity extends ActionBarActivity {
         }
 
         private void updateSettings() {
-            mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
+            mFilePaths = GlobalPhoneFuncs.getFileList(AppData.getImagePath());
             //setUp.notifyDataSetChanged();
             setSize();
         }
@@ -516,7 +516,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void updateFileList() {
-        mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
+        mFilePaths = GlobalPhoneFuncs.getFileList(AppData.getImagePath());
         setSize(); // size is count of images in folder, or constant if example pictures are used
         setUp.notifyDataSetChanged();
     }
@@ -553,25 +553,25 @@ public class MainActivity extends ActionBarActivity {
 
     private boolean checkForProblemsAndShowToasts() {
         // OwnCloud or Dropbox selected
-        if (!AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
+        if (!AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
             // if no write rights, we don't need to download
             if (!GlobalPhoneFuncs.isExternalStorageWritable()) {
                 Toast.makeText(this, R.string.main_toast_noSDWriteRights, Toast.LENGTH_SHORT).show();
             } else {
                 // If no Username set although source is not SD Card
-                if ("".equals(settingsObj.getUserName()) || "".equals(settingsObj.getUserPassword())) {
+                if ("".equals(AppData.getUserName()) || "".equals(AppData.getUserPassword())) {
                     Toast.makeText(this, R.string.main_toast_noUsernameSet, Toast.LENGTH_SHORT).show();
                 } else {
                     if (DEBUG) Log.i(TAG, "username and pw set");
                     // Try to connect & login to selected source server
-                    if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
+                    if (AppData.sourceTypes.OwnCloud.equals(AppData.getSourceType())) {
                         if (DEBUG) Log.i(TAG, "trying OC check");
                         //startConnectionCheck();
                         Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
                         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
                         startService(startDownloadIntent);
                         return true;
-                    }// else if (settingsObj.getSourceType().equals(AppData.sourceTypes.Dropbox))
+                    }// else if (AppData.getSourceType().equals(AppData.sourceTypes.Dropbox))
                     {
                         // TODO: Dropbox checks go here
                     }
@@ -594,10 +594,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void selectTransformer(){
-        if(settingsObj.getSlideshow() && settingsObj.getTransitionStyle() == 11){
+        if(AppData.getSlideshow() && AppData.getTransitionStyle() == 11){
             pager.setPageTransformer(true,transformers.get(random()));
-        } else if(settingsObj.getSlideshow()){
-            pager.setPageTransformer(true,transformers.get(settingsObj.getTransitionStyle()));
+        } else if(AppData.getSlideshow()){
+            pager.setPageTransformer(true,transformers.get(AppData.getTransitionStyle()));
         } else {
             pager.setPageTransformer(true,new ZoomOutPageTransformer());
         }
@@ -635,7 +635,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void tutorial (){
-        if (!settingsObj.getTutorial()) {
+        if (!AppData.getTutorial()) {
             return;
         }
         AlertDialog.Builder click_on_settings_dialog_builder = new AlertDialog.Builder(MainActivity.this);
@@ -650,7 +650,7 @@ public class MainActivity extends ActionBarActivity {
                     new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    settingsObj.setTutorial(false);
+                    AppData.setTutorial(false);
                 }
             })
             .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
@@ -683,7 +683,18 @@ public class MainActivity extends ActionBarActivity {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
                     if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
-                    updateFileList();
+                    new Handler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateFileList();
+                        }
+                    });
+                } else if (Keys.ACTION_PROGRESSUPDATE.equals(intent.getAction())) {
+                    int progressPercent = intent.getIntExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, 0);
+                    Boolean indeterminate = intent.getBooleanExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, true);
+
+                    if (DEBUG)  Log.d(TAG, "received 'progress_update' - " +
+                            progressPercent+"% - indeterminate?" + indeterminate);
                 }
             }
         }
