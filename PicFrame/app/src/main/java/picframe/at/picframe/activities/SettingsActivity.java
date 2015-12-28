@@ -53,7 +53,7 @@ import java.io.File;
 
 import picframe.at.picframe.MainApp;
 import picframe.at.picframe.R;
-import picframe.at.picframe.downloader.AlarmReceiver;
+import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.settings.SimpleFileDialog;
 import picframe.at.picframe.helper.settings.MySwitchPref;
@@ -68,7 +68,7 @@ public class SettingsActivity extends PreferenceActivity {
     private final static boolean DEBUG = false;
     @SuppressWarnings("FieldCanBeLocal")
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private boolean switchedToOwnCloudFlag = false;
+    private AlarmScheduler alarmScheduler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,17 +86,18 @@ public class SettingsActivity extends PreferenceActivity {
             System.out.println("Key: " + e + " == Value: " + keyMap.get(e));
         }
 */
+        alarmScheduler = new AlarmScheduler();
+
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 if (MainApp.getINSTANCE().getApplicationContext().getString(R.string.sett_key_srctype).equals(key)) {
                     setCorrectSrcPathField();
                     if (AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
                         Log.d(TAG, "SD-Card; delete alarm");
-                        deleteAlarm();
+                        alarmScheduler.deleteAlarm();
                     } else if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
                         // set new alarm when switching from sd-card to owncloud
                         Log.d(TAG, "OwnCloud");
-                        switchedToOwnCloudFlag = true;
                         // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }
                 }
@@ -443,10 +444,10 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ("-1".equals(String.valueOf(newValue))) {
-                    deleteAlarm();
+                    alarmScheduler.deleteAlarm();
                 }
                 return true;
-               } /* else {
+            } /* else {
                     setAlarm();
                     return true;
                 }*/
@@ -510,7 +511,7 @@ public class SettingsActivity extends PreferenceActivity {
         return false;
     }
 
-    private void deleteAlarm(){
+/*    private void deleteAlarm(){
         System.out.println(" DELETE ALARMS ");
         // clicked "never"
         AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
@@ -519,7 +520,7 @@ public class SettingsActivity extends PreferenceActivity {
         PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
         am.cancel(p);
         p.cancel();
-    }
+    }*/
 /*    private void setAlarm(){
         System.out.println(" UPDATE SETTINGS ACTIVITY ");
 

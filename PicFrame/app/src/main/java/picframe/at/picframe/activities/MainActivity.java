@@ -62,8 +62,9 @@ import java.util.TimerTask;
 
 import picframe.at.picframe.Keys;
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.TimeConverter;
+import picframe.at.picframe.helper.alarm.TimeConverter;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.downloader.AlarmReceiver;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
@@ -118,7 +119,6 @@ public class MainActivity extends ActionBarActivity {
     private Handler actionbarHideHandler;
     private ImageView mPause;
     private LinearLayout mRemainingTimeLayout;
-
     //alarmtime
     private Long alarmtime;
 
@@ -776,7 +776,9 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void setUpAlarmIfApplicable() {
-        if (settingsObj.getSourceType() != AppData.sourceTypes.OwnCloud
+        AlarmScheduler alarmScheduler = new AlarmScheduler();
+        alarmScheduler.deleteAlarm();
+        if(settingsObj.getSourceType() != AppData.sourceTypes.OwnCloud
                 || settingsObj.getUpdateIntervalInHours() == -1
                 || settingsObj.getUserName().equals("")
                 || settingsObj.getUserPassword().equals("")) {
@@ -784,57 +786,6 @@ public class MainActivity extends ActionBarActivity {
             return;
         }
         Log.d(TAG, "new alarm!");
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-        TimeConverter tc = new TimeConverter();
-
-        Long nextAlarmTime;
-        Long currentTime = new GregorianCalendar().getTimeInMillis();
-        Long nextScheduledAlarm = settingsObj.getLastAlarmTime() + settingsObj.getUpdateIntervalInHours() * 1000 * 60 * 60;
-
-        Log.d(TAG, "currentTime : "+tc.millisecondsToDate(currentTime));
-        Log.d(TAG, "previousAlarm: "+tc.millisecondsToDate(settingsObj.getLastAlarmTime()));
-        Log.d(TAG, "nextScheduledAlarm: " + tc.millisecondsToDate(nextScheduledAlarm));
-
-        // If the time for the next scheduled alarm is passed, download immediately
-        if(nextScheduledAlarm <= currentTime){
-            Log.d(TAG, "set off next alarm in 2 minutes: "+nextScheduledAlarm);
-            nextAlarmTime = currentTime + 2 * 1000 * 60;
-        } else {
-            nextAlarmTime = nextScheduledAlarm;
-        }
-
-        // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
-        // specified AlarmReceiver in the Intent. The onReceive() method of this class will execute when the broadcast from the alarm is received.
-        Intent intentAlarm = new Intent(this, AlarmReceiver.class);
-
-        // Set the alarm for a particular alarmtime.
-        alarmManager.set(AlarmManager.RTC_WAKEUP, nextAlarmTime, PendingIntent.getBroadcast(this, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
-
-        // save alarm start time
-        settingsObj.setLastAlarmTime(currentTime);
-
-        System.out.println("Start time: " + tc.millisecondsToDate(currentTime) + " " + (currentTime));
-        System.out.println("Go OFF time: " + tc.millisecondsToDate(nextAlarmTime) + " " + nextAlarmTime);
-        Toast.makeText(this, "Alarm Scheduled for " + tc.millisecondsToDate(nextAlarmTime), Toast.LENGTH_LONG).show();
-    }
-
-    private void deleteAlarm(){
-        Log.d(TAG, " DELETE ALARMS ");
-
-        AlarmManager am = (AlarmManager) getSystemService(getContext().ALARM_SERVICE);
-
-        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
-        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
-        am.cancel(p);
-        p.cancel();
-    }
-
-    private void setAlarm(){
-        deleteAlarm();
-        //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
-        Intent intent = new Intent();
-        intent.setAction("ACTION_UPDATE_ALARM");
-        sendBroadcast(intent);
+        alarmScheduler.scheduleAlarm();
     }
 }

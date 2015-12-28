@@ -32,7 +32,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import picframe.at.picframe.activities.MainActivity;
-import picframe.at.picframe.helper.TimeConverter;
+import picframe.at.picframe.helper.alarm.AlarmScheduler;
+import picframe.at.picframe.helper.alarm.TimeConverter;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.service_broadcast.DownloadService;
 import picframe.at.picframe.Keys;
@@ -55,48 +56,21 @@ public class AlarmReceiver extends BroadcastReceiver {
         tc = new TimeConverter();
 
         System.out.println(" ALARMRECEIVER ");
-        Long alarmTime = settingsObj.getLastAlarmTime();
-        Log.d(TAG, "Last Alarm" + tc.millisecondsToDate(alarmTime));
+
+//        Long scheduledAlarm = lastAlarmTime+settingsObj.getUpdateIntervalInHours();
         Long currentTime = new GregorianCalendar().getTimeInMillis();
 
         Intent startDownloadIntent = new Intent(context, DownloadService.class);
         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
         context.startService(startDownloadIntent);
 
-        // Set time for next alarm
-
-        // loading settings
-
         settingsObj.setLastAlarmTime(currentTime);
 
-        if (alarmTime + settingsObj.getUpdateIntervalInHours() * 1000 * 60 * 60 < currentTime) {
-            // Time is small or negativ download after 1 minute
-            Log.d(TAG, "Short");
-            alarmTime = currentTime + 1 * 60 * 1000;
-        } else {
-            Log.d(TAG, "long");
-            alarmTime = alarmTime + settingsObj.getUpdateIntervalInHours() * 1000 * 60 *60;
-        }
-
-        Log.d(TAG, "Current Time"+tc.millisecondsToDate(currentTime));
-        Log.d(TAG, "Next Alarm"+tc.millisecondsToDate(alarmTime));
-
-        //testing
-        //time = calendar + 1*60*1000;
-
-        // Save starttime of the alarm so we can compare after the app shutsdown if the interval gets switched
-
-        // Create an Intent and set the class that will execute when the Alarm triggers. Here we have
-        // specified AlarmReceiver in the Intent. The onReceive() method of this class will execute when the broadcast from your alarm is received.
-        Intent intentAlarm = new Intent(context, AlarmReceiver.class);
-
-        // Get the Alarm Service.
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-
-        // Set the alarm for a particular time.
-        alarmManager.set(AlarmManager.RTC_WAKEUP, alarmTime, PendingIntent.getBroadcast(context, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
-
-        System.out.println("Start time: " + tc.millisecondsToDate(currentTime) + " " + (currentTime));
-        System.out.println("Go OFF time: " + tc.millisecondsToDate(alarmTime) + " " + alarmTime);
+        Log.d(TAG, "Current Time    : " + tc.millisecondsToDate(currentTime));
+        AlarmScheduler alarmScheduler = new AlarmScheduler();
+        Long nextAlarm = alarmScheduler.scheduleAlarm();
+        Log.d(TAG, "Next Alarm      : "+tc.millisecondsToDate(nextAlarm));
+        Log.d(TAG,"Start time: " + tc.millisecondsToDate(currentTime) + " " + (currentTime));
+        Log.d(TAG, "Go OFF time: " + tc.millisecondsToDate(nextAlarm) + " " + nextAlarm);
     }
 }
