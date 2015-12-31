@@ -148,6 +148,8 @@ public class MainActivity extends ActionBarActivity {
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
 
+        settingsObj.resetPictureFolderIfChanged();
+
         pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrollStateChanged(int state) { }
