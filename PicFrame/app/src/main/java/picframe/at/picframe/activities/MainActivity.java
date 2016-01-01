@@ -86,7 +86,7 @@ public class MainActivity extends ActionBarActivity {
     private static CustomViewPager pager;
     private Timer timer;
     private Timer downloadTimer;
-    private final long countdownIntervalInMilliseconds = 1*30*1000-50;
+    private final long countdownIntervalInMilliseconds = 1*30*1000-50; // interval set to about half a minute
     private CountDownTimer countDownTimer;
     private CountDownTimer countDownTimer2;
     private int page;
@@ -227,9 +227,14 @@ public class MainActivity extends ActionBarActivity {
             pager.setCurrentItem(currentPageSaved);
             page=currentPageSaved;
         }
+
         setUpSlideShow();
 
-        startSlideshowCountDown();
+        if(settingsObj.getSlideshow()){
+            startSlideshowCountDown();
+        } else if(paused) {
+            paused = false;
+        }
     }
 
     @Override
@@ -280,7 +285,8 @@ public class MainActivity extends ActionBarActivity {
         cancelSlideShowCoundown();
         Log.d(TAG, "remaing display time: "+remainingDisplayTime);
         deleteTimerz();
-        countDownTimer.cancel();
+        if(countDownTimer != null)
+            countDownTimer.cancel();
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -420,8 +426,8 @@ public class MainActivity extends ActionBarActivity {
 
 
         @Override
-        public Object instantiateItem(ViewGroup container, int position) {
-
+        public Object instantiateItem(ViewGroup container, final int position) {
+            Log.d(TAG, "position: "+position);
 
             inflater = (LayoutInflater) activity
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -445,16 +451,23 @@ public class MainActivity extends ActionBarActivity {
                 Log.d(TAG, "currentImage: " + currentImage);
                 imgDisplay.setImageResource(currentImageID);
             }
+            Log.d(TAG, "localpage: "+localpage);
             imgDisplay.setOnTouchListener(new Gestures(getApplicationContext()) {
                 @Override
                 public void onSwipeBottom() {
                     showActionBar();
                 }
+
                 @Override
                 public void onSwipeTop() {
-                    if (getSupportActionBar() != null){
+                    if (getSupportActionBar() != null) {
                         getSupportActionBar().hide();
                     }
+                }
+
+                @Override
+                public void onSwipeRight() {
+                    Log.d(TAG, "To the right!");
                 }
 
                 @Override
@@ -463,6 +476,8 @@ public class MainActivity extends ActionBarActivity {
                         paused = !paused;
 
                         if (paused) {
+                            cancelSlideShowCoundown();
+                            pager.setPagingEnabled(true);
                             mPause.setVisibility(View.VISIBLE);
                             //
 //                            remainingDisplayTime = 4; // TODO: comment in once we show remaing time
@@ -473,19 +488,23 @@ public class MainActivity extends ActionBarActivity {
 //                                mRemainingTimeLayout.setVisibility(View.VISIBLE);
 //                            }
                             showActionBar();
-                        }
-                        else {
+                        } else {
+                            startSlideshowCountDown();
                             mPause.setVisibility(View.INVISIBLE);
-                            if(mRemainingTimeLayout.getVisibility() == View.VISIBLE)
+                            if(position < pager.getAdapter().getCount() -1 && position > 0) {
+                                pager.setCurrentItem(position); // in case page was manually changed while paused
+                                page=position;
+                            }
+                            pager.setPagingEnabled(false);
+                            if (mRemainingTimeLayout.getVisibility() == View.VISIBLE)
                                 mRemainingTimeLayout.setVisibility(View.INVISIBLE);
                         }
                     }
                 }
             });
             container.addView(viewLayout);
-
+            Log.d(TAG, "page: " + page);
             return viewLayout;
-
         }
 
         @Override
@@ -547,7 +566,7 @@ public class MainActivity extends ActionBarActivity {
     private void loadAdapter(){
         setUp = new DisplayImages(MainActivity.this);
 //        pager.setPagingEnabled(true);
-        setUp = new DisplayImages(MainActivity.this);
+//        setUp = new DisplayImages(MainActivity.this);
         try {
             pager.setAdapter(setUp);
             page = setUp.getPage();
@@ -747,7 +766,7 @@ public class MainActivity extends ActionBarActivity {
 
             @Override
             public void onFinish() {
-                Log.d(TAG, "I'm done!");
+                Log.d(TAG, "Timer done; new timer!");
                 pageSwitcher();
                 countDownTimer.start();
             }
@@ -755,7 +774,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void cancelSlideShowCoundown(){
-        /* remaing display time is always imprecise, the real value located somewhere between
+        /* remainingg display time is always imprecise, the real value located somewhere between
             0 and countdownIntervalInMilliseconds.
             If the display time is smaller than countdownIntervalInMilliseconds/1000,
             then the value of countdownIntervalInMilliseconds will never change, and resetting
