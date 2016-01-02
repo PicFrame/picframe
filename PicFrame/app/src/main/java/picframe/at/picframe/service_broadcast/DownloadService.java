@@ -295,14 +295,14 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - " + getString(R.string.service_notif_startDownloadTicker))
                         .setContentText(getString(R.string.service_notif_startDownloadText))
-                        .setSubText("")
+                        .setSubText(null)
                         .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.service_notif_actionStop), stopDownloadPendIntent)
                         .setProgress(100, 50, true);
         // PROGRESS
             } else if (Keys.NotificationStates.PROGRESS.equals(notification_state)) {
                 notificationBuilder
                         .setContentText(getString(R.string.service_notif_progressText) + " " + progress + "%")
-                        .setSubText("")
+                        .setSubText(null)
                         .setProgress(100, progress, false);
             }
         } else if (Keys.NotificationStates.FAILURE.equals(notification_state)
