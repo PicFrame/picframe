@@ -124,7 +124,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
             } // else if (AppData.sourceTypes.Dropbox.equals(tmpSource) {}    //  TODO Dropbox
             if (args == null) {
                 Log.d(TAG, "Arguments cannot be null, aborting!");
-                stopSelf();
+                downloadFailed(Downloader.Failure.LOGIN);
                 return Service.START_NOT_STICKY;
             }
             // start download here, progress will be published via callback to this class and then broadcast
