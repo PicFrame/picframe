@@ -82,13 +82,12 @@ public class MainActivity extends ActionBarActivity {
     public static AppData settingsObj = AppData.getINSTANCE();
     LocalBroadcastManager broadcastManager;
 
-    private static DisplayImages setUp;
-    private static CustomViewPager pager;
+    private DisplayImages setUp;
+    private CustomViewPager pager;
     private Timer timer;
     private Timer downloadTimer;
     private final long countdownIntervalInMilliseconds = 1*30*1000-50; // interval set to about half a minute
     private CountDownTimer countDownTimer;
-    private CountDownTimer countDownTimer2;
     private int page;
 
     private static Context mContext;
@@ -108,10 +107,10 @@ public class MainActivity extends ActionBarActivity {
     private static Animation mFadeInAnim, mFadeOutAnim;                 //TODO still needed?
 
     private ArrayList<PageTransformer> transformers;
-    private static List<String> mFilePaths;
-    private static int size;
+    private List<String> mFilePaths;
+    private int size;
     private static int currentPageSaved;
-    private static boolean toggleDirection;
+    private boolean rightToLeft;
     private Handler actionbarHideHandler;
     private ImageView mPause;
     private LinearLayout mRemainingTimeLayout;
@@ -133,7 +132,7 @@ public class MainActivity extends ActionBarActivity {
         mFadeOutAnim = AnimationUtils.loadAnimation(this, R.anim.fade_out);
         //mConnCheckOC = false;
         //mConnCheckSMB = false;
-        toggleDirection = false;
+        rightToLeft = true;
         paused = false;
         enableGestures();
         //deletePreferences();
@@ -225,7 +224,6 @@ public class MainActivity extends ActionBarActivity {
         // start on the page we left in onPause, unless it was the first or last picture (as this freezes the slideshow
         if(currentPageSaved < pager.getAdapter().getCount() -1 && currentPageSaved > 0) {
             pager.setCurrentItem(currentPageSaved);
-            page=currentPageSaved;
         }
 
         setUpSlideShow();
@@ -332,40 +330,22 @@ public class MainActivity extends ActionBarActivity {
 
     private void pageSwitcher() {
         if (setUp.getCount() > 0 && !paused) {
-            pager.setCurrentItem(page, true);
-            if(!toggleDirection) {
-                page++;
+            int localpage = pager.getCurrentItem();
+            Log.d(TAG, "localpage "+localpage);
+            // switch diretion if extremity of slideshow is reacher
+            if(localpage >= setUp.getCount()-1){
+                rightToLeft = false;
+            } else if(localpage == 0){
+                rightToLeft = true;
+            }
+            if(rightToLeft) {
+                localpage++;
             }
             else {
-                page--;
+                localpage--;
             }
-            if(page == setUp.getCount()-1 || page == 0){
-                toggleDirection = !toggleDirection;
-            }
-        }
-    }
-
-
-
-    private class RemindTask extends TimerTask {
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    if (setUp.getCount() > 0 && !paused) {
-                        pager.setCurrentItem(page, true);
-                        if(!toggleDirection) {
-                            page++;
-                        }
-                        else {
-                            page--;
-                        }
-                        if(page == setUp.getCount()-1 || page == 0){
-                            toggleDirection = !toggleDirection;
-                        }
-                    }
-                }
-            });
+            pager.setCurrentItem(localpage, true);
+            Log.d(TAG, "localpage "+localpage);
         }
     }
 
@@ -398,6 +378,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        cancelSlideShowCoundown();
         deleteTimerz();
     }
 
@@ -427,8 +408,6 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public Object instantiateItem(ViewGroup container, final int position) {
-            Log.d(TAG, "position: "+position);
-
             inflater = (LayoutInflater) activity
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View viewLayout = inflater.inflate(R.layout.fullscreen_layout, container,
@@ -445,13 +424,10 @@ public class MainActivity extends ActionBarActivity {
             if(!showExamplePictures){
                 imgDisplay.setImageBitmap(EXIF_helper.decodeFile(mFilePaths.get(this.localpage), mContext));
             } else {
-                Log.d(TAG, "localpage: "+this.localpage);
                 String currentImage = "ex" + this.localpage;
                 int currentImageID = mContext.getResources().getIdentifier(currentImage, "drawable", mContext.getPackageName());
-                Log.d(TAG, "currentImage: " + currentImage);
                 imgDisplay.setImageResource(currentImageID);
             }
-            Log.d(TAG, "localpage: "+localpage);
             imgDisplay.setOnTouchListener(new Gestures(getApplicationContext()) {
                 @Override
                 public void onSwipeBottom() {
@@ -464,12 +440,6 @@ public class MainActivity extends ActionBarActivity {
                         getSupportActionBar().hide();
                     }
                 }
-
-                @Override
-                public void onSwipeRight() {
-                    Log.d(TAG, "To the right!");
-                }
-
                 @Override
                 public void onTap() {
                     if (settingsObj.getSlideshow()) {
@@ -491,11 +461,14 @@ public class MainActivity extends ActionBarActivity {
                         } else {
                             startSlideshowCountDown();
                             mPause.setVisibility(View.INVISIBLE);
-                            if(position < pager.getAdapter().getCount() -1 && position > 0) {
-                                pager.setCurrentItem(position); // in case page was manually changed while paused
+/*                            if(position < pager.getAdapter().getCount() -1 && position > 0) {
+                                pager.setCurrentItem(position);
                                 page=position;
+                                Log.d(TAG, "position in range: "+position);
+                            } else {
+                                Log.d(TAG, "not in range: "+position);
                             }
-                            pager.setPagingEnabled(false);
+*/                            pager.setPagingEnabled(false);
                             if (mRemainingTimeLayout.getVisibility() == View.VISIBLE)
                                 mRemainingTimeLayout.setVisibility(View.INVISIBLE);
                         }
@@ -503,7 +476,6 @@ public class MainActivity extends ActionBarActivity {
                 }
             });
             container.addView(viewLayout);
-            Log.d(TAG, "page: " + page);
             return viewLayout;
         }
 
@@ -560,6 +532,11 @@ public class MainActivity extends ActionBarActivity {
         }
         setSize(); // size is count of images in folder, or constant if example pictures are used
         setUp.notifyDataSetChanged();
+        // if there are more images than previously, reset to the last image
+/*        if(page >= setUp.getCount()) {
+            page = setUp.getCount();
+            rightToLeft = true;
+        }*/
     }
 
 
@@ -649,7 +626,7 @@ public class MainActivity extends ActionBarActivity {
         return (int)(Math.random() * 11);
     }
 
-    private static void setSize(){
+    private void setSize(){
         if(!showExamplePictures)
             size = mFilePaths.size();
         else
@@ -721,6 +698,7 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "In onReceive!");
             if (intent != null) {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
@@ -750,6 +728,7 @@ public class MainActivity extends ActionBarActivity {
                 }
             }.start();
         } else {
+            Log.d(TAG, "no leftover displaytime!");
             startRepeatingCountDowns();
         }
 
