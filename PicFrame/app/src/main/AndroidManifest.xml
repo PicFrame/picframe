@@ -51,6 +51,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.MainActivity" />
         </activity>
+
+        <!-- Register the Alarm Receiver -->
+        <receiver android:name=".downloader.AlarmReceiver">
+            <intent-filter>
+                <action android:name="ACTION_UPDATE_ALARM">
+                </action>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

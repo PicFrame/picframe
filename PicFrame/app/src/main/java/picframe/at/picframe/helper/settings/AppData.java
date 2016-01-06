@@ -171,6 +171,32 @@ public class AppData {
     public void setTutorial(boolean showTutorial) {
         mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_tutorial), showTutorial).commit();
     }
+
+    public int getCurrentPage(){
+        return mPrefs.getInt("currentpage", 1);
+    }
+
+    public void setCurrentPage(int page){
+        mPrefs.edit().putInt("currentpage", page).commit();
+    }
+
+    // flag for slideshow direction
+    public boolean getDirection() {
+        return mPrefs.getBoolean("toogledirection", true);
+    }
+    public void setDirection(boolean toggeleDirection) {
+        mPrefs.edit().putBoolean("toogledirection", toggeleDirection).commit();
+    }
+
+    // alam time ??
+    public Long getLastAlarmTime() {
+        return mPrefs.getLong("alarmtime", -1);
+    }
+
+    public void setLastAlarmTime (Long time) {
+        mPrefs.edit().putLong("alarmtime", time).commit();
+    }
+
 /* TODO
     // holds the remaining time to display the current image
     public int getRemainingDisplayTime() {
