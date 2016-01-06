@@ -83,7 +83,7 @@ public class MainActivity extends ActionBarActivity {
 
     private DisplayImages setUp;
     private CustomViewPager pager;
-    private final long countdownIntervalInMilliseconds = 1*30*1000-50; // interval set to about half a minute
+    private final long countdownIntervalInMilliseconds = 2*60*1000-50; // interval to slightly less than 2 minutes
     private CountDownTimer countDownTimer;
 
     private static Context mContext;
@@ -109,7 +109,7 @@ public class MainActivity extends ActionBarActivity {
     private Handler actionbarHideHandler;
     private ImageView mPause;
     private LinearLayout mRemainingTimeLayout;
-    //alarmtime
+    private AlertDialog click_on_settings_dialog;
 
     //public static boolean mConnCheckOC, mConnCheckSMB; //TODO still needed?
     public boolean mDoubleBackToExitPressedOnce;
@@ -290,7 +290,10 @@ public class MainActivity extends ActionBarActivity {
         // unregister receiver, because if the activity is not in focus, we want no UI updates
         broadcastManager.unregisterReceiver(receiver);
         receiver = null;
-
+        if(click_on_settings_dialog != null){
+            click_on_settings_dialog.cancel();
+            click_on_settings_dialog.dismiss();
+        }
         currentPage = pager.getCurrentItem();
     }
 
@@ -650,7 +653,7 @@ public class MainActivity extends ActionBarActivity {
                                 startActivity(getSettingsActivityIntent());
                             }
                         });
-        AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();
+        click_on_settings_dialog = click_on_settings_dialog_builder.create();
         click_on_settings_dialog.getWindow().setGravity(Gravity.TOP | Gravity.START);
         click_on_settings_dialog.setCancelable(true);
         click_on_settings_dialog.show();
