@@ -120,6 +120,7 @@
     <string name="sett_key_firstStart" translatable="false">FirstStart</string>
     <string name="sett_key_tutorial" translatable="false">Tutorial</string>
     <string name="sett_key_restoreDefaults" translatable="false">restoreDefaults</string>
+    <string name="sett_key_loginCheckButton" translatable="false">loginCheckButton</string>
     <!-- SETTINGS STRINGS END -->
 
     <!-- ABOUT STRINGS -->

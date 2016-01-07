@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import picframe.at.picframe.activities.MainActivity;
 import picframe.at.picframe.helper.settings.AppData;
 
 public class GlobalPhoneFuncs {
@@ -44,7 +43,7 @@ public class GlobalPhoneFuncs {
             if (allowedExts.contains(filename.toLowerCase())) {
                 return true;
             }
-            return MainActivity.AppData.getRecursiveSearch() && tempfile.isDirectory();
+            return AppData.getRecursiveSearch() && tempfile.isDirectory();
 
         }
     };
@@ -52,15 +51,15 @@ public class GlobalPhoneFuncs {
     // returns a List with all files in given directory
     public static List<String> getFileList(String path){
         List<String> fileArray = new ArrayList<>();
-        if (MainActivity.AppData.getSourceType() == AppData.sourceTypes.ExternalSD) {
+        if (AppData.getSourceType() == AppData.sourceTypes.ExternalSD) {
             fileArray = readSdDirectory(path);
-        } else if (MainActivity.AppData.getSourceType() == AppData.sourceTypes.OwnCloud) {
+        } else if (AppData.getSourceType() == AppData.sourceTypes.OwnCloud) {
             fileArray = readSdDirectory(path);
-        } else if (MainActivity.AppData.getSourceType() == AppData.sourceTypes.Dropbox) {
+        } else if (AppData.getSourceType() == AppData.sourceTypes.Dropbox) {
             fileArray = readSdDirectory(path);
         }
         if (fileArray.isEmpty()) return fileArray;
-        if (MainActivity.AppData.getRandomize()) {
+        if (AppData.getRandomize()) {
             Collections.shuffle(fileArray);
         } else {
             Collections.sort(fileArray);
@@ -85,7 +84,7 @@ public class GlobalPhoneFuncs {
 
     // Checks whether the given directory has allowed files
     public static boolean hasAllowedFiles() {
-        List<String> files = readSdDirectory(MainActivity.AppData.getImagePath());
+        List<String> files = readSdDirectory(AppData.getImagePath());
         return !(files.isEmpty());
     }
 

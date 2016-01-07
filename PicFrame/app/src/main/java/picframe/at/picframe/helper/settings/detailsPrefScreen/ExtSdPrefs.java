@@ -2,6 +2,7 @@ package picframe.at.picframe.helper.settings.detailsPrefScreen;
 
 import android.content.Context;
 import android.preference.Preference;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 
@@ -54,5 +55,10 @@ public class ExtSdPrefs implements IDetailsPreferenceScreen {
     @Override
     public ArrayList<Preference> getAllDetailPreferenceFields() {
         return allPrefs;
+    }
+
+    @Override
+    public ViewGroup getStatusViewGroup() {
+        return null;
     }
 }

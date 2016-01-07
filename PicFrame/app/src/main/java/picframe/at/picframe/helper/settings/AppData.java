@@ -114,16 +114,14 @@ public class AppData {
     // holds the path to the image source (from where to (down)-load them
     public static String getSourcePath() {
         sourceTypes tmpType = getSourceType();
-        if (sourceTypes.ExternalSD.equals(tmpType)) {
-            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd),
-                    (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_sd));
-        } else if (sourceTypes.OwnCloud.equals(tmpType)) {
+        if (sourceTypes.OwnCloud.equals(tmpType)) {
             return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_owncloud),
                     (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_dropbox));
         } else if (sourceTypes.Dropbox.equals(tmpType)) {
             return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_dropbox), "");
-        } else {
-            return null;
+        } else {    // if SD or undefined, get SD path
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd),
+                    (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_sd));
         }
     }
 

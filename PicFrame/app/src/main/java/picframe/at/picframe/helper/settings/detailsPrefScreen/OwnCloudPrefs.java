@@ -4,10 +4,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Handler;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.support.v4.content.LocalBroadcastManager;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
 
@@ -19,6 +21,7 @@ import picframe.at.picframe.R;
 import picframe.at.picframe.activities.SettingsActivity;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.service_broadcast.connectionChecker.ConnectionCheck_OC;
 
 public class OwnCloudPrefs implements IDetailsPreferenceScreen {
     private ArrayList<Preference> allPrefs = new ArrayList<>();
@@ -32,12 +35,8 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
         createUsernamePref();
         createPasswordPref();
         createDownloadIntervalPref();
-        //createLoginCheckButton();
+        createLoginCheckButton();
     }
-
-    /*
-
-    */
 
     private void createUrlPref() {
         EditTextPreference mySrcPathPref = new EditTextPreference(mSettAct);
@@ -50,11 +49,11 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if (newValue.toString().endsWith(File.separator)) {
                     Toast
-                        .makeText(
-                                mSettAct,
-                                "forbidden character at end of url: \"" + File.separator + "\"",    //TODO
-                                Toast.LENGTH_SHORT)
-                        .show();
+                            .makeText(
+                                    mSettAct,
+                                    "forbidden character at end of url: \"" + File.separator + "\"",    //TODO
+                                    Toast.LENGTH_SHORT)
+                            .show();
                     return false;
                 }
                 AlertDialog.Builder myDialQBuilder = new AlertDialog.Builder(mSettAct);
@@ -65,8 +64,8 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         Toast
-                                            .makeText(mSettAct, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT)
-                                            .show();
+                                                .makeText(mSettAct, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT)
+                                                .show();
                                         GlobalPhoneFuncs.recursiveDeletionInBackgroundThread(
                                                 new File(AppData.getExtFolderAppRoot()),
                                                 false);
@@ -117,12 +116,31 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
                     // "-1" = download never -> deleteAlarm
                     sendBroadcast(Keys.ACTION_DELETEALARM);
                 } else {
-                    sendBroadcast(Keys.ACTION_SETALARM);
+                    if (AppData.getLoginSuccessful()) {
+                        sendBroadcast(Keys.ACTION_SETALARM);
+                    } else {
+                        sendBroadcast(Keys.ACTION_DELETEALARM);
+                    }
                 }
                 return true;
             }
         });
         allPrefs.add(myUpdatePref);
+    }
+
+    private void createLoginCheckButton() {
+        Preference connCeckButton = new Preference(mSettAct);
+        connCeckButton.setTitle("Login-Check");
+        connCeckButton.setSummary("Click here, to test the connection.");
+        connCeckButton.setKey(mSettAct.getString(R.string.sett_key_loginCheckButton));
+        connCeckButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                new Handler().post(new ConnectionCheck_OC());
+                return true;
+            }
+        });
+        allPrefs.add(connCeckButton);
     }
 
     public void sendBroadcast(String alarmAction) {
@@ -134,5 +152,10 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
     @Override
     public ArrayList<Preference> getAllDetailPreferenceFields() {
         return allPrefs;
+    }
+
+    @Override
+    public ViewGroup getStatusViewGroup() {
+        return null;
     }
 }

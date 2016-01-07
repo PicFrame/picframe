@@ -2,13 +2,14 @@ package picframe.at.picframe.helper.settings;
 
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
+import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import picframe.at.picframe.R;
 import picframe.at.picframe.activities.SettingsActivity;
 import picframe.at.picframe.helper.settings.detailsPrefScreen.ExtSdPrefs;
+import picframe.at.picframe.helper.settings.detailsPrefScreen.IDetailsPreferenceScreen;
 import picframe.at.picframe.helper.settings.detailsPrefScreen.OwnCloudPrefs;
 
 public class DetailsPreferenceScreen {
@@ -16,6 +17,8 @@ public class DetailsPreferenceScreen {
     private String mLocalizedSrcTypeValue;
     private PreferenceScreen mPreferenceScreen;
     private SettingsActivity mSettAct;
+    private ViewGroup mStatusViewGroup;
+    private IDetailsPreferenceScreen detailsPreferenceScreen;
 
     public DetailsPreferenceScreen(int srcType, PreferenceScreen preferenceScreen,
                                    SettingsActivity settingsActivity) {
@@ -27,26 +30,32 @@ public class DetailsPreferenceScreen {
         String[] srcValueArray = mSettAct.getResources().getStringArray(R.array.srcTypeEntries);
         mLocalizedSrcTypeValue = Arrays.asList(srcValueArray).get(srcType);
 
-        prefScreenSetup();
+        fetchCorrectDetailsPrefScreen();
+        if (detailsPreferenceScreen != null) {
+            mStatusViewGroup = detailsPreferenceScreen.getStatusViewGroup();
+            prefScreenSetup();
+        }
+    }
+
+    private void fetchCorrectDetailsPrefScreen() {
+        if (AppData.sourceTypes.OwnCloud.equals(mSrcType)) {
+            detailsPreferenceScreen = new OwnCloudPrefs(mSettAct);
+        } else if (AppData.sourceTypes.Dropbox.equals(mSrcType)) {
+            // TODO
+            //detailsPreferenceScreen = new
+        } else {
+            detailsPreferenceScreen = new ExtSdPrefs(mSettAct);
+        }
     }
 
     private void prefScreenSetup() {
         mPreferenceScreen.setTitle(mLocalizedSrcTypeValue + " " +
                 mSettAct.getString(R.string.sett_detailsPrefScreen_title));
         mPreferenceScreen.setSummary(mSettAct.getString(R.string.sett_detailsPrefScreen_summ) +
-                " " + mLocalizedSrcTypeValue);
+                " " + mLocalizedSrcTypeValue + ".");
         mPreferenceScreen.setKey(mSettAct.getString(R.string.sett_key_prefScreenDetails));
 
-        ArrayList<Preference> allPrefs = new ArrayList<>();
-        if (AppData.sourceTypes.OwnCloud.equals(mSrcType)) {
-            allPrefs = new OwnCloudPrefs(mSettAct).getAllDetailPreferenceFields();
-        } else //noinspection StatementWithEmptyBody
-            if (AppData.sourceTypes.Dropbox.equals(mSrcType)) {
-            // TODO
-        } else {
-            allPrefs = new ExtSdPrefs(mSettAct).getAllDetailPreferenceFields();
-        }
-        for (Preference p : allPrefs) {
+        for (Preference p : detailsPreferenceScreen.getAllDetailPreferenceFields()) {
             if (p != null) {
                 mPreferenceScreen.addPreference(p);
             }
@@ -55,5 +64,8 @@ public class DetailsPreferenceScreen {
 
     public PreferenceScreen getPreferenceScreen() {
         return mPreferenceScreen;
+    }
+    public ViewGroup getStatusViewGroup() {
+        return mStatusViewGroup;
     }
 }
