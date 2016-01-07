@@ -370,11 +370,11 @@ public class MainActivity extends ActionBarActivity {
     private void setUpSlideShow(){
         if (settingsObj.getSlideshow()){
             pager.setScrollDurationFactor(8);
-            pager.setPagingEnabled(false);
+//            pager.setPagingEnabled(false);
         }
         else{
             pager.setScrollDurationFactor(3);
-            pager.setPagingEnabled(true);
+//            pager.setPagingEnabled(true);
         }
     }
 
@@ -449,7 +449,7 @@ public class MainActivity extends ActionBarActivity {
 
                         if (paused) {
                             cancelSlideShowCoundown();
-                            pager.setPagingEnabled(true);
+//                            pager.setPagingEnabled(true);
                             mPause.setVisibility(View.VISIBLE);
                             //
 //                            remainingDisplayTime = 4; // TODO: comment in once we show remaing alarmtime
@@ -470,7 +470,7 @@ public class MainActivity extends ActionBarActivity {
                             } else {
                                 Log.d(TAG, "not in range: "+position);
                             }
-*/                            pager.setPagingEnabled(false);
+*/             //               pager.setPagingEnabled(false);
                             if (mRemainingTimeLayout.getVisibility() == View.VISIBLE)
                                 mRemainingTimeLayout.setVisibility(View.INVISIBLE);
                         }
