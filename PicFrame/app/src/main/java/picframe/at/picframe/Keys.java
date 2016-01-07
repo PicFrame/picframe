@@ -38,6 +38,10 @@ public class Keys {
     public static final String MSG_PROGRESSUPDATE_INDITERMINATE = "progressUpdateInditerminate";
     public static final String MSG_FAILURE = "failure";
 
+/* Keys to SettingsActivity */
+    public static final String ACTION_LOGINSTATUSSUCCESS = "picframe.at.picframe.service.LOGINSTATUSSUCCESS";
+    public static final String ACTION_LOGINSTATUSFAILURE = "picframe.at.picframe.service.LOGINSTATUSFAILURE";
+
 /* Keys to AlarmManager */
     public static final String ACTION_DELETEALARM = "picframe.at.picframe.service.DELETEALARM";
     public static final String ACTION_SETALARM = "picframe.at.picframe.service.SETALARM";

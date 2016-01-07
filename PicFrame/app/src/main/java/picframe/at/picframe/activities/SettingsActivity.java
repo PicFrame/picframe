@@ -21,7 +21,11 @@ package picframe.at.picframe.activities;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,6 +37,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
@@ -47,6 +52,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 
+import picframe.at.picframe.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
@@ -62,6 +68,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     private SharedPreferences mPrefs;
     private ArrayList<String> editableTitleFields = new ArrayList<>();
     private ArrayList<String> fieldsToRemove = new ArrayList<>();
+    private StatusReceiver receiver;
+    private LocalBroadcastManager broadcastManager;
+    private DetailsPreferenceScreen detailsPrefScreenToAdd;
+
     /*
             {
             getString(R.string.sett_key_displaytime),
@@ -100,6 +110,29 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         for (String e : keyMap.keySet()) {
             debug("DUMP| Key: " + e + " ++ Value: " + keyMap.get(e));
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (broadcastManager == null) {
+            broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        }
+        if (receiver == null) {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Keys.ACTION_LOGINSTATUSSUCCESS);
+            filter.addAction(Keys.ACTION_LOGINSTATUSFAILURE);
+            filter.addCategory(Intent.CATEGORY_DEFAULT);
+            receiver = new StatusReceiver();
+            broadcastManager.registerReceiver(receiver, filter);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        broadcastManager.unregisterReceiver(receiver);
+        receiver = null;
     }
 
     @Override
@@ -244,13 +277,13 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
 
     public void setDetailsPrefScreen() {
-        PreferenceScreen preferenceScreenToAdd = new DetailsPreferenceScreen(
+        detailsPrefScreenToAdd = new DetailsPreferenceScreen(
                     AppData.getSrcTypeInt(),
                     getPreferenceManager().createPreferenceScreen(this),
-                    SettingsActivity.this)
-                .getPreferenceScreen();
-        if (myCat2 != null && preferenceScreenToAdd != null) {
-            myCat2.addPreference(preferenceScreenToAdd);
+                    SettingsActivity.this);
+        //detailsPrefScreenToAdd.set*Resource
+        if (myCat2 != null && detailsPrefScreenToAdd.getPreferenceScreen() != null) {
+            myCat2.addPreference(detailsPrefScreenToAdd.getPreferenceScreen());
         }
     }
 
@@ -349,20 +382,27 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         return false;
     }
 
+    public ViewGroup getStatusView () {
+        return detailsPrefScreenToAdd.getStatusViewGroup();
+    }
+
     /************************************************************************************
-    *   needed because else the nested preference screen don't have a actionbat/toolbar *
+    *   needed because else the nested preference screen don't have a actionbar/toolbar *
     *   see the fix and the given problem here: http://stackoverflow.com/a/27455363     *
     ************************************************************************************/
     public void setUpNestedScreen(PreferenceScreen preferenceScreen) {
         final Dialog dialog = preferenceScreen.getDialog();
+        ViewGroup list;
         Toolbar bar;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            LinearLayout root = (LinearLayout) dialog.findViewById(android.R.id.list).getParent();
+            list = (LinearLayout) dialog.findViewById(android.R.id.list);
+            LinearLayout root = (LinearLayout) list.getParent();
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
             root.addView(bar, 0); // insert at top
         } else {
             ViewGroup root = (ViewGroup) dialog.findViewById(android.R.id.content);
             ListView content = (ListView) root.getChildAt(0);
+            list = content;
             root.removeAllViews();
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
 
@@ -379,6 +419,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             root.addView(content);
             root.addView(bar);
         }
+        //list.addView(detailsPrefScreenToAdd.getStatusViewGroup(), 1); //TODO
         bar.setTitle(preferenceScreen.getTitle());
         bar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -389,4 +430,26 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
 
     private void debug(String msg) { if (DEBUG) { Log.d(TAG, msg); } }
+
+    private class StatusReceiver extends BroadcastReceiver {
+        private StatusReceiver() {
+
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null) {
+                // received an intent to update the viewpager
+                if (Keys.ACTION_LOGINSTATUSSUCCESS.equals(intent.getAction())) {
+                    if (DEBUG)  Log.d(TAG, "received 'loginSuccess' action via broadcast");
+                    Toast.makeText(getApplicationContext(), "LOGINSUCCESS", Toast.LENGTH_SHORT).show();
+//TODO
+                } else if (Keys.ACTION_LOGINSTATUSFAILURE.equals(intent.getAction())) {
+                    if (DEBUG)  Log.d(TAG, "received 'loginFailure' action via boadcast");
+                    Toast.makeText(getApplicationContext(), "LOGINFAILURE", Toast.LENGTH_SHORT).show();
+//TODO
+                }
+            }
+        }
+    }
 }
