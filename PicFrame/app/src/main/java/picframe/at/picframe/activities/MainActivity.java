@@ -232,10 +232,8 @@ public class MainActivity extends ActionBarActivity {
 
         setUpSlideShow();
 
-        if(settingsObj.getSlideshow()){
+        if(settingsObj.getSlideshow() && !paused){
             startSlideshowCountDown();
-        } else if(paused) {
-            paused = false;
         }
     }
 
