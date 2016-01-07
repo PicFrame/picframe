@@ -36,4 +36,7 @@ public class Keys {
     public static final String MSG_PROGRESSUPDATE_PERCENT = "progressUpdatePercent";
     public static final String MSG_PROGRESSUPDATE_INDITERMINATE = "progressUpdateInditerminate";
     public static final String MSG_FAILURE = "failure";
+
+    //alarms
+    public static final String ACTION_UPDATE_ALARM = "ACTION_UPDATE_ALARM";
 }

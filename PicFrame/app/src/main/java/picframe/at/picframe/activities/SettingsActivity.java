@@ -19,8 +19,11 @@
 
 package picframe.at.picframe.activities;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Environment;
@@ -34,6 +37,7 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
 import android.preference.TwoStatePreference;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
@@ -49,9 +53,11 @@ import java.io.File;
 
 import picframe.at.picframe.MainApp;
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.settings.SimpleFileDialog;
 import picframe.at.picframe.helper.settings.MySwitchPref;
+import picframe.at.picframe.Keys;
 
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity {
@@ -62,6 +68,7 @@ public class SettingsActivity extends PreferenceActivity {
     private final static boolean DEBUG = false;
     @SuppressWarnings("FieldCanBeLocal")
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private AlarmScheduler alarmScheduler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,11 +86,18 @@ public class SettingsActivity extends PreferenceActivity {
             System.out.println("Key: " + e + " == Value: " + keyMap.get(e));
         }
 */
+        alarmScheduler = new AlarmScheduler();
+
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 if (MainApp.getINSTANCE().getApplicationContext().getString(R.string.sett_key_srctype).equals(key)) {
                     setCorrectSrcPathField();
-                    if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
+                    if (AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
+                        Log.d(TAG, "SD-Card; delete alarm");
+                        alarmScheduler.deleteAlarm();
+                    } else if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
+                        // set new alarm when switching from sd-card to owncloud
+                        Log.d(TAG, "OwnCloud");
                         // do smth here..clicked OC, if user&pw set, start logincheck TODO
                     }
                 }
@@ -175,6 +189,7 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             });
             mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_sd));
+//            deleteAlarm();
         } else if (srcType == AppData.sourceTypes.OwnCloud.ordinal()) {
             mySrcPathPref = new EditTextPreference(this);
            // mySrcPathPref.setTitle(mPrefs.getString("SrcType", "-1") + " URL");
@@ -255,6 +270,18 @@ public class SettingsActivity extends PreferenceActivity {
                 return;
             }
         }
+        // Needed so we can interate through the other keys
+        if(key.equals("currentpage")){
+            return;
+        }
+        if(key.equals("alarmtime")){
+            return;
+        }
+        if(key.equals("toogledirection")){
+            return;
+        }
+
+
         // UNTIL HERE ARE CHECKS FOR SWITCH-PREFERENCES, APP WOULD CRASH OTHERWISE
 
         boolean loadAll = false;
@@ -417,12 +444,13 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ("-1".equals(String.valueOf(newValue))) {
-                    // clicked "never" .. remove alarm here TODO
-                    return true;
-                } else {
-                    return true;
+                    alarmScheduler.deleteAlarm();
                 }
-            }
+                return true;
+            } /* else {
+                    setAlarm();
+                    return true;
+                }*/
         });
         if (myCategory != null) {
             myCategory.addPreference(myUpdatePref);
@@ -482,4 +510,32 @@ public class SettingsActivity extends PreferenceActivity {
         // Comment to remove warning xD
         return false;
     }
+
+/*    private void deleteAlarm(){
+        System.out.println(" DELETE ALARMS ");
+        // clicked "never"
+        AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+
+        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+        am.cancel(p);
+        p.cancel();
+    }*/
+/*    private void setAlarm(){
+        System.out.println(" UPDATE SETTINGS ACTIVITY ");
+
+        switchedToOwnCloudFlag = false; // void starting alarm twice
+
+        AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+
+        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
+        am.cancel(p);
+        p.cancel();
+
+        //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
+        Intent intent = new Intent();
+        intent.setAction("ACTION_UPDATE_ALARM");
+        sendBroadcast(intent);
+    }*/
 }
