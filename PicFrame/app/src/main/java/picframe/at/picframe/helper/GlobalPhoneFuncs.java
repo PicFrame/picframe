@@ -19,6 +19,9 @@
 
 package picframe.at.picframe.helper;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Environment;
 import android.os.StatFs;
 
@@ -29,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import picframe.at.picframe.MainApp;
 import picframe.at.picframe.activities.MainActivity;
 import picframe.at.picframe.helper.settings.AppData;
 
@@ -113,5 +117,13 @@ public class GlobalPhoneFuncs {
         System.err.println("MB avail: " + (float) (bytesAvail / (1024*1024)));
         System.err.println("GB avail: " + (float) (bytesAvail / (1024*1024*1024)));
         return bytesAvail;
+    }
+
+    public static boolean wifiConnected() {
+        NetworkInfo wifi = ((ConnectivityManager) MainApp.getINSTANCE()
+                .getApplicationContext()
+                .getSystemService(Context.CONNECTIVITY_SERVICE))
+                .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        return wifi != null && wifi.isConnected();
     }
 }

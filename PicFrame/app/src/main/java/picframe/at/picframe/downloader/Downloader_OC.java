@@ -2,8 +2,6 @@ package picframe.at.picframe.downloader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Handler;
 import android.util.Log;
 
@@ -24,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -46,153 +45,121 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
     // private fields holding the download-parameter-data
     private OwnCloudClient mClient;
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    private String remoteFolder;                                // folder, in which the download should start   TODO folderpicke stuff
+    private String remoteFolder;                                // folder, in which the download should start   TODO folderpicker stuff
     private Handler mHandler;
     private Context mContext;                                   // only needed for EXIF-helper to get screen width and height
     private String mExtFolderAppRoot;
     private String mExtFolderDisplayPath;
     private String mExtFolderCachePath;
     private ArrayList<String> mLocalFileList;                   // files (relative path), that are currently in the display folder
-    private ArrayList<RemoteFile> remoteFileList;               // all files on remote server
-    private ArrayList<RemoteFile> mRemoteFilesToDownloadList;       // files that need to be downloaded (full remote paths to the files)
+    private ArrayList<RemoteFile> mRemoteFileList;              // all files on remote server
+    private ArrayList<RemoteFile> mRemoteFilesToDownloadList;   // files that need to be downloaded (full remote paths to the files)
     public LinkedBlockingQueue<String> mDownloadedFiles;        // files downloaded successfully - empty after processed all files
-    private AtomicInteger mDownloadedFilesCount;                // total count of sucessfully downloaded files
+    private AtomicInteger mDownloadedFilesCount;                // total count of successfully downloaded files
     private AtomicInteger mThreadCounter;                       // Count active threads so task only finishes once all threads are done
-    private boolean loginFailed = false;
+    private boolean failedOnce = false;                         // only relay the first failure to the service (flag to ensure this)
+    private final int MIN_MB_REMAINING = 15;                    // if storage is smaller than 15 MB, stop the download!
+    private final int MIN_BYTES_REMAINING = MIN_MB_REMAINING * 1024 * 1024;
+    private AtomicBoolean loginRequest = new AtomicBoolean(false);
+    private AtomicBoolean loginResultSuccess = new AtomicBoolean(false);
 
 
     public Downloader_OC(HashMap<String, Object> args) {
+        if (DEBUG) Log.d(TAG, "created OC Downloader");
         mClient = (OwnCloudClient) args.get(CLIENT);
         mHandler = (Handler) args.get(HANDLER);
         mExtFolderAppRoot = (String) args.get(Keys.PICFRAMEPATH);
         remoteFolder = (String) args.get(REMOTEFOLDER);
         serviceCallbacks = (ServiceCallbacks) args.get(Keys.CALLBACK);
         mContext = (Context) args.get(Keys.CONTEXT);
-        if (DEBUG) Log.d(TAG, "created OC Downloader");
     }
 
     @Override
     public void run() {
         if (DEBUG) Log.d(TAG, "started OC Downloader");
-        // set counter to zero
-        mThreadCounter = new AtomicInteger(0);
-        mDownloadedFilesCount = new AtomicInteger(0);
+        initializeCounterArraysQueuesPaths();
 
-        // initialise empty arraylists and queue
-        remoteFileList = new ArrayList<>();
-        mLocalFileList = new ArrayList<>();
-        mRemoteFilesToDownloadList = new ArrayList<>();
-        mDownloadedFiles = new LinkedBlockingQueue<>();
-
-        // build the paths to the needed folders
-        mExtFolderDisplayPath = mExtFolderAppRoot + File.separator + "pictures";
-        mExtFolderCachePath = mExtFolderAppRoot + File.separator + "cache";
-
-        if (DEBUG) Log.i(TAG, "AppRootFolder: "+ mExtFolderAppRoot +
-                " -- CacheFolder: " +mExtFolderCachePath +
-                " -- DisplayFoler: " +mExtFolderDisplayPath);
+        if (DEBUG) Log.i(TAG,
+                    "AppRootFolder: "   + mExtFolderAppRoot +
+                " -- CacheFolder: "     + mExtFolderCachePath +
+                " -- DisplayFoler: "    + mExtFolderDisplayPath);
         if (DEBUG) Log.i(TAG, "thread counter at first: " + mThreadCounter.get());
         if (DEBUG) Log.i(TAG, "###### STARTING OWNCLOUD DOWNLOAD TASK #####");
 
-        // read all files on the server
-        remoteReadAnyFolder(FileUtils.PATH_SEPARATOR);      // TODO: limit read too (like download)
 
-        // await for all read operations to finish
-        while(mThreadCounter.get() > 0) {
-            if (isInterrupted()) {
-                if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: doInB -waited for reads");
-                interruptDownload();
-                return;
-            }
-            if (loginFailed) {
-                return;
-            }
-        }
-
-        // check which files aren't in the picture folder yet
-        compareLocalAndRemoteFolder();
-        if (mRemoteFilesToDownloadList.size() == 0) {
+        if (!checkLogin()) {
+            downloadFailure(Failure.LOGIN);
             return;
         }
-
-        boolean processed, deleted;
-        int fileIndex = 0;
-        File mExtFolderCacheObject = new File(mExtFolderCachePath);
-        boolean cacheFolderExists = mExtFolderCacheObject.exists();
-        //noinspection PointlessBooleanExpression
-        if (DEBUG && cacheFolderExists) Log.i(TAG, "mExtFolderCacheObject exists! (" + mExtFolderCachePath + ")");
-        if (DEBUG) Log.i(TAG, "Number of files to download: " + mRemoteFilesToDownloadList.size());
-        // while there are still files to process and the download isn't done yet, loop
-        while(
-                mThreadCounter.get() > 0 ||
-                        (mDownloadedFilesCount.get() != mRemoteFilesToDownloadList.size())  ||
-                        mDownloadedFiles.peek() != null) {    // Retrieves but doesn't remove from FIFO
-            if (mDownloadedFiles.peek() != null) {      // Check if DownloadList has files to process
-                String fileToProcess = mDownloadedFiles.poll();
-                processed = scaleRotateAndSave(fileToProcess);
-                if (processed) {    // if rotate, scale and move worked, delete from list, and delete src file
-                    if (DEBUG) Log.i(TAG, "rot/scaled/saved >" + fileToProcess + "<");
-                    File fileToDelete = new File(fileToProcess);
-                    if (fileToDelete.exists() && fileToDelete.isFile()) {
-                        deleted = fileToDelete.delete();
-                        if (deleted)
-                            if (DEBUG) Log.i(TAG, "deleted >" + fileToProcess + "<");
-                            else
-                            if (DEBUG) Log.e(TAG, "couldn't delete >" + fileToProcess + "<");
-                    }
-                } else {
-                    if (DEBUG) Log.e(TAG, "Failure while processing file[" + fileToProcess + "]. (scaleRotateAndSave");
-                }
-            }
-            // if cancelled, process downloaded pictures and then stop
-            if (isInterrupted()) {
-                if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: doInBackground - downloadFiles");
-                if (mDownloadedFiles.peek() == null)
-                    interruptDownload();
-                    return;
-            }  else {
-                if (mRemoteFilesToDownloadList.size() > 0 &&
-                        mDownloadedFilesCount.get() < mRemoteFilesToDownloadList.size()) {
-                    // download here (but check every six files, if still connected to wifi
-                    if ((fileIndex % 6) == 0) {
-                        if (!wifiConnected()) {
-                            Thread.currentThread().interrupt();
-                            continue;
-                        }
-                    }
-                    if (cacheFolderExists
-                            && mThreadCounter.get() < 2
-                            && fileIndex < mRemoteFilesToDownloadList.size()) {
-                        RemoteFile remoteFile = mRemoteFilesToDownloadList.get(fileIndex);
-                        if (15 * 1024 * 1024 < GlobalPhoneFuncs.getSdCardFreeBytes() - remoteFile.getLength()) {
-                            if (DEBUG) Log.i(TAG, "Starting download: " + remoteFile.getRemotePath());
-                            mThreadCounter.getAndIncrement();
-                            DownloadRemoteFileOperation downloadOperation =
-                                    new DownloadRemoteFileOperation(remoteFile.getRemotePath(), mExtFolderCacheObject.getAbsolutePath());
-                            downloadOperation.execute( mClient, this, mHandler);
-                            fileIndex++;
-                        } else {
-                            if (DEBUG) Log.e(TAG, "No more space available on the sd card!");
-                            publishProgress(-1.5f, false);
-                            Thread.currentThread().interrupt();
-                        }
-                    }
-                }
-            }
-            /* catch (InterruptedException e) {            // no interrupted exception anymore, due to no Thread.sleeps
-                if (DEBUG) Log.e(TAG, "Exception happened while trying to await end of remote downloads");
-                //e.printStackTrace();
-            }*/
+        // populate the mRemoteFileList with all the (accepted) remote files found on server
+        if (!readAllRemoteFoldersInDirAndWait()) {
+            downloadFailure(Failure.INTERRUPT);
+            return;
+        }
+        // check which files have to be downloaded (not downloaded yet) (false if none/0 to download)
+        if (!compareListsAndCheckForNewFilesToDownload()) {
+            finishedDownload();
+            return;
+        }
+        // process and download all images (false if interrupted)
+        if (!processAndDownloadLoop()) {
+            downloadFailure(Failure.INTERRUPT);
+            return;
         }
 
         finishedDownload();
         // END OF THREAD!
     }
 
+    private void initializeCounterArraysQueuesPaths() {
+        // set counter to zero
+        mThreadCounter = new AtomicInteger(0);
+        mDownloadedFilesCount = new AtomicInteger(0);
+
+        // initialise empty arraylists and queue
+        mRemoteFileList = new ArrayList<>();
+        mLocalFileList = new ArrayList<>();
+        mRemoteFilesToDownloadList = new ArrayList<>();
+        mDownloadedFiles = new LinkedBlockingQueue<>();
+
+        // build the paths to the needed folders    // TODO: once new AppData is merged, change these 2 lines
+        mExtFolderDisplayPath = mExtFolderAppRoot + File.separator + "pictures";
+        mExtFolderCachePath = mExtFolderAppRoot + File.separator + "cache";
+    }
+
+    private boolean checkLogin() {
+        loginRequest.set(true);
+        mThreadCounter.getAndIncrement();
+        ReadRemoteFolderOperation loginCheckOperation =
+                new ReadRemoteFolderOperation(FileUtils.PATH_SEPARATOR);
+        loginCheckOperation.execute(mClient, this, mHandler);
+        while (loginRequest.get()) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return loginResultSuccess.get();
+    }
+
+    private boolean readAllRemoteFoldersInDirAndWait() {
+        // read all files on the server                     // TODO: instead of "/" use remoteFolderPath
+        remoteReadAnyFolder(FileUtils.PATH_SEPARATOR);      // TODO: limit read too (like download)
+        // wait for all read operations to finish
+        while(mThreadCounter.get() > 0) {
+            if (isInterrupted()) {
+                if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: run() - waited for reads to end");
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void remoteReadAnyFolder(String path) {
         if (isInterrupted()) {
             if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: remoteReadAnyFolder");
-            interruptDownload();
+            downloadFailure(Failure.INTERRUPT);
             return;
         }
         mThreadCounter.getAndIncrement();
@@ -200,72 +167,21 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
         refreshOperation.execute(mClient, this, mHandler);
     }
 
-    @Override
-    public void onRemoteOperationFinish(RemoteOperation operation, RemoteOperationResult result) {
-        if (!result.isSuccess()) {
-            if (DEBUG)  Log.d(TAG, "operation unsuccessful, login/connection failed");
-            this.loginFailed();
-            return;
-        }
-        if (operation instanceof ReadRemoteFolderOperation) {
-            if (result.isSuccess()) {
-                ArrayList files = (ArrayList)result.getData();
-                for(int i=0; i < files.size(); i++){
-                    if (i==0) continue;     // don't include first element in list as that is the read folder itself
-                    RemoteFile remoteFile = (RemoteFile) files.get(i);
-                    String mimeType = remoteFile.getMimeType();
-                    switch (mimeType) {
-                        case "DIR":
-                            if (DEBUG) Log.i(TAG, "remote folder[" + mimeType + "]: " + remoteFile.getRemotePath());
-                            remoteReadAnyFolder(remoteFile.getRemotePath());
-                            break;
-                        case "image/jpeg":
-                        case "image/png":
-                            if (DEBUG) Log.i(TAG, "remote file[" + mimeType + "]: " + remoteFile.getRemotePath());
-                            if (!remoteFileList.contains(remoteFile)) {
-                                remoteFileList.add(remoteFile);
-                            }
-                            break;
-                        default:
-                            if (DEBUG) Log.i(TAG, "WRONG file[" + mimeType + "]: " + remoteFile.getRemotePath());
-                            break;
-                    }
-                }
-            }
-            mThreadCounter.getAndDecrement();
-            if (DEBUG) Log.i(TAG, "Threadcounter after read operation: " + mThreadCounter.get());
-        } else if (operation instanceof DownloadRemoteFileOperation) {
-            if (result.isSuccess()) {
-                if (DEBUG) Log.d(TAG, "Download: success -- info:" + result.getFilename()); // LogMessage: success, status code 200
-                try {
-                    mDownloadedFiles.put(result.getFilename());
-                } catch (InterruptedException e) {
-                    if (DEBUG) Log.e(TAG, "Couldn't put the downloaded file (" + result.getFilename() + ") on the list of downloaded files");
-                    e.printStackTrace();
-                }
-                mDownloadedFilesCount.getAndIncrement();
-                publishProgress((float)mDownloadedFilesCount.get() / (float)mRemoteFilesToDownloadList.size(), false);  // is between 0 and 1
-            } else {
-                if (DEBUG) Log.e(TAG, "Download: FAILURE -- info:" + result.getFilename() + " = " + result.getLogMessage());
-            }
-            mThreadCounter.getAndDecrement();
-        }
-    }
-
-    private void compareLocalAndRemoteFolder(){
+    private boolean compareListsAndCheckForNewFilesToDownload(){
         File mExtFolderCacheObject = new File(mExtFolderDisplayPath);
         File[] mLocalFilesInDisplayFolder = mExtFolderCacheObject.listFiles();
 
         if (mLocalFilesInDisplayFolder == null || mLocalFilesInDisplayFolder.length == 0) {
-            if (DEBUG) Log.i(TAG, "Display folder is empty, all remote files are being downloaded.");
-            for(RemoteFile remoteFile : remoteFileList){
+            if (DEBUG) Log.i(TAG, "Display folder is empty, all remote files are to be downloaded.");
+            for(RemoteFile remoteFile : mRemoteFileList){
                 mRemoteFilesToDownloadList.add(remoteFile);
             }
         } else {
             if (DEBUG) Log.i(TAG, "Display folder not empty, checking files...");
-            addFilepathsToLocalFileList(mLocalFilesInDisplayFolder);  // save names (with relative path) of all files in local folder
-            // For every remote file, check if it already exists locally
-            for (RemoteFile remoteFile : remoteFileList) {
+            // save names (with relative path) of all files in local folder
+            addFilepathsToLocalFileList(mLocalFilesInDisplayFolder);
+            // for every remote file, check if it already exists locally
+            for (RemoteFile remoteFile : mRemoteFileList) {
                 if (mLocalFileList.contains(remoteFile.getRemotePath())) {
                     if (DEBUG) Log.i(TAG, "File(" + remoteFile.getRemotePath() + ") exists locally!");
                 } else {
@@ -274,12 +190,13 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
                     mRemoteFilesToDownloadList.add(remoteFile);
                 }
             }
-            if (mRemoteFilesToDownloadList.size() == 0) {
-                if (DEBUG) Log.i(TAG, "No file needs to be downloaded!");
-                publishProgress(-1f, false);
-            } else {
-                if (DEBUG) Log.i(TAG, "Starting download of missing files shortly");
-            }
+        }
+        if (mRemoteFilesToDownloadList.size() == 0) {
+            if (DEBUG) Log.i(TAG, "No file needs to be downloaded!");
+            return false;
+        } else {
+            if (DEBUG) Log.i(TAG, "Starting download of missing files (" + mRemoteFilesToDownloadList.size() + ") shortly");
+            return true;
         }
     }
 
@@ -290,21 +207,82 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
             } else {
                 // substring to get the relative path
                 String fileRelPath = file.getPath().substring(mExtFolderDisplayPath.length());
-                if (DEBUG) Log.i(TAG + " -addFilepaths", "filename:" + fileRelPath);
+                //if (DEBUG) Log.i(TAG + " -addFilepaths", "filename:" + fileRelPath);
                 mLocalFileList.add(fileRelPath);
             }
         }
     }
 
-    private boolean wifiConnected() {
-        ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        return wifi != null && wifi.isConnected();
+    private boolean processAndDownloadLoop() {
+        int fileIndex = 0;
+        File mExtFolderCacheObject = new File(mExtFolderCachePath);
+        boolean cacheFolderExists = mExtFolderCacheObject.exists();
+        while( mThreadCounter.get() > 0 ||
+                    (mDownloadedFilesCount.get() != mRemoteFilesToDownloadList.size()) ||
+                    mDownloadedFiles.peek() != null) {
+            if (mDownloadedFiles.peek() != null) {
+                //scale, rotate, save smaller image, delete cached/big image
+                processFile();
+            }
+            if (isInterrupted()) {
+            // if the user aborted the download, process the remaining files
+                if (DEBUG) Log.e(TAG, "Thread cancelled! -- position: while-loop in 'run()'");
+                if (mDownloadedFiles.peek() == null) {
+                    return false;
+                }
+            } else {
+            // else carry on downloading the remaining images
+                if (mRemoteFilesToDownloadList.size() > 0 &&
+                        mDownloadedFilesCount.get() < mRemoteFilesToDownloadList.size()) {
+                    // check every 3 files, if still connected to wifi
+                    if ((fileIndex % 3) == 0) {
+                        if (!GlobalPhoneFuncs.wifiConnected()) {
+                            downloadFailure(Failure.WIFI);
+                            continue;
+                        }
+                    }
+                    // start download
+                    if (cacheFolderExists && mThreadCounter.get() < 2 &&
+                            fileIndex < mRemoteFilesToDownloadList.size()) {
+                        RemoteFile remoteFile = mRemoteFilesToDownloadList.get(fileIndex);
+                        // if more than MIN_BYTES_REMAINING bytes would be free after the download -> download
+                        if ((GlobalPhoneFuncs.getSdCardFreeBytes() - remoteFile.getLength()) > MIN_BYTES_REMAINING) {
+                            if (DEBUG) Log.i(TAG, "Starting download: " + remoteFile.getRemotePath());
+                            mThreadCounter.getAndIncrement();
+                            DownloadRemoteFileOperation downloadOperation =
+                                    new DownloadRemoteFileOperation(remoteFile.getRemotePath(), mExtFolderCacheObject.getAbsolutePath());
+                            downloadOperation.execute( mClient, this, mHandler);
+                            fileIndex++;
+                        } else {
+                            if (DEBUG) Log.e(TAG, "No more space available on the sd card!");
+                            downloadFailure(Failure.STORAGESPACE);
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 
-    @Override
-    public void onTransferProgress(long progressRate, long totalTransferredSoFar,
-                                   long totalToTransfer, String fileAbsoluteName) { }
+    private void processFile() {
+        boolean processed;
+        boolean deleted;
+        String fileToProcess = mDownloadedFiles.poll();
+        processed = scaleRotateAndSave(fileToProcess);
+        if (processed) {    // if rotate, scale and move worked, delete from list, and delete src file
+            if (DEBUG) Log.i(TAG, "rot/scaled/saved >" + fileToProcess + "<");
+            File fileToDelete = new File(fileToProcess);
+            if (fileToDelete.exists() && fileToDelete.isFile()) {
+                deleted = fileToDelete.delete();
+                if (deleted)
+                    if (DEBUG) Log.i(TAG, "deleted >" + fileToProcess + "<");
+                    else
+                    if (DEBUG) Log.e(TAG, "couldn't delete >" + fileToProcess + "<");
+            }
+        } else {
+            if (DEBUG) Log.e(TAG, "Failure while processing file[" + fileToProcess + "]. (scaleRotateAndSave");
+        }
+    }
 
     private boolean scaleRotateAndSave(String filepath) {
         if (filepath.contains(mExtFolderCachePath)) {
@@ -377,15 +355,87 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
         return true;
     }
 
+    @Override
+    public void onRemoteOperationFinish(RemoteOperation operation, RemoteOperationResult result) {
+        if (loginRequest.get()) {
+            if (operation instanceof ReadRemoteFolderOperation) {
+                if (result.isSuccess()) {
+                    if (DEBUG)  Log.d(TAG, "operation successful, login/connection success");
+                    loginResultSuccess.set(true);
+                } else {
+                    if (DEBUG)  Log.d(TAG, "operation unsuccessful, login/connection failed");
+                }
+            }
+            mThreadCounter.getAndDecrement();
+            loginRequest.set(false);
+            return;
+        }
+        if (operation instanceof ReadRemoteFolderOperation) {
+            handleReadOperation(result);
+        } else if (operation instanceof DownloadRemoteFileOperation) {
+            handleDownloadOperation(result);
+        }
+    }
+
+    private void handleReadOperation(RemoteOperationResult result) {
+        if (result.isSuccess()) {
+            ArrayList files = (ArrayList)result.getData();
+            for(int i=0; i < files.size(); i++){
+                if (i==0) continue;     // don't include first element in list as that is the read folder itself
+                RemoteFile remoteFile = (RemoteFile) files.get(i);
+                String mimeType = remoteFile.getMimeType();
+                switch (mimeType) {
+                    case "DIR":
+                        if (DEBUG) Log.i(TAG, "remote folder[" + mimeType + "]: " + remoteFile.getRemotePath());
+                        remoteReadAnyFolder(remoteFile.getRemotePath());
+                        break;
+                    case "image/jpeg":
+                    case "image/png":
+                        if (DEBUG) Log.i(TAG, "remote file[" + mimeType + "]: " + remoteFile.getRemotePath());
+                        if (!mRemoteFileList.contains(remoteFile)) {
+                            mRemoteFileList.add(remoteFile);
+                        }
+                        break;
+                    default:
+                        if (DEBUG) Log.i(TAG, "WRONG file[" + mimeType + "]: " + remoteFile.getRemotePath());
+                        break;
+                }
+            }
+        }
+        mThreadCounter.getAndDecrement();
+        if (DEBUG) Log.i(TAG, "Threadcounter after read operation: " + mThreadCounter.get());
+    }
+
+    private void handleDownloadOperation(RemoteOperationResult result) {
+        if (result.isSuccess()) {
+            if (DEBUG) Log.d(TAG, "Download: success -- info:" + result.getFilename()); // LogMessage: success, status code 200
+            try {
+                mDownloadedFiles.put(result.getFilename());
+            } catch (InterruptedException e) {
+                if (DEBUG) Log.e(TAG, "Couldn't put the downloaded file (" + result.getFilename() + ") on the list of downloaded files");
+                e.printStackTrace();
+            }
+            mDownloadedFilesCount.getAndIncrement();
+            publishProgress((float)mDownloadedFilesCount.get() / (float)mRemoteFilesToDownloadList.size(), false);  // is between 0 and 1
+        } else {
+            if (DEBUG) Log.e(TAG, "Download: FAILURE -- info:" + result.getFilename() + " = " + result.getLogMessage());
+        }
+        mThreadCounter.getAndDecrement();
+    }
+
+    @Override
+    public void onTransferProgress(long progressRate, long totalTransferredSoFar,
+                                   long totalToTransfer, String fileAbsoluteName) { }
+
 
     /*  CALLBACKS TO SERVICE */
 
-    private void publishProgress(float f, boolean b) {
+    private void publishProgress(float percentAsFloat, boolean indeterminate) {
         if (serviceCallbacks != null) {
-            if (f > 0)
-                f *= 100;
-            serviceCallbacks.publishProgress(f, b);
-            if (DEBUG) Log.i(TAG, "% update: " + f);
+            if (percentAsFloat > 0)
+                percentAsFloat *= 100;
+            serviceCallbacks.publishProgress(percentAsFloat, indeterminate);
+            if (DEBUG) Log.i(TAG, "% update: " + percentAsFloat);
         } else {
             if (DEBUG)  Log.d(TAG, "couldn't publish progress, event object is null");
         }
@@ -400,20 +450,22 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
         }
     }
 
-    private void interruptDownload() {
-        if (serviceCallbacks != null) {
-            serviceCallbacks.interruptedDownload();
+    private void downloadFailure(Downloader.Failure failType) {
+        if (!failedOnce) {
+            // Only send the first failureType to the Service (could be Wifi->Interrupt)
+            failedOnce = true;
+            Thread.currentThread().interrupt();
+            if (DEBUG) Log.e(TAG, "Thread interrupted!");
+            if (serviceCallbacks != null) {
+                serviceCallbacks.downloadFailed(failType);
+            } else {
+                if (DEBUG)  Log.d(TAG, "couldn't fire 'downloadFailed' , event obj.is null");
+            }
         } else {
-            if (DEBUG)  Log.d(TAG, "couldn't 'interrupt' download, event obj.is null");
-        }
-    }
-
-    private void loginFailed() {
-        loginFailed = true;
-        if (serviceCallbacks != null) {
-            serviceCallbacks.loginFailed();
-        } else {
-            if (DEBUG)  Log.d(TAG, "couldn't fire 'loginFailed' , event obj.is null");
+            if (Failure.INTERRUPT.equals(failType)) {
+                if (DEBUG)  Log.e(TAG, "Thread interrupted");
+                // TODO: release resources?!
+            }
         }
     }
 }

@@ -6,8 +6,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
@@ -31,6 +29,7 @@ import picframe.at.picframe.R;
 import picframe.at.picframe.activities.MainActivity;
 import picframe.at.picframe.downloader.Downloader;
 import picframe.at.picframe.downloader.Downloader_OC;
+import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
 
 
@@ -97,10 +96,9 @@ public class DownloadService extends Service implements ServiceCallbacks {
         if (!downloading) {
             // check for problems only in mainactivity (after settings changed) (checkForProblemsAndShowToasts)
             // since at this point we are mostly sure to not run into problems, we check for wifi
-            if (!wifiConnected()) {      // settObj.getWifiConnected()
+            if (!GlobalPhoneFuncs.wifiConnected()) {
                 stopForeground(false);
-                showNotification(Keys.NotificationStates.FAILURE, 0, getString(R.string.service_notif_failureNoWifi));
-                stopSelf();
+                downloadFailed(Downloader.Failure.WIFI);
                 return Service.START_NOT_STICKY;
             } else if (!initializedFolders()){
                 stopForeground(false);
@@ -124,6 +122,11 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 args = setUpOcClientArguments();
                 downloader = new Downloader_OC(args);
             } // else if (AppData.sourceTypes.Dropbox.equals(tmpSource) {}    //  TODO Dropbox
+            if (args == null) {
+                Log.d(TAG, "Arguments cannot be null, aborting!");
+                downloadFailed(Downloader.Failure.LOGIN);
+                return Service.START_NOT_STICKY;
+            }
             // start download here, progress will be published via callback to this class and then broadcast
             downloading = true;
             downloader.start();
@@ -145,9 +148,15 @@ public class DownloadService extends Service implements ServiceCallbacks {
 
     @Override
     public void onDestroy() {
+        interruptDownloaderAndStopService();
+        Log.d(TAG, "Service - onDestroy");
+    }
+
+    private void interruptDownloaderAndStopService() {
         if (downloader != null) {
             if (downloading || !finished) {
                 if (!downloader.isInterrupted()) {
+                    Log.d(TAG, "- interrupting downloader");
                     downloader.interrupt();
                 }
             }
@@ -159,13 +168,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
             }
             downloader = null;
         }
-        Log.d(TAG, "Service - onDestroy");
-    }
-
-    private boolean wifiConnected() {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        return wifi != null && wifi.isConnected();
+        stopSelf();
     }
 
     private boolean initializedFolders() {
@@ -231,6 +234,12 @@ public class DownloadService extends Service implements ServiceCallbacks {
     private HashMap<String, Object> setUpOcClientArguments() {
         OwnCloudClient mClientOwnCloud;
         Uri serverUri = Uri.parse(settObj.getSourcePath());
+        if (settObj.getUserName().equals("") || settObj.getUserPassword().equals("") ||
+                settObj.getSourcePath().equals("") ||
+                settObj.getSourcePath().equals("https://") || // TODO get from Default
+                serverUri == null) {
+            return null;
+        }
         if (DEBUG) Log.i(TAG, "OwnCloud serverUri: " + serverUri);
         // Create client object to perform remote operations
         mClientOwnCloud = OwnCloudClientFactory.createOwnCloudClient(serverUri, getApplicationContext(), true);
@@ -254,7 +263,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
         if (DEBUG)  Log.d(TAG, "user clicked 'stopDownload' -- ending");
         downloading = false;
         finished = false;
-        stopSelf();
+        interruptDownloaderAndStopService();
     }
 
     // handling the notifications
@@ -286,14 +295,14 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - " + getString(R.string.service_notif_startDownloadTicker))
                         .setContentText(getString(R.string.service_notif_startDownloadText))
-                        .setSubText("")
+                        .setSubText(null)
                         .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.service_notif_actionStop), stopDownloadPendIntent)
                         .setProgress(100, 50, true);
         // PROGRESS
             } else if (Keys.NotificationStates.PROGRESS.equals(notification_state)) {
                 notificationBuilder
                         .setContentText(getString(R.string.service_notif_progressText) + " " + progress + "%")
-                        .setSubText("")
+                        .setSubText(null)
                         .setProgress(100, progress, false);
             }
         } else if (Keys.NotificationStates.FAILURE.equals(notification_state)
@@ -323,11 +332,12 @@ public class DownloadService extends Service implements ServiceCallbacks {
                         .setContentText(getString(R.string.service_notif_failureText))
                         .setSubText(msg);
         // INTERRUPT
-            } else if (Keys.NotificationStates.INTERRUPT.equals(notification_state)) {
+        /*    } else if (Keys.NotificationStates.INTERRUPT.equals(notification_state)) {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - " + getString(R.string.service_notif_interruptTicker))
                         .setContentText(getString(R.string.service_notif_interruptText))
                         .setSubText(getString(R.string.service_notif_stoppedSubText));
+        */
         // FINISHED
             } else if (Keys.NotificationStates.FINISHED.equals(notification_state)) {
                 notificationBuilder
@@ -349,15 +359,46 @@ public class DownloadService extends Service implements ServiceCallbacks {
     @Override
     public void publishProgress(float progressPercent, boolean progressIndeterminate) {
         Log.d(TAG, "SHOW NOTIFICATION PROGRESS: " + progressPercent);
-        if (progressPercent == -1f) {
-            showNotification(Keys.NotificationStates.FINISHED, 0, getString(R.string.service_notif_finishedNoNewFiles));
-        } else if (progressPercent == -1.5f) {
-            showNotification(Keys.NotificationStates.FAILURE, 0, getString(R.string.service_notif_failureNotEnoughStorage));
-        } else {
-            showNotification(Keys.NotificationStates.PROGRESS, Math.round(progressPercent), null);
-        }
+        showNotification(Keys.NotificationStates.PROGRESS, Math.round(progressPercent), null);
     }
 
+    @Override
+    public void finishedDownload(int count) {
+        // when finished, show changed notification with "open" button
+        // DEPRECATED: [or in app, the full pogressbar, which get's invisible after several seconds again.]
+        // now the download is finished, we can stop the service.
+        // if service is stopped, notification is active and app gets opened, delete notification
+        if (DEBUG)  Log.d(TAG, "downloader sent 'finishedDownload' -- ending");
+        downloading = false;
+        finished = true;
+        if (count <= 0) {
+            showNotification(Keys.NotificationStates.FINISHED, 0, getString(R.string.service_notif_finishedNoNewFiles));
+        } else {
+            showNotification(Keys.NotificationStates.FINISHED, 0, (String.valueOf(count) + " " + getString(R.string.service_notif_finishedTextFiles)));
+            broadcastManager.sendBroadcast(new Intent().setAction(Keys.ACTION_DOWNLOAD_FINISHED));  // TODO not only after finished
+        }
+        stopSelf();
+    }
+
+    @Override
+    public void downloadFailed(Downloader.Failure failureMsg) {
+        if (DEBUG)  Log.d(TAG, "downloader sent 'downloadFailed' -- ending");
+        downloading = false;
+        finished = false;
+        if (Downloader.Failure.LOGIN.equals(failureMsg)) {
+            showNotification(Keys.NotificationStates.FAILURE, 0, getString(R.string.service_notif_failureLogin));
+        } else if (Downloader.Failure.WIFI.equals(failureMsg)) {
+            showNotification(Keys.NotificationStates.FAILURE, 0, getString(R.string.service_notif_failureNoWifi));
+        } else if (Downloader.Failure.STORAGESPACE.equals(failureMsg)) {
+            showNotification(Keys.NotificationStates.FAILURE, 0, getString(R.string.service_notif_failureNotEnoughStorage));
+        } else if (Downloader.Failure.INTERRUPT.equals(failureMsg)) {
+            // aborted by user - delete notification, end service
+            showNotification(Keys.NotificationStates.STOP, 0, null);
+        }
+        interruptDownloaderAndStopService();
+    }
+
+    /*
     @Override
     public void interruptedDownload() {
         // downloader has lost wifi connection or got interrupted by the destruction of the service.
@@ -373,29 +414,5 @@ public class DownloadService extends Service implements ServiceCallbacks {
         finished = false;
         stopSelf();
     }
-
-    @Override
-    public void finishedDownload(int count) {
-        // when finished, show changed notification with "open" button
-        // DEPRECATED: [or in app, the full pogressbar, which get's invisible after several seconds again.]
-        // now the download is finished, we can stop the service.
-        // if service is stopped, notification is active and app gets opened, delete notification
-        if (DEBUG)  Log.d(TAG, "downloader sent 'finishedDownload' -- ending");
-        downloading = false;
-        finished = true;
-        showNotification(Keys.NotificationStates.FINISHED, 0, (String.valueOf(count) + " " + getString(R.string.service_notif_finishedTextFiles)));
-        broadcastManager.sendBroadcast(new Intent().setAction(Keys.ACTION_DOWNLOAD_FINISHED));  // TODO not only after finished
-        stopSelf();
-    }
-
-    @Override
-    public void loginFailed() {
-        if (DEBUG)  Log.d(TAG, "downloader sent 'loginFailed' -- ending");
-        downloading = false;
-        finished  = false;
-        showNotification(Keys.NotificationStates.FAILURE, 0, getString(R.string.service_notif_failureLogin));
-        downloading = false;
-        finished = false;
-        stopSelf();
-    }
+*/
 }
