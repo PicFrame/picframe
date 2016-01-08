@@ -30,7 +30,7 @@ public class AlarmScheduler {
 
         Long nextAlarmTime;
         Long currentTime = new GregorianCalendar().getTimeInMillis();
-        nextAlarmTime = settingsObj.getLastAlarmTime() + settingsObj.getUpdateIntervalInHours() * 1000 * /*60 **/ 60;
+        nextAlarmTime = settingsObj.getLastAlarmTime() + settingsObj.getUpdateIntervalInHours() * 1000 * 60 * 60;
 
         Log.d(TAG, "currentTime    : "+tc.millisecondsToDate(currentTime));
         Log.d(TAG, "previousAlarm  : "+tc.millisecondsToDate(settingsObj.getLastAlarmTime()));
