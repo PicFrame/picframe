@@ -17,13 +17,20 @@ import picframe.at.picframe.helper.settings.AppData;
  */
 public class AlarmScheduler {
     private static final String TAG = AlarmScheduler.class.getSimpleName();
+    private static AlarmManager alarmManager;
     private AppData settingsObj = AppData.getINSTANCE();
+
+    public AlarmScheduler(){
+        if(alarmManager == null)
+            alarmManager = (AlarmManager) MainActivity.getContext().getSystemService(Context.ALARM_SERVICE);
+    }
+
     public Long scheduleAlarm(){
         TimeConverter tc = new TimeConverter();
 
         Long nextAlarmTime;
         Long currentTime = new GregorianCalendar().getTimeInMillis();
-        nextAlarmTime = settingsObj.getLastAlarmTime() + settingsObj.getUpdateIntervalInHours() * 1000 * 60 * 60;
+        nextAlarmTime = settingsObj.getLastAlarmTime() + settingsObj.getUpdateIntervalInHours() * 1000 * /*60 **/ 60;
 
         Log.d(TAG, "currentTime    : "+tc.millisecondsToDate(currentTime));
         Log.d(TAG, "previousAlarm  : "+tc.millisecondsToDate(settingsObj.getLastAlarmTime()));
@@ -47,20 +54,21 @@ public class AlarmScheduler {
 
     private void setAlarm (Long nextAlarmTime){
         //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
-        AlarmManager alarmManager = (AlarmManager) MainActivity.getContext().getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent();
-        intent.setAction("ACTION_UPDATE_ALARM");
+        deleteAlarm();
+        Intent intent = new Intent(MainActivity.getContext(),AlarmReceiver.class);
+//        intent.setAction("ACTION_UPDATE_ALARM");
         alarmManager.set(AlarmManager.RTC_WAKEUP, nextAlarmTime, PendingIntent.getBroadcast(MainActivity.getContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT));
-//        sendBroadcast(intent);
-
     }
 
     public void deleteAlarm(){
         Log.d(TAG, " DELETE ALARMS ");
-        AlarmManager am = (AlarmManager) MainActivity.getContext().getSystemService(Context.ALARM_SERVICE);
         Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
         PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
-        am.cancel(p);
+        alarmManager.cancel(p);
         p.cancel();
+    }
+
+    public AlarmManager getAlarmManager(){
+        return alarmManager;
     }
 }
