@@ -21,12 +21,13 @@ package picframe.at.picframe.helper.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 
 import picframe.at.picframe.MainApp;
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.local_storage.SD_Card_Helper;
 
 /**
  * Stores App Settings, to get and load easily
@@ -51,9 +52,9 @@ public class AppData {
         }
     }
 
-    private String extFolderAppRoot;        // sc-card-dir/Pictures/picframe
-    private String extFolderDisplayPath;    // sc-card-dir/Pictures/picframe/pictures
-    private String extFolderCachePath;      // sc-card-dir/Pictures/picframe/cache
+    private String extFolderAppRoot;        // sc-card-dir/picframe
+    private String extFolderDisplayPath;    // sc-card-dir/picframe/pictures
+    private String extFolderCachePath;      // sc-card-dir/picframe/cache
 
     public static AppData getINSTANCE() {
         if (INSTANCE == null) {
@@ -64,12 +65,12 @@ public class AppData {
 
     private AppData() {
         mPrefs = MainApp.getINSTANCE().getSharedPreferences(mySettingsFilename, Context.MODE_PRIVATE);
-
-        extFolderAppRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) +
+        extFolderAppRoot = new SD_Card_Helper().getExteralStoragePath() +
                 File.separator + "picframe";
         extFolderDisplayPath = extFolderAppRoot + File.separator + "pictures";
         extFolderCachePath = extFolderAppRoot + File.separator + "cache";
     }
+
 
 // ONLY TO BE MODIFIED BY SETTINGS ACTIVITY
     // flag whether slideshow is selected(on=true) or not(off=false)
@@ -171,6 +172,32 @@ public class AppData {
     public void setTutorial(boolean showTutorial) {
         mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_tutorial), showTutorial).commit();
     }
+
+    public int getCurrentPage(){
+        return mPrefs.getInt("currentpage", 1);
+    }
+
+    public void setCurrentPage(int page){
+        mPrefs.edit().putInt("currentpage", page).commit();
+    }
+
+    // flag for slideshow direction
+    public boolean getDirection() {
+        return mPrefs.getBoolean("toogledirection", true);
+    }
+    public void setDirection(boolean toggeleDirection) {
+        mPrefs.edit().putBoolean("toogledirection", toggeleDirection).commit();
+    }
+
+    // alam time ??
+    public Long getLastAlarmTime() {
+        return mPrefs.getLong("alarmtime", -1);
+    }
+
+    public void setLastAlarmTime (Long time) {
+        mPrefs.edit().putLong("alarmtime", time).commit();
+    }
+
 /* TODO
     // holds the remaining time to display the current image
     public int getRemainingDisplayTime() {
@@ -180,7 +207,18 @@ public class AppData {
         mPrefs.edit().putInt(getAppContext().getString(R.string.sett_key_), remainingDisplayTime).commit();
     }
 */
-// CAN NEVER BE MODIFIED!   (holds local paths, desc at vars)
+
+// Local paths; to be reset on each restart of App in case sd-card was mounted/unmounted
+    public void resetPictureFolderIfChanged(){
+        String newExternalFolder = new SD_Card_Helper().getExteralStoragePath() + File.separator + "picframe";
+        if(!extFolderAppRoot.equals(newExternalFolder)) {
+            Log.d("AppData", "Different PicFrame root folder");
+            extFolderAppRoot = newExternalFolder;
+            extFolderDisplayPath = extFolderAppRoot + File.separator + "pictures";
+            extFolderCachePath = extFolderAppRoot + File.separator + "cache";
+        }
+    }
+
     public String getExtFolderAppRoot() {
         return extFolderAppRoot;
     }
@@ -191,6 +229,7 @@ public class AppData {
         return extFolderDisplayPath;
     }
 
+// CAN NEVER BE MODIFIED!   (holds local paths, desc at vars)
     private Context getAppContext() {
         return MainApp.getINSTANCE().getApplicationContext();
     }

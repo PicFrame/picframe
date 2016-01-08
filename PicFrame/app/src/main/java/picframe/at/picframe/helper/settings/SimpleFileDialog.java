@@ -35,13 +35,13 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.os.Environment;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.local_storage.SD_Card_Helper;
 
 public class SimpleFileDialog {
     private String m_sdcardDirectory = "";
@@ -62,7 +62,9 @@ public class SimpleFileDialog {
 
     public SimpleFileDialog(Context context, SimpleFileDialogListener SimpleFileDialogListener) {
         m_context = context;
-        m_sdcardDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
+//        m_sdcardDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
+        m_sdcardDirectory = new SD_Card_Helper().getExteralStoragePath();
+//        m_sdcardDirectory = "/storage";
         m_SimpleFileDialogListener = SimpleFileDialogListener;
 
         try {

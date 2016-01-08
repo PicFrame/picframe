@@ -1,21 +1,21 @@
- /*
-    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher,
-    Martin Bayerl, Christoph Krasa
+/*
+   Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher,
+   Martin Bayerl, Christoph Krasa
 
-    This file is part of PicFrame.
+   This file is part of PicFrame.
 
-    PicFrame is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+   PicFrame is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-    PicFrame is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   PicFrame is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package picframe.at.picframe.activities;
@@ -27,6 +27,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
@@ -51,11 +52,10 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import picframe.at.picframe.Keys;
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
@@ -81,18 +81,17 @@ public class MainActivity extends ActionBarActivity {
     public static AppData settingsObj = AppData.getINSTANCE();
     LocalBroadcastManager broadcastManager;
 
-    private static DisplayImages setUp;
-    private static CustomViewPager pager;
-    private Timer timer;
-    private Timer downloadTimer;
-    private int page;
+    private DisplayImages setUp;
+    private CustomViewPager pager;
+    private final long countdownIntervalInMilliseconds = 2*60*1000-50; // interval to slightly less than 2 minutes
+    private CountDownTimer countDownTimer;
 
     private static Context mContext;
     private String mOldPath;
     private boolean mOldRecursive;
     private RelativeLayout mainLayout;
     private boolean paused;
-    private int remainingDisplayTime; // in seconds
+    private long remainingDisplayTime = 0; // in seconds
 
     private static final int nbOfExamplePictures = 6;
     private static boolean showExamplePictures = false;
@@ -103,14 +102,16 @@ public class MainActivity extends ActionBarActivity {
     private static Animation mFadeInAnim, mFadeOutAnim;                 //TODO still needed?
 
     private ArrayList<PageTransformer> transformers;
-    private static List<String> mFilePaths;
-    private static int size;
-    private static int currentPageSaved;
-    private static boolean toggleDirection;
+    private List<String> mFilePaths;
+    private int size;
+    private int currentPage;
+    private boolean rightToLeft;
     private Handler actionbarHideHandler;
     private ImageView mPause;
     private LinearLayout mRemainingTimeLayout;
+    private AlertDialog click_on_settings_dialog;
 
+    //public static boolean mConnCheckOC, mConnCheckSMB; //TODO still needed?
     public boolean mDoubleBackToExitPressedOnce;
 
     private final static boolean DEBUG = true;
@@ -128,7 +129,7 @@ public class MainActivity extends ActionBarActivity {
         mFadeOutAnim = AnimationUtils.loadAnimation(this, R.anim.fade_out);
         //mConnCheckOC = false;
         //mConnCheckSMB = false;
-        toggleDirection = false;
+        rightToLeft = true;
         paused = false;
         enableGestures();
         //deletePreferences();
@@ -136,32 +137,49 @@ public class MainActivity extends ActionBarActivity {
         if(getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
-        deleteTimerz();
         initializeTransitions();
-
         pager = (CustomViewPager) findViewById(R.id.pager);
         mContext = getApplicationContext();
-
         loadAdapter();
-        slideShow();
+        setUpSlideShow();
 
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
 
+        settingsObj.resetPictureFolderIfChanged();
+
         pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onPageScrollStateChanged(int state) { }
+            public void onPageScrollStateChanged(int state) {
+            }
+
             @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
 
             @Override
             public void onPageSelected(int position) {
                 selectTransformer();
             }
         });
+
+        //getlastpage
+        currentPage = settingsObj.getCurrentPage();
+        if(pager.getAdapter().getCount() < currentPage){
+            currentPage = 1;
+        }
+
+        System.out.println("STARTING PAGE  " + currentPage);
+
+        rightToLeft = settingsObj.getDirection();
+
+        // Restart a download alarm if the scheduled alarm was in the future; else trigger alarm right away.
+        // Only do this if owncloud is selected and update intervall is not set to "never"
+//        setUpAlarmIfApplicable();
     }
 
-    // TODO: Make download timer to alarm                                           !! M
+
+
     // TODO: folderpicker for owncloud server folder                                ! L
 
     @Override
@@ -172,17 +190,19 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onResume() {
         super.onResume();
+
+        Log.d(TAG, "onResume");
+
         supportInvalidateOptionsMenu();
         if (settingsObj.getFirstAppStart()) {
             settingsObj.setFirstAppStart(false);
             settingsObj.setTutorial(true);
         }
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         tutorial();
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        // if the user choose "download NOW", download pictures; then set timer as usual
-      
         // get localBroadcastManager instance to receive localBroadCasts
         if (broadcastManager == null) {
             broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
@@ -195,18 +215,7 @@ public class MainActivity extends ActionBarActivity {
             broadcastManager.registerReceiver(receiver, filter);
         }
 
-        if(settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
-            Log.d(TAG, "new timer");
-            deleteTimerz(true);
-            this.downloadTimer = new Timer();
-            int downloadInterval = settingsObj.getUpdateIntervalInHours(); // number of hours to wait for next download
-            if (downloadInterval > 0) {
-                this.downloadTimer.schedule(new DownloadingTimerTask(), downloadInterval * 1000 * 60 * 60, downloadInterval * 1000 * 60 * 60); // delay in hours
-            }
-        } else {
-            System.out.println("no new timer");
-            deleteTimerz(true);
-        }
+        setUpAlarmIfApplicable();
 
         if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
             if (!settingsObj.getImagePath().equals(mOldPath) || mOldRecursive != settingsObj.getRecursiveSearch()) {
@@ -217,11 +226,15 @@ public class MainActivity extends ActionBarActivity {
         updateFileList();
 
         // start on the page we left in onPause, unless it was the first or last picture (as this freezes the slideshow
-        if(currentPageSaved < pager.getAdapter().getCount() -1 && currentPageSaved > 0) {
-            pager.setCurrentItem(currentPageSaved);
-            page=currentPageSaved;
+        if(currentPage < pager.getAdapter().getCount() -1 && currentPage > 0) {
+            pager.setCurrentItem(currentPage);
         }
-        slideShow();
+
+        setUpSlideShow();
+
+        if(settingsObj.getSlideshow() && !paused){
+            startSlideshowCountDown();
+        }
     }
 
     @Override
@@ -269,7 +282,7 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onPause() {
         super.onPause();
-        deleteTimerz();
+        cancelSlideShowCoundown();
         mOldPath = settingsObj.getImagePath();
         mOldRecursive = settingsObj.getRecursiveSearch();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -277,8 +290,11 @@ public class MainActivity extends ActionBarActivity {
         // unregister receiver, because if the activity is not in focus, we want no UI updates
         broadcastManager.unregisterReceiver(receiver);
         receiver = null;
-
-        currentPageSaved = pager.getCurrentItem();
+        if(click_on_settings_dialog != null){
+            click_on_settings_dialog.cancel();
+            click_on_settings_dialog.dismiss();
+        }
+        currentPage = pager.getCurrentItem();
     }
 
     public void onBackPressed() {
@@ -313,69 +329,63 @@ public class MainActivity extends ActionBarActivity {
         }, 2500);
     }
 
-    public void pageSwitcher(int seconds) {
-        // At this line a new Thread will be created
-        this.timer = new Timer();
-        this.timer.scheduleAtFixedRate(new RemindTask(), 0, seconds * 1000); // delay
-
-    }
-    private class RemindTask extends TimerTask {
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    if (setUp.getCount() > 0 && !paused) {
-                        pager.setCurrentItem(page, true);
-                        if(!toggleDirection) {
-                            page++;
-                        }
-                        else {
-                            page--;
-                        }
-                        if(page == setUp.getCount()-1 || page == 0){
-                            toggleDirection = !toggleDirection;
-                        }
-                    }
-                }
-            });
+    private void pageSwitcher() {
+        if (setUp.getCount() > 0 && !paused) {
+            int localpage = pager.getCurrentItem();
+            Log.d(TAG, "localpage " + localpage);
+            // switch diretion if extremity of slideshow is reacher
+            if (localpage >= setUp.getCount() - 1) {
+                rightToLeft = false;
+            } else if (localpage == 0) {
+                rightToLeft = true;
+            }
+            if (rightToLeft) {
+                localpage++;
+            } else {
+                localpage--;
+            }
+            pager.setCurrentItem(localpage, true);
+            Log.d(TAG, "localpage " + localpage);
         }
     }
 
-    public class DownloadingTimerTask extends TimerTask {
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    // set to false again every time
-                    //mConnCheckOC = false;
-                    checkForProblemsAndShowToasts();  // check for connection or file reading problems
-                }
-            });
-        }
+    public static Context getContext() {
+        return mContext;
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        // Save the current Page to resume after next start
+        // maybe not right here will test
+        settingsObj.setCurrentPage(currentPage);
+        Log.d(TAG,"SAVING PAGE  " + currentPage);
+
+        // Save the direction of the pageviewer
+        settingsObj.setDirection(rightToLeft);
     }
 
 
-    public void slideShow(){
+
+    private void setUpSlideShow(){
         if (settingsObj.getSlideshow()){
             pager.setScrollDurationFactor(8);
-            pager.setPagingEnabled(false);
-            pageSwitcher(settingsObj.getDisplayTime());
+//            pager.setPagingEnabled(false);
         }
         else{
             pager.setScrollDurationFactor(3);
-            pager.setPagingEnabled(true);
-            deleteTimerz(false);
+//            pager.setPagingEnabled(true);
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        deleteTimerz();
+        cancelSlideShowCoundown();
     }
 
     private class DisplayImages extends PagerAdapter {
-//        private List<String> mFilePaths;
+        //        private List<String> mFilePaths;
         private Activity activity;
         private LayoutInflater inflater;
         private ImageView imgDisplay;
@@ -399,9 +409,7 @@ public class MainActivity extends ActionBarActivity {
 
 
         @Override
-        public Object instantiateItem(ViewGroup container, int position) {
-
-
+        public Object instantiateItem(ViewGroup container, final int position) {
             inflater = (LayoutInflater) activity
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View viewLayout = inflater.inflate(R.layout.fullscreen_layout, container,
@@ -418,10 +426,8 @@ public class MainActivity extends ActionBarActivity {
             if(!showExamplePictures){
                 imgDisplay.setImageBitmap(EXIF_helper.decodeFile(mFilePaths.get(this.localpage), mContext));
             } else {
-                Log.d(TAG, "localpage: "+this.localpage);
                 String currentImage = "ex" + this.localpage;
                 int currentImageID = mContext.getResources().getIdentifier(currentImage, "drawable", mContext.getPackageName());
-                Log.d(TAG, "currentImage: " + currentImage);
                 imgDisplay.setImageResource(currentImageID);
             }
             imgDisplay.setOnTouchListener(new Gestures(getApplicationContext()) {
@@ -429,22 +435,24 @@ public class MainActivity extends ActionBarActivity {
                 public void onSwipeBottom() {
                     showActionBar();
                 }
+
                 @Override
                 public void onSwipeTop() {
-                    if (getSupportActionBar() != null){
+                    if (getSupportActionBar() != null) {
                         getSupportActionBar().hide();
                     }
                 }
-
                 @Override
                 public void onTap() {
                     if (settingsObj.getSlideshow()) {
                         paused = !paused;
 
                         if (paused) {
+                            cancelSlideShowCoundown();
+//                            pager.setPagingEnabled(true);
                             mPause.setVisibility(View.VISIBLE);
                             //
-//                            remainingDisplayTime = 4; // TODO: comment in once we show remaing time
+//                            remainingDisplayTime = 4; // TODO: comment in once we show remaing alarmtime
 //                            if(settingsObj.getDisplayTime() >= 60){
 //                                String remainingTimeString = String.valueOf(remainingDisplayTime);
 //                                TextView textView = (TextView) findViewById(R.id.remaining_time_value);
@@ -452,19 +460,25 @@ public class MainActivity extends ActionBarActivity {
 //                                mRemainingTimeLayout.setVisibility(View.VISIBLE);
 //                            }
                             showActionBar();
-                        }
-                        else {
+                        } else {
+                            startSlideshowCountDown();
                             mPause.setVisibility(View.INVISIBLE);
-                            if(mRemainingTimeLayout.getVisibility() == View.VISIBLE)
+/*                            if(position < pager.getAdapter().getCount() -1 && position > 0) {
+                                pager.setCurrentItem(position);
+                                page=position;
+                                Log.d(TAG, "position in range: "+position);
+                            } else {
+                                Log.d(TAG, "not in range: "+position);
+                            }
+*/             //               pager.setPagingEnabled(false);
+                            if (mRemainingTimeLayout.getVisibility() == View.VISIBLE)
                                 mRemainingTimeLayout.setVisibility(View.INVISIBLE);
                         }
                     }
                 }
             });
             container.addView(viewLayout);
-
             return viewLayout;
-
         }
 
         @Override
@@ -480,30 +494,6 @@ public class MainActivity extends ActionBarActivity {
 
         public int getPage(){
             return this.localpage;
-        }
-
-        /*
-        @Override
-        public float getPageWidth (int position) {
-            if (position == POS_MAIN_PAGE) {
-                return WIDTH_MAIN_PAGE;
-            }
-            return 1f;
-        }
-*/
-    }
-
-    private void deleteTimerz() { deleteTimerz(true); }
-    private void deleteTimerz(boolean deleteDLTimer){
-        if(timer != null){
-            this.timer.cancel();
-            this.timer.purge();
-            this.timer = null;
-        }
-        if(downloadTimer != null && deleteDLTimer){
-            this.downloadTimer.cancel();
-            this.downloadTimer.purge();
-            this.downloadTimer= null;
         }
     }
 
@@ -526,10 +516,10 @@ public class MainActivity extends ActionBarActivity {
     private void loadAdapter(){
         setUp = new DisplayImages(MainActivity.this);
 //        pager.setPagingEnabled(true);
-        setUp = new DisplayImages(MainActivity.this);
+//        setUp = new DisplayImages(MainActivity.this);
         try {
             pager.setAdapter(setUp);
-            page = setUp.getPage();
+            currentPage = setUp.getPage();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -609,7 +599,7 @@ public class MainActivity extends ActionBarActivity {
         return (int)(Math.random() * 11);
     }
 
-    private static void setSize(){
+    private void setSize(){
         if(!showExamplePictures)
             size = mFilePaths.size();
         else
@@ -641,30 +631,31 @@ public class MainActivity extends ActionBarActivity {
         }
         AlertDialog.Builder click_on_settings_dialog_builder = new AlertDialog.Builder(MainActivity.this);
         click_on_settings_dialog_builder
-            .setMessage(R.string.main_dialog_tutorial_text)
-            .setPositiveButton(R.string.main_dialog_tutorial_okButton,
-                    new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) { }
-            })
-            .setNeutralButton(R.string.main_dialog_tutorial_dontShowAgainButton,
-                    new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    settingsObj.setTutorial(false);
-                }
-            })
-            .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
-                    new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    startActivity(getSettingsActivityIntent());
-                }
-            });
-        AlertDialog click_on_settings_dialog = click_on_settings_dialog_builder.create();
+                .setMessage(R.string.main_dialog_tutorial_text)
+                .setPositiveButton(R.string.main_dialog_tutorial_okButton,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                            }
+                        })
+                .setNeutralButton(R.string.main_dialog_tutorial_dontShowAgainButton,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                settingsObj.setTutorial(false);
+                            }
+                        })
+                .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                                startActivity(getSettingsActivityIntent());
+                            }
+                        });
+        click_on_settings_dialog = click_on_settings_dialog_builder.create();
         click_on_settings_dialog.getWindow().setGravity(Gravity.TOP | Gravity.START);
-
+        click_on_settings_dialog.setCancelable(true);
         click_on_settings_dialog.show();
         showActionBar();
     }
@@ -681,6 +672,7 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "In onReceive!");
             if (intent != null) {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
@@ -691,4 +683,76 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    private void startSlideshowCountDown(){
+        Log.d(TAG, "startSlideshowCountDown");
+        if(remainingDisplayTime != 0 && remainingDisplayTime < settingsObj.getDisplayTime()){
+            Log.d(TAG, "remainingDisplayTime: "+remainingDisplayTime+" < "+settingsObj.getDisplayTime()+", displayTime");
+            countDownTimer = new CountDownTimer((settingsObj.getDisplayTime()-remainingDisplayTime)*1000, countdownIntervalInMilliseconds) {
+                @Override
+                public void onTick(long l) {
+                    Log.d(TAG+" unique", "tick!"+l/1000);
+                    remainingDisplayTime = l;
+                }
+
+                @Override
+                public void onFinish() {
+                    Log.d(TAG,"done with this one!");
+                    pageSwitcher();
+                    startRepeatingCountDowns();
+                }
+            }.start();
+        } else {
+            Log.d(TAG, "no leftover displaytime!");
+            startRepeatingCountDowns();
+        }
+
+    }
+
+    private void startRepeatingCountDowns(){
+        Log.d(TAG, "startRepeatingCountDowns");
+        countDownTimer = new CountDownTimer(settingsObj.getDisplayTime()*1000, countdownIntervalInMilliseconds) {
+            @Override
+            public void onTick(long l) {
+                remainingDisplayTime = l/1000;
+                Log.d(TAG, "tick!" + remainingDisplayTime);
+            }
+
+            @Override
+            public void onFinish() {
+                Log.d(TAG, "Timer done; new timer!");
+                pageSwitcher();
+                countDownTimer.start();
+            }
+        }.start();
+    }
+
+    private void cancelSlideShowCoundown(){
+        /* remainingg display time is always imprecise, the real value located somewhere between
+            0 and countdownIntervalInMilliseconds.
+            If the display time is smaller than countdownIntervalInMilliseconds/1000,
+            then the value of countdownIntervalInMilliseconds will never change, and resetting
+            the value will be more accurate.
+         */
+        if(settingsObj.getDisplayTime() < countdownIntervalInMilliseconds/1000){
+            Log.d(TAG, settingsObj.getDisplayTime()+" < "+countdownIntervalInMilliseconds/1000);
+            remainingDisplayTime = 0;
+        }
+        if(countDownTimer != null){
+            countDownTimer.cancel();
+        }
+    }
+
+    private void setUpAlarmIfApplicable() {
+        AlarmScheduler alarmScheduler = new AlarmScheduler();
+        alarmScheduler.deleteAlarm();
+        if (settingsObj.getSourceType() != AppData.sourceTypes.OwnCloud
+                || settingsObj.getUpdateIntervalInHours() == -1
+                || settingsObj.getUserName().equals("")
+                || settingsObj.getUserPassword().equals("")) {
+            Log.d(TAG, "no new alarm");
+            return;
+        }
+        Log.d(TAG, "new alarm!");
+        alarmScheduler.scheduleAlarm();
+    }
 }
