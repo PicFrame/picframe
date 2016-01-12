@@ -6,6 +6,7 @@
 ### Pre-requisites
 	Android SDK v21
 	Android build tools v21.1.2
+	Android Support Repository
 
 ### Getting started
 * Want to develop? - “Import Project” into Android Studio and you should be good to go.
