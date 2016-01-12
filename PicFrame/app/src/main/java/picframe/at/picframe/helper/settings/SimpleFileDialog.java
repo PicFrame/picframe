@@ -146,9 +146,9 @@ public class SimpleFileDialog {
         try {
             File dirFile = new File(dir);
             // if directory is not the base sd card directory add ".." for going up one directory
-            if (! m_dir.equals(m_sdcardDirectory) ) {
-                dirs.add("..");
-            }
+//            if (! m_dir.equals(m_sdcardDirectory) ) {
+            dirs.add("..");
+//            }
             if (! dirFile.exists() || ! dirFile.isDirectory()) {
                 return dirs;
             }
