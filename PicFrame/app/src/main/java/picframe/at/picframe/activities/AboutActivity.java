@@ -20,9 +20,8 @@ package picframe.at.picframe.activities;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.TextView;
 
@@ -36,7 +35,7 @@ public class AboutActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void showLicenseDialog(View view) {
