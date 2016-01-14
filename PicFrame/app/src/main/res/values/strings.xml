@@ -24,7 +24,7 @@
 
     <!-- MAIN STRINGS -->
     <string name="app_name" translatable="false">PicFrame</string>
-    <string name="app_version" translatable="false">1.5.1</string>
+    <string name="app_version" translatable="false">1.5.2</string>
     <string name="action_downloadNow">Download now</string>
     <string name="main_toast_noUsernameSet">No Username or Password set for network resource.</string>
     <string name="main_toast_noSDReadRights">Can\'t read from external SD card.</string>
