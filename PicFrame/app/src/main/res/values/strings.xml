@@ -74,6 +74,11 @@
     <string name="sett_transitionSumm">Choose desired transition for the slideshow</string>
     <string name="sett_deleteData">Delete data</string>
     <string name="sett_deleteDataSumm">Delete all downloaded images stored in the picframe folder</string>
+    <string name="sett_loginCheck_success">Success</string>
+    <string name="sett_loginCheck_failure">Failure</string>
+    <string name="sett_resetTitle">Restore default settings</string>
+    <string name="sett_resetSummary">Reset settings to default</string>
+    <string name="sett_confirmationDialogMessage">Do you really want to delete your settings information and reset everything to default?</string>
     <!-- Settings-Details Strings -->
     <string name="sett_srcPath_externalSD">Directory</string>
     <string name="sett_srcPath_externalSDSumm">Browse path to pictures</string>
@@ -833,7 +838,7 @@
         Apache JackRabbit depends on Commons HTTPClient version 3.1 and SLF4j version 1.7.5.\n
         Copyright © 2004-2010 The Apache Software Foundation. Licensed under Apache License,
         Version 2.0."</string>
-    <string name="sett_loginCheck_success">Success</string>
-    <string name="sett_loginCheck_failure">Failure</string>
+    <string name="sett_no">No</string>
+    <string name="sett_yes">Yes!</string>
     <!-- ABOUT STRINGS END -->
 </resources>

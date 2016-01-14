@@ -213,6 +213,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
 
     public void updateAllFieldTitles() {
+        Log.d(TAG, "in updateAllFieldTitles");
         for (String prefKey : editableTitleFields) {
             updateFieldTitle(prefKey);
         }
@@ -355,8 +356,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     public void setResetToDefaultButton() {
         Preference myResetButton = new Preference(this);
-        myResetButton.setTitle("Restore default settings");
-        myResetButton.setSummary("Reset settings to default");
+        myResetButton.setTitle(R.string.sett_resetTitle);
+        myResetButton.setSummary(R.string.sett_resetSummary);
         myResetButton.setKey(getString(R.string.sett_key_restoreDefaults));
         myResetButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
@@ -364,11 +365,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 AlertDialog.Builder ensureDialogB = new AlertDialog.Builder(SettingsActivity.this);
                 ensureDialogB
                         .setCancelable(false)
-                        .setMessage("Do you really want to delete your settings information and reset everything to default?")
-                        .setNegativeButton("No", null)
-                        .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
+                        .setMessage(R.string.sett_confirmationDialogMessage)
+                        .setNegativeButton(R.string.sett_no, null)
+                        .setPositiveButton(R.string.sett_yes, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                Log.d(TAG, "in click on yes!");
                                 resetSettingsToDefault();
                                 Toast.makeText(SettingsActivity.this, "Reset settings!", Toast.LENGTH_SHORT).show();
                                 updateAllFieldTitles();
@@ -454,7 +456,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent != null) {
+           /* if (intent != null) {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_LOGINSTATUSSUCCESS.equals(intent.getAction())) {
                     if (DEBUG)  Log.d(TAG, "received 'loginSuccess' action via broadcast");
@@ -465,7 +467,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                     Toast.makeText(getApplicationContext(), "LOGINFAILURE", Toast.LENGTH_SHORT).show();
 //TODO
                 }
-            }
+            }*/
         }
     }
 }
