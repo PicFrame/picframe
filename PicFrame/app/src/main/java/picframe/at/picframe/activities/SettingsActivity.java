@@ -410,17 +410,17 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     ************************************************************************************/
     public void setUpNestedScreen(PreferenceScreen preferenceScreen) {
         final Dialog dialog = preferenceScreen.getDialog();
-        ViewGroup list;
+        //ViewGroup list;
         Toolbar bar;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            list = (LinearLayout) dialog.findViewById(android.R.id.list);
-            LinearLayout root = (LinearLayout) list.getParent();
+            //list = (ViewGroup) dialog.findViewById(android.R.id.list);
+            LinearLayout root = (LinearLayout) dialog.findViewById(android.R.id.list).getParent();
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
             root.addView(bar, 0); // insert at top
         } else {
             ViewGroup root = (ViewGroup) dialog.findViewById(android.R.id.content);
             ListView content = (ListView) root.getChildAt(0);
-            list = content;
+            //list = content;
             root.removeAllViews();
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
 
