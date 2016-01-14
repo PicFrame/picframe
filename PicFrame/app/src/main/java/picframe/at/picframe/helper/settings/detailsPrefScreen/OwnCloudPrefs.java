@@ -136,19 +136,9 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
         myUpdatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                if ("-1".equals(String.valueOf(newValue))) {
-                    // "-1" = download never -> deleteAlarm
-                    //sendBroadcast(Keys.ACTION_DELETEALARM);
-                    alarmScheduler.deleteAlarm();
-                } else {
-                    if (AppData.getLoginSuccessful()) {
-                        //sendBroadcast(Keys.ACTION_SETALARM);
-                        alarmScheduler.scheduleAlarm();
-                    } else {
-                        //sendBroadcast(Keys.ACTION_DELETEALARM);
-                        alarmScheduler.deleteAlarm();
-                        Toast.makeText(mSettAct, R.string.sett_toast_noAlarmSet, Toast.LENGTH_SHORT).show();
-                    }
+                alarmScheduler.scheduleAlarm();
+                if (!"-1".equals(String.valueOf(newValue)) && !AppData.getLoginSuccessful()) {
+                    Toast.makeText(mSettAct, R.string.sett_toast_noAlarmSet, Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }

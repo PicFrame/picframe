@@ -195,22 +195,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             //update display/transition title
             updateFieldTitle(key);
             if (getString(R.string.sett_key_srctype).equals(key)) {
-                AppData.setLoginSuccessful(false);
+                setLoginStatus(false);
                 createCat2Fields();
-                if (AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
-                    Log.d(TAG, "SD-Card; delete alarm");
-                    alarmScheduler.deleteAlarm();
-                } else if (AppData.sourceTypes.OwnCloud.equals(AppData.getSourceType())) {
-                    if (AppData.getLoginSuccessful()) {
-                        alarmScheduler.scheduleAlarm();
-                    }
-                    Log.d(TAG, "OwnCloud");
-                }
             } else if (getString(R.string.sett_key_username).equals(key)  ||
                         getString(R.string.sett_key_password).equals(key) ||
                         getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
                 setLoginStatus(false);
-                alarmScheduler.deleteAlarm();
             } else if (getString(R.string.sett_key_loginCheckButton).equals(key)) {
                 alarmScheduler.scheduleAlarm();
             }

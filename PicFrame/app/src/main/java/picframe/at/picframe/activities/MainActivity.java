@@ -170,9 +170,7 @@ public class MainActivity extends ActionBarActivity {
 
         rightToLeft = AppData.getDirection();
 
-        // Restart a download alarm if the scheduled alarm was in the future; else trigger alarm right away.
-        // Only do this if owncloud is selected and update intervall is not set to "never"
-//        setUpAlarmIfApplicable();
+        new AlarmScheduler().scheduleAlarm();
     }
 
 
@@ -212,8 +210,6 @@ public class MainActivity extends ActionBarActivity {
             receiver = new ResponseReceiver();
             broadcastManager.registerReceiver(receiver, filter);
         }
-
-        setUpAlarmIfApplicable();
 
         if(GlobalPhoneFuncs.getFileList(AppData.getImagePath()).size() > 0) {
             if (!AppData.getImagePath().equals(mOldPath) || mOldRecursive != AppData.getRecursiveSearch()) {
@@ -749,19 +745,5 @@ public class MainActivity extends ActionBarActivity {
         if(countDownTimer != null){
             countDownTimer.cancel();
         }
-    }
-
-    private void setUpAlarmIfApplicable() {
-        AlarmScheduler alarmScheduler = new AlarmScheduler();
-        alarmScheduler.deleteAlarm();
-        if (AppData.getSourceType() != AppData.sourceTypes.OwnCloud
-                || AppData.getUpdateIntervalInHours() == -1
-                || AppData.getUserName().equals("")
-                || AppData.getUserPassword().equals("")) {
-            Log.d(TAG, "no new alarm");
-            return;
-        }
-        Log.d(TAG, "new alarm!");
-        alarmScheduler.scheduleAlarm();
     }
 }

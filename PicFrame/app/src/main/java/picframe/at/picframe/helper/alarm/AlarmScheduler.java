@@ -25,11 +25,20 @@ public class AlarmScheduler {
     }
 
     public Long scheduleAlarm(){
+
+        deleteAlarm();
+        if(AppData.getSourceType() != AppData.sourceTypes.OwnCloud
+                || AppData.getUpdateIntervalInHours() == -1
+                || !AppData.getLoginSuccessful())
+        {
+            return -1L;
+        }
+
         TimeConverter tc = new TimeConverter();
 
         Long nextAlarmTime;
         Long currentTime = new GregorianCalendar().getTimeInMillis();
-        nextAlarmTime = AppData.getLastAlarmTime() + AppData.getUpdateIntervalInHours() * 1000 * 60 * 60;
+        nextAlarmTime = AppData.getLastAlarmTime() + AppData.getUpdateIntervalInHours() * 1000 /** 60 */* 60;
 
         Log.d(TAG, "currentTime    : "+tc.millisecondsToDate(currentTime));
         Log.d(TAG, "previousAlarm  : "+tc.millisecondsToDate(AppData.getLastAlarmTime()));
@@ -59,7 +68,7 @@ public class AlarmScheduler {
         alarmManager.set(AlarmManager.RTC_WAKEUP, nextAlarmTime, PendingIntent.getBroadcast(MainActivity.getContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT));
     }
 
-    public void deleteAlarm(){
+    private void deleteAlarm(){
         Log.d(TAG, " DELETE ALARMS ");
         Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
         PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
@@ -67,7 +76,4 @@ public class AlarmScheduler {
         p.cancel();
     }
 
-    public AlarmManager getAlarmManager(){
-        return alarmManager;
-    }
 }
