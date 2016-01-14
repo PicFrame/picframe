@@ -9,7 +9,6 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.support.v4.content.LocalBroadcastManager;
-import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
@@ -39,7 +38,7 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
 
         populateStatusFields();
 
-        populateStatusView();
+        //populateStatusView();
         createUrlPref();
         createUsernamePref();
         createPasswordPref();
@@ -51,13 +50,13 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
         // save: title-string (id) and value-view-id (add to view as tag?!)
         //statusFields.put("statusNo1", R.)
     }
-
+/*
     private void populateStatusView() {
         LayoutInflater li = (LayoutInflater) mSettAct.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ViewGroup container = (ViewGroup) mSettAct.getResources().getLayout(R.layout.status_container);
 
     }
-
+*/
     private void createUrlPref() {
         EditTextPreference mySrcPathPref = new EditTextPreference(mSettAct);
         mySrcPathPref.setTitle(R.string.sett_srcPath_OwnCloud);
