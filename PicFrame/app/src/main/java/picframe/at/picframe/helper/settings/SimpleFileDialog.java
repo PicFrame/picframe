@@ -35,6 +35,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -145,8 +146,8 @@ public class SimpleFileDialog {
         List<String> dirs = new ArrayList<String>();
         try {
             File dirFile = new File(dir);
-            // if directory is not the base sd card directory add ".." for going up one directory
-            if (! m_dir.equals(m_sdcardDirectory) ) {
+            // if parent directory is not root, add ".." for going up one directory
+            if (!dirFile.getParent().equals("/")) {
                 dirs.add("..");
             }
             if (! dirFile.exists() || ! dirFile.isDirectory()) {
