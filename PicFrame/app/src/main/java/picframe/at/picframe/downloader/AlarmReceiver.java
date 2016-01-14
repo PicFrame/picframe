@@ -19,25 +19,18 @@
 
 package picframe.at.picframe.downloader;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.util.Log;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
-import picframe.at.picframe.activities.MainActivity;
+import picframe.at.picframe.Keys;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.alarm.TimeConverter;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.service_broadcast.DownloadService;
-import picframe.at.picframe.Keys;
-import android.util.Log;
 
 
 /**
@@ -46,8 +39,6 @@ import android.util.Log;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String TAG = AlarmReceiver.class.getSimpleName();
-    private static AppData settingsObj = AppData.getINSTANCE();
-
     TimeConverter tc;
 
     @Override
@@ -57,14 +48,14 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         System.out.println(" ALARMRECEIVER ");
 
-//        Long scheduledAlarm = lastAlarmTime+settingsObj.getUpdateIntervalInHours();
+//        Long scheduledAlarm = lastAlarmTime+AppData.getUpdateIntervalInHours();
         Long currentTime = new GregorianCalendar().getTimeInMillis();
 
         Intent startDownloadIntent = new Intent(context, DownloadService.class);
         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
         context.startService(startDownloadIntent);
 
-        settingsObj.setLastAlarmTime(currentTime);
+        AppData.setLastAlarmTime(currentTime);
 
         Log.d(TAG, "Current Time    : " + tc.millisecondsToDate(currentTime));
         AlarmScheduler alarmScheduler = new AlarmScheduler();

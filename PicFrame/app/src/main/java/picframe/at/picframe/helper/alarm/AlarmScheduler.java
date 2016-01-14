@@ -18,7 +18,6 @@ import picframe.at.picframe.helper.settings.AppData;
 public class AlarmScheduler {
     private static final String TAG = AlarmScheduler.class.getSimpleName();
     private static AlarmManager alarmManager;
-    private AppData settingsObj = AppData.getINSTANCE();
 
     public AlarmScheduler(){
         if(alarmManager == null)
@@ -30,11 +29,11 @@ public class AlarmScheduler {
 
         Long nextAlarmTime;
         Long currentTime = new GregorianCalendar().getTimeInMillis();
-        nextAlarmTime = settingsObj.getLastAlarmTime() + settingsObj.getUpdateIntervalInHours() * 1000 * 60 * 60;
+        nextAlarmTime = AppData.getLastAlarmTime() + AppData.getUpdateIntervalInHours() * 1000 * 60 * 60;
 
         Log.d(TAG, "currentTime    : "+tc.millisecondsToDate(currentTime));
-        Log.d(TAG, "previousAlarm  : "+tc.millisecondsToDate(settingsObj.getLastAlarmTime()));
-        Log.d(TAG, "Update Interval: "+String.valueOf(settingsObj.getUpdateIntervalInHours()));
+        Log.d(TAG, "previousAlarm  : "+tc.millisecondsToDate(AppData.getLastAlarmTime()));
+        Log.d(TAG, "Update Interval: "+String.valueOf(AppData.getUpdateIntervalInHours()));
         Log.d(TAG, "nextAlarm      : " + tc.millisecondsToDate(nextAlarmTime));
 
         // If the time for the next scheduled alarm is passed, download immediately
