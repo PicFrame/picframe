@@ -37,7 +37,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
     private final String TAG = this.getClass().getSimpleName();
     private static final boolean DEBUG = true;
 
-    private AppData settObj;
     private LocalBroadcastManager broadcastManager;
     private NotificationCompat.Builder notificationBuilder;
     private NotificationManager notificationManager;
@@ -90,9 +89,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
         stopDownloadIntent.setAction(Keys.ACTION_STOPDOWNLOAD);
         stopDownloadIntent.addCategory(Intent.CATEGORY_DEFAULT);
 
-        // load shared preferences settingsObject
-        settObj = AppData.getINSTANCE();
-
         if (!downloading) {
             // check for problems only in mainactivity (after settings changed) (checkForProblemsAndShowToasts)
             // since at this point we are mostly sure to not run into problems, we check for wifi
@@ -113,7 +109,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
             /* create downloader object according to selected type */
             // if type is external sd, no download should happen (should never be the case)
             AppData.sourceTypes tmpSource;
-            tmpSource = settObj.getSourceType();
+            tmpSource = AppData.getSourceType();
             if (AppData.sourceTypes.ExternalSD.equals(tmpSource)) {
                 Log.d(TAG, "FAILURE! DownloadService started, while SD Card is selected");
                 stopSelf();
@@ -176,10 +172,10 @@ public class DownloadService extends Service implements ServiceCallbacks {
         boolean dirCreated;
         // check if folders exist, if not, create them
         ArrayList<String> folderList = new ArrayList<>();
-        if (DEBUG) Log.d(TAG, settObj.getExtFolderAppRoot());
-        folderList.add(settObj.getExtFolderAppRoot());
-        folderList.add(settObj.getExtFolderCachePath());
-        folderList.add(settObj.getExtFolderDisplayPath());
+        if (DEBUG) Log.d(TAG, "ExtFolderAppRoot" + AppData.getExtFolderAppRoot());
+        folderList.add(AppData.getExtFolderAppRoot());
+        folderList.add(AppData.getExtFolderCachePath());
+        folderList.add(AppData.getExtFolderDisplayPath());
         for (String folder : folderList) {
             File dir = new File(folder);
             if (dir.exists() && dir.isDirectory())
@@ -195,44 +191,23 @@ public class DownloadService extends Service implements ServiceCallbacks {
         File folder = new File(folderList.get(1));
         if (DEBUG) Log.i(TAG, "deleting files in cache dir before downloading");
         // delete all files and folders in cache folder
-        if (!recursiveDelete(folder, false)) {
-            return false;
-        }
-        File nomedia = new File(folderList.get(1) + File.separator + ".nomedia");
-        if (!nomedia.exists()) {
+        GlobalPhoneFuncs.recursiveDeletionInBackgroundThread(folder, false);
+        File noMedia = new File(folderList.get(1) + File.separator + ".noMedia");
+        if (!noMedia.exists()) {
             try {
-                if (nomedia.createNewFile()) {
-                    if (DEBUG) Log.i(TAG, "Created .nomedia file successfully");
+                if (noMedia.createNewFile()) {
+                    if (DEBUG) Log.i(TAG, "Created .noMedia file successfully");
                 }
             } catch (IOException e) {
-                if (DEBUG) Log.e(TAG, "Couldn't create .nomedia file");
+                if (DEBUG) Log.e(TAG, "Couldn't create .noMedia file");
             }
-        }
-        return true;
-    }
-
-    public boolean recursiveDelete(File dir, boolean delRoot) {
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                        return false;
-                    }
-                }
-            }
-        }
-        //noinspection SimplifiableIfStatement
-        if (delRoot) {
-            return dir.delete();
         }
         return true;
     }
 
     private HashMap<String, Object> setUpOcClientArguments() {
         OwnCloudClient mClientOwnCloud;
+<<<<<<< HEAD
         Uri serverUri = Uri.parse(settObj.getSourcePath());
         if (settObj.getUserName().equals("") || settObj.getUserPassword().equals("") ||
                 settObj.getSourcePath().equals("") ||
@@ -240,18 +215,21 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 serverUri == null) {
             return null;
         }
+=======
+        Uri serverUri = Uri.parse(AppData.getSourcePath());
+>>>>>>> newSettings
         if (DEBUG) Log.i(TAG, "OwnCloud serverUri: " + serverUri);
         // Create client object to perform remote operations
         mClientOwnCloud = OwnCloudClientFactory.createOwnCloudClient(serverUri, getApplicationContext(), true);
         mClientOwnCloud.setCredentials(
                 OwnCloudCredentialsFactory.newBasicCredentials(
-                        settObj.getUserName(),
-                        settObj.getUserPassword()
+                        AppData.getUserName(),
+                        AppData.getUserPassword()
                 )
         );
         args.put(Downloader_OC.CLIENT, mClientOwnCloud);
         args.put(Downloader_OC.HANDLER, new Handler());
-        args.put(Keys.PICFRAMEPATH, settObj.getExtFolderAppRoot());
+        args.put(Keys.PICFRAMEPATH, AppData.getExtFolderAppRoot());
         args.put(Keys.CONTEXT, getApplicationContext());
     //    args.put(Downloader_OC.REMOTEFOLDER,   settObj. getRemoteFolderPath); TODO FOLDERPICKER STUFF
         args.put(Keys.CALLBACK, this);
@@ -291,20 +269,32 @@ public class DownloadService extends Service implements ServiceCallbacks {
                     .setOngoing(true)
                     .setAutoCancel(false);                          // to stop from dismissing notif. on click
         // START
+            Intent progressBarIntent = new Intent();
+            progressBarIntent.setAction(Keys.ACTION_PROGRESSUPDATE);
             if (Keys.NotificationStates.START.equals(notification_state)) {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - " + getString(R.string.service_notif_startDownloadTicker))
                         .setContentText(getString(R.string.service_notif_startDownloadText))
+<<<<<<< HEAD
                         .setSubText(null)
+=======
+>>>>>>> newSettings
                         .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.service_notif_actionStop), stopDownloadPendIntent)
+                        .setSubText(null)
                         .setProgress(100, 50, true);
+                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, true);
+                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, 50);
+
         // PROGRESS
             } else if (Keys.NotificationStates.PROGRESS.equals(notification_state)) {
                 notificationBuilder
                         .setContentText(getString(R.string.service_notif_progressText) + " " + progress + "%")
                         .setSubText(null)
                         .setProgress(100, progress, false);
+                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, false);
+                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, progress);
             }
+            broadcastManager.sendBroadcast(new Intent().setAction(Keys.ACTION_PROGRESSUPDATE));
         } else if (Keys.NotificationStates.FAILURE.equals(notification_state)
                 || Keys.NotificationStates.INTERRUPT.equals(notification_state)
                 || Keys.NotificationStates.STOP.equals(notification_state)

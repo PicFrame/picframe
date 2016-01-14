@@ -66,26 +66,31 @@
     <string name="sett_cat2">Source Settings</string>
     <string name="sett_srcType">Picture Source</string>
     <string name="sett_srcTypeSumm">Select the source of your pictures</string>
-    <string name="sett_username">Username</string>
-    <string name="sett_usernameSumm">Username for the selected source</string>
-    <string name="sett_password">Password</string>
-    <string name="sett_passwordSumm">Password for the selected source</string>
-    <string name="sett_srcPath_externalSD">Directory</string>
-    <string name="sett_srcPath_externalSDSumm">Browse path to pictures</string>
-    <string name="sett_srcPath_OwnCloudSumm">Set the URL for your OwnCloud Directory</string>
-    <string name="sett_example_owncloud_path" translatable="false">https://</string>
     <string name="sett_recursiveSearch">Include sub-directories</string>
     <string name="sett_recursiveSearchSumm">Whether pictures from sub-directories should be included</string>
     <string name="sett_recursiveSearchSummOff">Pictures from sub-directories will not be included</string>
     <string name="sett_recursiveSearchSummOn">Pictures from sub-directories will be included</string>
-    <string name="sett_updateInterval">Update Interval</string>
-    <string name="sett_updateIntervalSumm">Choose an interval, after which the images are fetched from the source again</string>
     <string name="sett_transition">Transition</string>
     <string name="sett_transitionSumm">Choose desired transition for the slideshow</string>
     <string name="sett_deleteData">Delete data</string>
     <string name="sett_deleteDataSumm">Delete all downloaded images stored in the picframe folder</string>
+    <!-- Settings-Details Strings -->
+    <string name="sett_srcPath_externalSD">Directory</string>
+    <string name="sett_srcPath_externalSDSumm">Browse path to pictures</string>
+    <string name="sett_username">Username</string>
+    <string name="sett_usernameSumm">Username for the selected source</string>
+    <string name="sett_password">Password</string>
+    <string name="sett_passwordSumm">Password for the selected source</string>
+    <string name="sett_srcPath_OwnCloud">OwnCloud URL</string>
+    <string name="sett_srcPath_OwnCloudSumm">Set the URL for your OwnCloud Server</string>
+    <string name="sett_downloadInterval">Download Interval</string>
+    <string name="sett_downloadIntervalSumm">Choose an interval, after which the images are fetched from the source again</string>
+    <string name="sett_loginCheck">Login-Check</string>
+    <string name="sett_loginCheckSumm">Click here, to test the login</string>
     <!-- Settings Toast Strings -->
     <string name="sett_toast_delFiles">Deleting images!</string>
+    <string name="sett_toast_wrongUrl">Forbidden character at end of URL: \'/\'. Not saving.</string>
+    <string name="sett_toast_noAlarmSet">Could not set download alarm - last login-check was not successful.</string>
             <!-- Settings Dialog Strings -->
     <string name="sett_dialog_title">Select directory</string>
     <string name="sett_dialog_posBtn" tools:ignore="ButtonCase">Ok</string>
@@ -94,11 +99,14 @@
     <string name="sett_deleteDataDialog_msg">Do you really want to delete all downloaded image files?</string>
     <string name="sett_deleteDataDialog_posBtn">Yes</string>
     <string name="sett_deleteDataDialog_negBtn">No</string>
+    <string name="sett_detailsPrefScreen_title">Settings</string>
+    <string name="sett_detailsPrefScreen_summ">Set specific settings for</string>
 
 
         <!-- KEYS -->
     <string name="sett_key_cat1" translatable="false">sett_cat1</string>
     <string name="sett_key_cat2" translatable="false">sett_cat2</string>
+    <string name="sett_key_prefScreenDetails" translatable="false">sett_prefScreenDetails</string>
             <!-- SAVE KEYS -->
     <string name="sett_key_username" translatable="false">Username</string>
     <string name="sett_key_password" translatable="false">Password</string>
@@ -113,9 +121,11 @@
     <string name="sett_key_recursiveSearch" translatable="false">RecursiveSearch</string>
     <string name="sett_key_deleteData" translatable="false">DeleteData</string>
     <string name="sett_key_transition" translatable="false">Transition</string>
-    <string name="sett_key_updateInterval" translatable="false">UpdateInterval</string>
+    <string name="sett_key_downloadInterval" translatable="false">UpdateInterval</string>
     <string name="sett_key_firstStart" translatable="false">FirstStart</string>
     <string name="sett_key_tutorial" translatable="false">Tutorial</string>
+    <string name="sett_key_restoreDefaults" translatable="false">restoreDefaults</string>
+    <string name="sett_key_loginCheckButton" translatable="false">loginCheckButton</string>
     <!-- SETTINGS STRINGS END -->
 
     <!-- ABOUT STRINGS -->

@@ -24,7 +24,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.owncloud.android.lib.common.OwnCloudClient;
 import com.owncloud.android.lib.common.network.OnDatatransferProgressListener;
@@ -35,9 +34,6 @@ import com.owncloud.android.lib.resources.files.FileUtils;
 import com.owncloud.android.lib.resources.files.ReadRemoteFolderOperation;
 
 import java.util.concurrent.atomic.AtomicInteger;
-
-import picframe.at.picframe.R;
-import picframe.at.picframe.activities.MainActivity;
 
 public class OC_ConnectionCheck extends AsyncTask<Object, Float, Object>
         implements OnRemoteOperationListener, OnDatatransferProgressListener {

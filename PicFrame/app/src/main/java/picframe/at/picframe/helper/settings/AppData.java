@@ -21,7 +21,6 @@ package picframe.at.picframe.helper.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import java.io.File;
 
@@ -31,13 +30,15 @@ import picframe.at.picframe.helper.local_storage.SD_Card_Helper;
 
 /**
  * Stores App Settings, to get and load easily
- * Stores App Settings, to get and load easily
  * Created by ClemensH on 04.04.2015.
  */
 public class AppData {
-    private static AppData INSTANCE;
-    private SharedPreferences mPrefs;
     public static final String mySettingsFilename = "PicFrameSettings";
+    private static final SharedPreferences mPrefs = MainApp.getINSTANCE().getSharedPreferences(mySettingsFilename, Context.MODE_PRIVATE);
+
+    public static void resetSettings() {
+        SettingsDefaults.resetSettings();
+    }
 
     // enums for available source types (like images from SD-Card, OwnCloud or Dropbox)
     public enum sourceTypes {
@@ -52,201 +53,198 @@ public class AppData {
         }
     }
 
-    private String extFolderAppRoot;        // sc-card-dir/picframe
-    private String extFolderDisplayPath;    // sc-card-dir/picframe/pictures
-    private String extFolderCachePath;      // sc-card-dir/picframe/cache
-
-    public static AppData getINSTANCE() {
-        if (INSTANCE == null) {
-            INSTANCE = new AppData();
-        }
-        return INSTANCE;
-    }
-
-    private AppData() {
-        mPrefs = MainApp.getINSTANCE().getSharedPreferences(mySettingsFilename, Context.MODE_PRIVATE);
-        extFolderAppRoot = new SD_Card_Helper().getExteralStoragePath() +
+    /* TODO
+    extFolderAppRoot = new SD_Card_Helper().getExteralStoragePath() +
                 File.separator + "picframe";
         extFolderDisplayPath = extFolderAppRoot + File.separator + "pictures";
         extFolderCachePath = extFolderAppRoot + File.separator + "cache";
-    }
-
+    *
+    * */
 
 // ONLY TO BE MODIFIED BY SETTINGS ACTIVITY
     // flag whether slideshow is selected(on=true) or not(off=false)
-    public boolean getSlideshow() {
-        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_slideshow), true);
+    public static boolean getSlideshow() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_slideshow),
+                (Boolean) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_slideshow));
     }
 
     // holds the time to display each picture in seconds
-    public int getDisplayTime() {
-        return Integer.parseInt(mPrefs.getString(getAppContext().getString(R.string.sett_key_displaytime), "2"));
+    public static int getDisplayTime() {
+        return Integer.parseInt(mPrefs.getString(getAppContext().getString(R.string.sett_key_displaytime),
+                (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_displaytime)));
     }
 
     // holds the int of the transitionStyle - @res.values.arrays.transitionTypeValues
-    public int getTransitionStyle(){
+    public static int getTransitionStyle(){
         return Integer.parseInt(
-                mPrefs.getString(getAppContext().getString(R.string.sett_key_transition), "0"));
+                mPrefs.getString(getAppContext().getString(R.string.sett_key_transition),
+                        (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_transition)));
     }
 
     // flag whether to randomize the order of the displayed images (on=true)
-    public boolean getRandomize() {
-        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_randomize), false);
+    public static boolean getRandomize() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_randomize),
+                (Boolean) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_randomize));
     }
 
     // flag whether to scale the displayed image (on=true)
-    public boolean getScaling() {
-        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_scaling), false);
+    public static boolean getScaling() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_scaling),
+                (Boolean) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_scaling));
     }
 
     // holds the type of the selected source as int
-    public int getSrcTypeInt() {
+    public static int getSrcTypeInt() {
         return Integer.parseInt(
-                mPrefs.getString(getAppContext().getString(R.string.sett_key_srctype), "0"));
+                mPrefs.getString(getAppContext().getString(R.string.sett_key_srctype),
+                        (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srctype)));
     }
     // holds the type of the selected source
-    public sourceTypes getSourceType() {
+    public static sourceTypes getSourceType() {
         return sourceTypes.getSourceTypesForInt(Integer.parseInt(
-                mPrefs.getString(getAppContext().getString(R.string.sett_key_srctype), "0")));
+                mPrefs.getString(getAppContext().getString(R.string.sett_key_srctype),
+                        (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srctype))));
     }
 
     // holds the username to log into the owncloud account
-    public String getUserName() {
-        return mPrefs.getString(getAppContext().getString(R.string.sett_key_username), "");
+    public static String getUserName() {
+        return mPrefs.getString(getAppContext().getString(R.string.sett_key_username),
+                (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_username));
     }
 
     // holds the password to log into the owncloud account
-    public String getUserPassword() {
-        return mPrefs.getString(getAppContext().getString(R.string.sett_key_password), "");
+    public static String getUserPassword() {
+        return mPrefs.getString(getAppContext().getString(R.string.sett_key_password),
+                (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_password));
     }
 
     // Returns selected SD-Card directory, or URL to owncloud or samba server
     // holds the path to the image source (from where to (down)-load them
-    public String getSourcePath() {
+    public static String getSourcePath() {
         sourceTypes tmpType = getSourceType();
-        if (sourceTypes.ExternalSD.equals(tmpType)) {
-            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd), "");
-        } else if (sourceTypes.OwnCloud.equals(tmpType)) {
-            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_owncloud), "");
+        if (sourceTypes.OwnCloud.equals(tmpType)) {
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_owncloud),
+                    (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_dropbox));
         } else if (sourceTypes.Dropbox.equals(tmpType)) {
             return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_dropbox), "");
-        } else {
-            return null;
+        } else {    // if SD or undefined, get SD path
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd),
+                    (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_sd));
         }
     }
 
     // holds the time-interval to initiate the next download of images in hours
-    public int getUpdateIntervalInHours() {
-        return Integer.parseInt(mPrefs.getString(getAppContext().getString(R.string.sett_key_updateInterval), "12"));
+    public static int getUpdateIntervalInHours() {
+        return Integer.parseInt(mPrefs.getString(getAppContext().getString(R.string.sett_key_downloadInterval),
+                (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_downloadInterval)));
     }
 
     // flag whether to include images in subfolders (on=true)
-    public boolean getRecursiveSearch() {
-        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_recursiveSearch), false);
+    public static boolean getRecursiveSearch() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_recursiveSearch),
+                (Boolean) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_recursiveSearch));
     }
 
     // Always returns the path to the img folder of current src type
     // holds the root-path to the displayed images
-    public String getImagePath() {
+    public static String getImagePath() {
         sourceTypes tmpType = getSourceType();
         if (sourceTypes.ExternalSD.equals(tmpType)) {
-            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd), "");
+            return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd),
+                    (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_sd));
         } else {
-            return extFolderDisplayPath;
+            return getExtFolderDisplayPath();
         }
     }
 
 // CAN ALWAYS BE MODIFIED
+/*
+    public static String getSdSourcePath() {
+        return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd), "");
+    }
+*/
+    // get flag whether the last loginCheck for a server was successful or not
+    public static boolean getLoginSuccessful() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_loginCheckButton), false);
+    }
+    // set flag whether the last loginCheck for a server is successful or not
+    public static void setLoginSuccessful(boolean loginSuccess) {
+        mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_loginCheckButton), loginSuccess).commit();
+    }
+
+    public static void setSdSourcePath(String path) {
+        mPrefs.edit().putString(getAppContext().getString(R.string.sett_key_srcpath_sd), path).commit();
+    }
+
     // flag whether this is the first app start
-    public boolean getFirstAppStart() {
+    public static boolean getFirstAppStart() {
         return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_firstStart), true);
     }
-    public void setFirstAppStart(boolean firstAppStart) {
+    public static void setFirstAppStart(boolean firstAppStart) {
         mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_firstStart), firstAppStart).commit();
     }
 
     // flag whether to display the tutorial-dialog (on=true)
-    public boolean getTutorial() {
+    public static boolean getTutorial() {
         return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_tutorial), true);
     }
-    public void setTutorial(boolean showTutorial) {
+    public static void setTutorial(boolean showTutorial) {
         mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_tutorial), showTutorial).commit();
     }
 
-    public int getCurrentPage(){
+    public static int getCurrentPage(){
         return mPrefs.getInt("currentpage", 1);
     }
 
-    public void setCurrentPage(int page){
+    public static void setCurrentPage(int page){
         mPrefs.edit().putInt("currentpage", page).commit();
     }
 
     // flag for slideshow direction
-    public boolean getDirection() {
+    public static boolean getDirection() {
         return mPrefs.getBoolean("toogledirection", true);
     }
-    public void setDirection(boolean toggeleDirection) {
-        mPrefs.edit().putBoolean("toogledirection", toggeleDirection).commit();
+    public static void setDirection(boolean toggleDirection) {
+        mPrefs.edit().putBoolean("toogledirection", toggleDirection).commit();
     }
 
-    // alam time ??
-    public Long getLastAlarmTime() {
+    // last alarm time in millisecs
+    public static Long getLastAlarmTime() {
         return mPrefs.getLong("alarmtime", -1);
     }
 
-    public void setLastAlarmTime (Long time) {
+    public static void setLastAlarmTime (Long time) {
         mPrefs.edit().putLong("alarmtime", time).commit();
     }
 
 /* TODO
     // holds the remaining time to display the current image
-    public int getRemainingDisplayTime() {
+    public static int getRemainingDisplayTime() {
         return mPrefs.getInt(getAppContext().getString(R.string.sett_key_), 0);
     }
-    public void setRemainingDisplayTime(int remainingDisplayTime) {
+    public static void setRemainingDisplayTime(int remainingDisplayTime) {
         mPrefs.edit().putInt(getAppContext().getString(R.string.sett_key_), remainingDisplayTime).commit();
     }
 */
 
-// Local paths; to be reset on each restart of App in case sd-card was mounted/unmounted
-    public void resetPictureFolderIfChanged(){
-        String newExternalFolder = new SD_Card_Helper().getExteralStoragePath() + File.separator + "picframe";
-        if(!extFolderAppRoot.equals(newExternalFolder)) {
-            Log.d("AppData", "Different PicFrame root folder");
-            extFolderAppRoot = newExternalFolder;
-            extFolderDisplayPath = extFolderAppRoot + File.separator + "pictures";
-            extFolderCachePath = extFolderAppRoot + File.separator + "cache";
-        }
-    }
-
-    public String getExtFolderAppRoot() {
-        return extFolderAppRoot;
-    }
-    public String getExtFolderCachePath() {
-        return extFolderCachePath;
-    }
-    public String getExtFolderDisplayPath() {
-        return extFolderDisplayPath;
-    }
-
 // CAN NEVER BE MODIFIED!   (holds local paths, desc at vars)
-    private Context getAppContext() {
-        return MainApp.getINSTANCE().getApplicationContext();
+    // sd-card-dir/picframe
+    public static String getExtFolderAppRoot() {
+        return new SD_Card_Helper().getExteralStoragePath() + File.separator + "picframe";
+    }
+    // sd-card-dir/picframe/cache
+    public static String getExtFolderCachePath() {
+        return (getExtFolderAppRoot() + File.separator + "cache");
+    }
+    // sd-card-dir/picframe/pictures
+    public static String getExtFolderDisplayPath() {
+        return (getExtFolderAppRoot() + File.separator + "pictures");
     }
 
-    @Override
-    public String toString() {
-        return(
-                "┌----AppData----*\n" +
-                " | Username: " +   this.getUserName() + "\n" +
-                " | Password: " +   this.getUserPassword() + "\n" +
-                " | Slideshow: " +  this.getSlideshow() + "\n" +
-                " | Scaling: " +    this.getScaling() + "\n" +
-                " | Randomize: " +  this.getRandomize() + "\n" +
-                " | Displaytime: "+ this.getDisplayTime() + "\n" +
-                " | SrcType: " +    this.getSourceType() + "\n" +
-                " | SrcPath: " +    this.getSourcePath() + "\n" +
-                " | Recursive: " +  this.getRecursiveSearch() + "\n" +
-                "└---------------*");
+    public static SharedPreferences getSharedPreferences() {
+        return mPrefs;
+    }
+    private static Context getAppContext() {
+        return MainApp.getINSTANCE().getApplicationContext();
     }
 }

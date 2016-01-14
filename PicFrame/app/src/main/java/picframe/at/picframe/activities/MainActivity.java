@@ -78,7 +78,6 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private ResponseReceiver receiver;
-    public static AppData settingsObj = AppData.getINSTANCE();
     LocalBroadcastManager broadcastManager;
 
     private DisplayImages setUp;
@@ -143,10 +142,8 @@ public class MainActivity extends ActionBarActivity {
         loadAdapter();
         setUpSlideShow();
 
-        mOldPath = settingsObj.getImagePath();
-        mOldRecursive = settingsObj.getRecursiveSearch();
-
-        settingsObj.resetPictureFolderIfChanged();
+        mOldPath = AppData.getImagePath();
+        mOldRecursive = AppData.getRecursiveSearch();
 
         pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -164,14 +161,14 @@ public class MainActivity extends ActionBarActivity {
         });
 
         //getlastpage
-        currentPage = settingsObj.getCurrentPage();
+        currentPage = AppData.getCurrentPage();
         if(pager.getAdapter().getCount() < currentPage){
             currentPage = 1;
         }
 
         System.out.println("STARTING PAGE  " + currentPage);
 
-        rightToLeft = settingsObj.getDirection();
+        rightToLeft = AppData.getDirection();
 
         // Restart a download alarm if the scheduled alarm was in the future; else trigger alarm right away.
         // Only do this if owncloud is selected and update intervall is not set to "never"
@@ -192,24 +189,25 @@ public class MainActivity extends ActionBarActivity {
         super.onResume();
 
         Log.d(TAG, "onResume");
-
+        // refresh toolbar options (hide/show downloadNow)
         supportInvalidateOptionsMenu();
-        if (settingsObj.getFirstAppStart()) {
-            settingsObj.setFirstAppStart(false);
-            settingsObj.setTutorial(true);
+        if (AppData.getFirstAppStart()) {
+            AppData.setFirstAppStart(false);
+            AppData.setTutorial(true);
         }
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         tutorial();
-
         // get localBroadcastManager instance to receive localBroadCasts
         if (broadcastManager == null) {
             broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         }
         // register broadcast receiver for UI update from service
         if (receiver == null) {
-            IntentFilter filter = new IntentFilter(Keys.ACTION_DOWNLOAD_FINISHED);
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Keys.ACTION_DOWNLOAD_FINISHED);
+            filter.addAction(Keys.ACTION_PROGRESSUPDATE);
             filter.addCategory(Intent.CATEGORY_DEFAULT);
             receiver = new ResponseReceiver();
             broadcastManager.registerReceiver(receiver, filter);
@@ -217,8 +215,8 @@ public class MainActivity extends ActionBarActivity {
 
         setUpAlarmIfApplicable();
 
-        if(GlobalPhoneFuncs.getFileList(settingsObj.getImagePath()).size() > 0) {
-            if (!settingsObj.getImagePath().equals(mOldPath) || mOldRecursive != settingsObj.getRecursiveSearch()) {
+        if(GlobalPhoneFuncs.getFileList(AppData.getImagePath()).size() > 0) {
+            if (!AppData.getImagePath().equals(mOldPath) || mOldRecursive != AppData.getRecursiveSearch()) {
                 loadAdapter();
             }
         }
@@ -232,7 +230,7 @@ public class MainActivity extends ActionBarActivity {
 
         setUpSlideShow();
 
-        if(settingsObj.getSlideshow() && !paused){
+        if(AppData.getSlideshow() && !paused){
             startSlideshowCountDown();
         }
     }
@@ -242,7 +240,7 @@ public class MainActivity extends ActionBarActivity {
         if (menu == null || !menu.hasVisibleItems())
             return super.onPrepareOptionsMenu(menu);
 
-        if (settingsObj.getSourceType() == AppData.sourceTypes.OwnCloud) {
+        if (AppData.getSourceType() == AppData.sourceTypes.OwnCloud) {
             menu.findItem(R.id.action_download).setVisible(true);
         } else {
             menu.findItem(R.id.action_download).setVisible(false);
@@ -283,8 +281,9 @@ public class MainActivity extends ActionBarActivity {
     protected void onPause() {
         super.onPause();
         cancelSlideShowCoundown();
-        mOldPath = settingsObj.getImagePath();
-        mOldRecursive = settingsObj.getRecursiveSearch();
+        mOldPath = AppData.getImagePath();
+        mOldRecursive = AppData.getRecursiveSearch();
+
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // unregister receiver, because if the activity is not in focus, we want no UI updates
@@ -358,17 +357,15 @@ public class MainActivity extends ActionBarActivity {
         super.onStop();
         // Save the current Page to resume after next start
         // maybe not right here will test
-        settingsObj.setCurrentPage(currentPage);
+        AppData.setCurrentPage(currentPage);
         Log.d(TAG,"SAVING PAGE  " + currentPage);
 
         // Save the direction of the pageviewer
-        settingsObj.setDirection(rightToLeft);
+        AppData.setDirection(rightToLeft);
     }
 
-
-
     private void setUpSlideShow(){
-        if (settingsObj.getSlideshow()){
+        if (AppData.getSlideshow()){
             pager.setScrollDurationFactor(8);
 //            pager.setPagingEnabled(false);
         }
@@ -417,7 +414,7 @@ public class MainActivity extends ActionBarActivity {
 
             imgDisplay = (ImageView) viewLayout.findViewById(R.id.photocontainer);
 
-            if (settingsObj.getScaling()) {
+            if (AppData.getScaling()) {
                 imgDisplay.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } else {
                 imgDisplay.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -444,14 +441,14 @@ public class MainActivity extends ActionBarActivity {
                 }
                 @Override
                 public void onTap() {
-                    if (settingsObj.getSlideshow()) {
+                    if (AppData.getSlideshow()) {
                         paused = !paused;
 
                         if (paused) {
                             cancelSlideShowCoundown();
 //                            pager.setPagingEnabled(true);
                             mPause.setVisibility(View.VISIBLE);
-                            //
+
 //                            remainingDisplayTime = 4; // TODO: comment in once we show remaing alarmtime
 //                            if(settingsObj.getDisplayTime() >= 60){
 //                                String remainingTimeString = String.valueOf(remainingDisplayTime);
@@ -459,6 +456,7 @@ public class MainActivity extends ActionBarActivity {
 //                                textView.setText(remainingTimeString);
 //                                mRemainingTimeLayout.setVisibility(View.VISIBLE);
 //                            }
+
                             showActionBar();
                         } else {
                             startSlideshowCountDown();
@@ -487,7 +485,7 @@ public class MainActivity extends ActionBarActivity {
         }
 
         private void updateSettings() {
-            mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
+            mFilePaths = GlobalPhoneFuncs.getFileList(AppData.getImagePath());
             //setUp.notifyDataSetChanged();
             setSize();
         }
@@ -498,11 +496,11 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void updateFileList() {
-        if(settingsObj.getImagePath().equals("")) {
+        if(AppData.getImagePath().equals("")) {
             showExamplePictures = true;
             Toast.makeText(mContext,R.string.main_toast_noFolderPathSet, Toast.LENGTH_SHORT).show();
         } else {
-            mFilePaths = GlobalPhoneFuncs.getFileList(settingsObj.getImagePath());
+            mFilePaths = GlobalPhoneFuncs.getFileList(AppData.getImagePath());
             showExamplePictures = mFilePaths.isEmpty() || mFilePaths.size() <= 0;
             if (showExamplePictures) {
                 Toast.makeText(mContext,R.string.main_toast_noFileFound, Toast.LENGTH_SHORT).show();
@@ -544,25 +542,25 @@ public class MainActivity extends ActionBarActivity {
 
     private boolean checkForProblemsAndShowToasts() {
         // OwnCloud or Dropbox selected
-        if (!AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
+        if (!AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
             // if no write rights, we don't need to download
             if (!GlobalPhoneFuncs.isExternalStorageWritable()) {
                 Toast.makeText(this, R.string.main_toast_noSDWriteRights, Toast.LENGTH_SHORT).show();
             } else {
                 // If no Username set although source is not SD Card
-                if ("".equals(settingsObj.getUserName()) || "".equals(settingsObj.getUserPassword())) {
+                if ("".equals(AppData.getUserName()) || "".equals(AppData.getUserPassword())) {
                     Toast.makeText(this, R.string.main_toast_noUsernameSet, Toast.LENGTH_SHORT).show();
                 } else {
                     if (DEBUG) Log.i(TAG, "username and pw set");
                     // Try to connect & login to selected source server
-                    if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
+                    if (AppData.sourceTypes.OwnCloud.equals(AppData.getSourceType())) {
                         if (DEBUG) Log.i(TAG, "trying OC check");
                         //startConnectionCheck();
                         Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
                         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
                         startService(startDownloadIntent);
                         return true;
-                    }// else if (settingsObj.getSourceType().equals(AppData.sourceTypes.Dropbox))
+                    }// else if (AppData.getSourceType().equals(AppData.sourceTypes.Dropbox))
                     {
                         // TODO: Dropbox checks go here
                     }
@@ -585,10 +583,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void selectTransformer(){
-        if(settingsObj.getSlideshow() && settingsObj.getTransitionStyle() == 11){
+        if(AppData.getSlideshow() && AppData.getTransitionStyle() == 11){
             pager.setPageTransformer(true,transformers.get(random()));
-        } else if(settingsObj.getSlideshow()){
-            pager.setPageTransformer(true,transformers.get(settingsObj.getTransitionStyle()));
+        } else if(AppData.getSlideshow()){
+            pager.setPageTransformer(true,transformers.get(AppData.getTransitionStyle()));
         } else {
             pager.setPageTransformer(true,new ZoomOutPageTransformer());
         }
@@ -626,7 +624,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void tutorial (){
-        if (!settingsObj.getTutorial()) {
+        if (!AppData.getTutorial()) {
             return;
         }
         AlertDialog.Builder click_on_settings_dialog_builder = new AlertDialog.Builder(MainActivity.this);
@@ -642,7 +640,7 @@ public class MainActivity extends ActionBarActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                settingsObj.setTutorial(false);
+                                AppData.setTutorial(false);
                             }
                         })
                 .setNegativeButton(R.string.main_dialog_tutorial_openSettingsNowButton,
@@ -676,8 +674,19 @@ public class MainActivity extends ActionBarActivity {
             if (intent != null) {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
-                    if (DEBUG) Log.d(TAG, "received 'download_finished' action via broadcast");
-                    updateFileList();
+                    if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
+                    new Handler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateFileList();
+                        }
+                    });
+                } else if (Keys.ACTION_PROGRESSUPDATE.equals(intent.getAction())) {
+                    int progressPercent = intent.getIntExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, 0);
+                    Boolean indeterminate = intent.getBooleanExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, true);
+
+                    if (DEBUG)  Log.d(TAG, "received 'progress_update' - " +
+                            progressPercent+"% - indeterminate?" + indeterminate);
                 }
             }
         }
@@ -685,9 +694,9 @@ public class MainActivity extends ActionBarActivity {
 
     private void startSlideshowCountDown(){
         Log.d(TAG, "startSlideshowCountDown");
-        if(remainingDisplayTime != 0 && remainingDisplayTime < settingsObj.getDisplayTime()){
-            Log.d(TAG, "remainingDisplayTime: "+remainingDisplayTime+" < "+settingsObj.getDisplayTime()+", displayTime");
-            countDownTimer = new CountDownTimer((settingsObj.getDisplayTime()-remainingDisplayTime)*1000, countdownIntervalInMilliseconds) {
+        if(remainingDisplayTime != 0 && remainingDisplayTime < AppData.getDisplayTime()){
+            Log.d(TAG, "remainingDisplayTime: "+remainingDisplayTime+" < "+AppData.getDisplayTime()+", displayTime");
+            countDownTimer = new CountDownTimer((AppData.getDisplayTime()-remainingDisplayTime)*1000, countdownIntervalInMilliseconds) {
                 @Override
                 public void onTick(long l) {
                     Log.d(TAG+" unique", "tick!"+l/1000);
@@ -710,7 +719,7 @@ public class MainActivity extends ActionBarActivity {
 
     private void startRepeatingCountDowns(){
         Log.d(TAG, "startRepeatingCountDowns");
-        countDownTimer = new CountDownTimer(settingsObj.getDisplayTime()*1000, countdownIntervalInMilliseconds) {
+        countDownTimer = new CountDownTimer(AppData.getDisplayTime()*1000, countdownIntervalInMilliseconds) {
             @Override
             public void onTick(long l) {
                 remainingDisplayTime = l/1000;
@@ -733,8 +742,8 @@ public class MainActivity extends ActionBarActivity {
             then the value of countdownIntervalInMilliseconds will never change, and resetting
             the value will be more accurate.
          */
-        if(settingsObj.getDisplayTime() < countdownIntervalInMilliseconds/1000){
-            Log.d(TAG, settingsObj.getDisplayTime()+" < "+countdownIntervalInMilliseconds/1000);
+        if(AppData.getDisplayTime() < countdownIntervalInMilliseconds/1000){
+            Log.d(TAG, AppData.getDisplayTime()+" < "+countdownIntervalInMilliseconds/1000);
             remainingDisplayTime = 0;
         }
         if(countDownTimer != null){
@@ -745,10 +754,10 @@ public class MainActivity extends ActionBarActivity {
     private void setUpAlarmIfApplicable() {
         AlarmScheduler alarmScheduler = new AlarmScheduler();
         alarmScheduler.deleteAlarm();
-        if (settingsObj.getSourceType() != AppData.sourceTypes.OwnCloud
-                || settingsObj.getUpdateIntervalInHours() == -1
-                || settingsObj.getUserName().equals("")
-                || settingsObj.getUserPassword().equals("")) {
+        if (AppData.getSourceType() != AppData.sourceTypes.OwnCloud
+                || AppData.getUpdateIntervalInHours() == -1
+                || AppData.getUserName().equals("")
+                || AppData.getUserPassword().equals("")) {
             Log.d(TAG, "no new alarm");
             return;
         }

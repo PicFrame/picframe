@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import picframe.at.picframe.Keys;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.viewpager.EXIF_helper;
-import picframe.at.picframe.Keys;
 import picframe.at.picframe.service_broadcast.ServiceCallbacks;
 
 
@@ -57,11 +57,20 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
     public LinkedBlockingQueue<String> mDownloadedFiles;        // files downloaded successfully - empty after processed all files
     private AtomicInteger mDownloadedFilesCount;                // total count of successfully downloaded files
     private AtomicInteger mThreadCounter;                       // Count active threads so task only finishes once all threads are done
+
+
+
     private boolean failedOnce = false;                         // only relay the first failure to the service (flag to ensure this)
     private final int MIN_MB_REMAINING = 15;                    // if storage is smaller than 15 MB, stop the download!
     private final int MIN_BYTES_REMAINING = MIN_MB_REMAINING * 1024 * 1024;
     private AtomicBoolean loginRequest = new AtomicBoolean(false);
     private AtomicBoolean loginResultSuccess = new AtomicBoolean(false);
+
+
+
+    private boolean loginFailed = false;
+    private boolean firstOperation = true;
+
 
 
     public Downloader_OC(HashMap<String, Object> args) {

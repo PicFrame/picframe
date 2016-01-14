@@ -21,7 +21,6 @@ package picframe.at.picframe.helper.owncloud;
 
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
@@ -31,23 +30,14 @@ import com.owncloud.android.lib.common.network.OnDatatransferProgressListener;
 import com.owncloud.android.lib.common.operations.OnRemoteOperationListener;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
-import com.owncloud.android.lib.resources.files.DownloadRemoteFileOperation;
 import com.owncloud.android.lib.resources.files.FileUtils;
 import com.owncloud.android.lib.resources.files.ReadRemoteFolderOperation;
 import com.owncloud.android.lib.resources.files.RemoteFile;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
-import picframe.at.picframe.activities.MainActivity;
-import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.viewpager.EXIF_helper;
 
 public class OC_ReadFolderStructure extends AsyncTask<Object, Float, Object>
         implements OnRemoteOperationListener, OnDatatransferProgressListener {
