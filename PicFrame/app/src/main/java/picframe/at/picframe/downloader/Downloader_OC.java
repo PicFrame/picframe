@@ -75,6 +75,7 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
 
     public Downloader_OC(HashMap<String, Object> args) {
         if (DEBUG) Log.d(TAG, "created OC Downloader");
+        if (args == null)   return;
         mClient = (OwnCloudClient) args.get(CLIENT);
         mHandler = (Handler) args.get(HANDLER);
         mExtFolderAppRoot = (String) args.get(Keys.PICFRAMEPATH);

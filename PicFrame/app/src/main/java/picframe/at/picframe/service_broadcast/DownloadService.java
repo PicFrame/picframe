@@ -207,17 +207,14 @@ public class DownloadService extends Service implements ServiceCallbacks {
 
     private HashMap<String, Object> setUpOcClientArguments() {
         OwnCloudClient mClientOwnCloud;
-<<<<<<< HEAD
-        Uri serverUri = Uri.parse(settObj.getSourcePath());
-        if (settObj.getUserName().equals("") || settObj.getUserPassword().equals("") ||
-                settObj.getSourcePath().equals("") ||
-                settObj.getSourcePath().equals("https://") || // TODO get from Default
+
+        Uri serverUri = Uri.parse(AppData.getSourcePath());
+        if (AppData.getUserName().equals("") || AppData.getUserPassword().equals("") ||
+                AppData.getSourcePath().equals("") ||
+                AppData.getSourcePath().equals("https://") || // TODO get from Default
                 serverUri == null) {
             return null;
         }
-=======
-        Uri serverUri = Uri.parse(AppData.getSourcePath());
->>>>>>> newSettings
         if (DEBUG) Log.i(TAG, "OwnCloud serverUri: " + serverUri);
         // Create client object to perform remote operations
         mClientOwnCloud = OwnCloudClientFactory.createOwnCloudClient(serverUri, getApplicationContext(), true);
@@ -275,10 +272,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - " + getString(R.string.service_notif_startDownloadTicker))
                         .setContentText(getString(R.string.service_notif_startDownloadText))
-<<<<<<< HEAD
                         .setSubText(null)
-=======
->>>>>>> newSettings
                         .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.service_notif_actionStop), stopDownloadPendIntent)
                         .setSubText(null)
                         .setProgress(100, 50, true);
