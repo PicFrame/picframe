@@ -54,6 +54,11 @@ SET "currPath=%~dp0"
 @REM Android SDK Version and Path
 SET platformVersionNeeded=21
 SET "platformVersionNeededString=Android 5.0.1"
+SET "supportLibraryV4Path=%androidHome%/extras/android/m2repository/com/android/support/support-v4/23.0.1"
+SET "supportLibraryV7Path=%androidHome%/extras/android/m2repository/com/android/support/appcompat-v7/21.0.0"
+SET "support-v4String=support-v4:23.0.1"
+SET "support-v7String=appcompat-v7:21.0.0"
+SET "platformPath=%androidHome%/platforms/android-%platformVersionNeeded%/"
 SET "platformPath=%androidHome%/platforms/android-%platformVersionNeeded%/"
 @REM Input variables
 SET input=empty
@@ -103,6 +108,7 @@ IF !androidHomeFound!==TRUE (
 )
 
 SET "platformPath=%androidHome%/platforms/android-%platformVersionNeeded%/"
+ECHO !platformPath!
 
 :JAVA
 IF !javaHomeFound!==TRUE (
@@ -129,19 +135,11 @@ IF !javaHomeFound!==TRUE (
 
 :versionCheck
 CLS
-@REM ECHO ^new JavaHome: "!javaHome!"
-@REM ECHO.
-@REM ECHO "!platformPath!"
-SET androidHome=!androidHome:"^("=^^(!
-SET androidHome=!androidHome:"^)"=^^)!
-SET javaHome=!javaHome:"^)"=^)!
-SET javaHome=!javaHome:"^("=^(!
 ECHO ^Checking for the required android platform version.
 ECHO !platformPath!
 IF EXIST !platformPath! (
 	ECHO ^Required version '%platformVersionNeededString% -- API %platformVersionNeeded%' found.
-	ECHO ^Press any key to proceed.
-	PAUSE>NUL
+	ECHO.
 ) ELSE (
 	ECHO ^Couldn't find the required android platform version.
 	ECHO ^Please download '%platformVersionNeededString% -- API %platformVersionNeeded%'.
@@ -149,6 +147,43 @@ IF EXIST !platformPath! (
 	PAUSE>NUL
 	GOTO :versionCheck
 )
+
+SET "supportLibraryV4Path=%androidHome%/extras/android/m2repository/com/android/support/support-v4/23.0.1/"
+SET "supportLibraryV7Path=%androidHome%/extras/android/m2repository/com/android/support/appcompat-v7/21.0.0/"
+
+ECHO ^Checking for the required support libraries...
+
+:supportLibV4Check
+ECHO ^Checking for '%support-v4String%'...
+IF EXIST !supportLibraryV4Path! (
+	ECHO ^Required support library '%support-v4String%' found.
+	ECHO.
+) ELSE (
+	ECHO ^Couldn't find the support library at !supportLibraryV4Path!
+	ECHO ^Please download Android Support Repository.
+	ECHO ^Once successfully downloaded, please press any key.
+	PAUSE>NUL
+	GOTO :supportLibV4Check
+)
+
+:supportLibV7Check
+ECHO ^Checking for '%support-v7String%'...
+IF EXIST !supportLibraryV7Path! (
+	ECHO ^Required support library '%support-v7String%' found.
+	ECHO ^Press any key to proceed.
+	PAUSE>NUL
+) ELSE (
+	ECHO ^Couldn't find the support library at !supportLibraryV7Path!
+	ECHO ^Please download Android Support Repository.
+	ECHO ^Once successfully downloaded, please press any key.
+	PAUSE>NUL
+	GOTO :supportLibV7Check
+)
+
+SET androidHome=!androidHome:"^("=^^(!
+SET androidHome=!androidHome:"^)"=^^)!
+SET javaHome=!javaHome:"^)"=^)!
+SET javaHome=!javaHome:"^("=^(!
 
 :createAPK
 SET checkI=FALSE

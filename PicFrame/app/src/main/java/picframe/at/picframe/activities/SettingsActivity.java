@@ -19,14 +19,11 @@
 
 package picframe.at.picframe.activities;
 
-import android.app.AlarmManager;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Environment;
+import android.os.Bundle;
 import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -35,9 +32,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
-import android.os.Bundle;
 import android.preference.TwoStatePreference;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
@@ -55,9 +50,8 @@ import picframe.at.picframe.MainApp;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.settings.AppData;
-import picframe.at.picframe.helper.settings.SimpleFileDialog;
 import picframe.at.picframe.helper.settings.MySwitchPref;
-import picframe.at.picframe.Keys;
+import picframe.at.picframe.helper.settings.SimpleFileDialog;
 
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity {
@@ -171,7 +165,7 @@ public class SettingsActivity extends PreferenceActivity {
             mySrcPathPref.setDefaultValue("");
 
             mySrcPathPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                String _chosenDir;
+                String _chosenDir = AppData.getINSTANCE().getSourcePath();
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SimpleFileDialog FolderChooseDialog =
@@ -184,7 +178,7 @@ public class SettingsActivity extends PreferenceActivity {
                                     mPrefsE.commit();
                                 }
                             });
-                    FolderChooseDialog.chooseFile_or_Dir();
+                    FolderChooseDialog.chooseFile_or_Dir(_chosenDir);
                     return false;
                 }
             });
