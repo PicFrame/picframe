@@ -26,7 +26,7 @@
             android:summary="@string/sett_transitionSumm"
             android:key="@string/sett_key_transition"
             android:dependency="Slideshow"
-            android:defaultValue="0"
+            android:defaultValue="8"
             android:entries="@array/transitionTypeEntries"
             android:entryValues="@array/transitionTypeValues" />
         <CheckBoxPreference
