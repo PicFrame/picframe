@@ -833,5 +833,7 @@
         Apache JackRabbit depends on Commons HTTPClient version 3.1 and SLF4j version 1.7.5.\n
         Copyright © 2004-2010 The Apache Software Foundation. Licensed under Apache License,
         Version 2.0."</string>
+    <string name="sett_loginCheck_success">Success</string>
+    <string name="sett_loginCheck_failure">Failure</string>
     <!-- ABOUT STRINGS END -->
 </resources>

@@ -177,6 +177,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         editableTitleFields.add(getString(R.string.sett_key_password));
         editableTitleFields.add(getString(R.string.sett_key_srcpath_owncloud));
         editableTitleFields.add(getString(R.string.sett_key_downloadInterval));
+        editableTitleFields.add(getString(R.string.sett_key_loginCheckButton));
     }
 
     private void populateFieldsToRemove() {
@@ -210,6 +211,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                         getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
                 setLoginStatus(false);
                 alarmScheduler.deleteAlarm();
+            } else if (getString(R.string.sett_key_loginCheckButton).equals(key)) {
+                alarmScheduler.scheduleAlarm();
             }
         }
     }
@@ -243,6 +246,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 if (getString(R.string.sett_key_srcpath_sd).equals(mPref.getKey()) &&
                         AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
                     mPrefValue = AppData.getSourcePath();
+                } else if (getString(R.string.sett_key_loginCheckButton).equals(mPref.getKey())) {
+                    mPrefValue = AppData.getLoginSuccessful() ? getString(R.string.sett_loginCheck_success) : getString(R.string.sett_loginCheck_failure);
                 }
             }
 
@@ -262,6 +267,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 mPrefTitle = getString(R.string.sett_srcPath_OwnCloud);
             } else if (getString(R.string.sett_key_downloadInterval).equals(key)) {
                 mPrefTitle = getString(R.string.sett_downloadInterval);
+            } else if (getString(R.string.sett_key_loginCheckButton).equals(key)) {
+                mPrefTitle = getString(R.string.sett_loginCheck);
             }
             mPref.setTitle(mPrefTitle + ": " + mPrefValue);
         }
@@ -374,6 +381,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                             public void onClick(DialogInterface dialog, int which) {
                                 resetSettingsToDefault();
                                 Toast.makeText(SettingsActivity.this, "Reset settings!", Toast.LENGTH_SHORT).show();
+                                updateAllFieldTitles();
                             }
                         });
                 ensureDialogB.show();
