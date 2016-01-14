@@ -327,7 +327,6 @@ public class MainActivity extends ActionBarActivity {
     private void pageSwitcher() {
         if (setUp.getCount() > 0 && !paused) {
             int localpage = pager.getCurrentItem();
-            Log.d(TAG, "localpage " + localpage);
             // switch diretion if extremity of slideshow is reacher
             if (localpage >= setUp.getCount() - 1) {
                 rightToLeft = false;
@@ -701,7 +700,7 @@ public class MainActivity extends ActionBarActivity {
 
                 @Override
                 public void onFinish() {
-                    Log.d(TAG,"done with this one!");
+                    Log.d(TAG,"done with this timer!");
                     pageSwitcher();
                     startRepeatingCountDowns();
                 }
@@ -724,7 +723,6 @@ public class MainActivity extends ActionBarActivity {
 
             @Override
             public void onFinish() {
-                Log.d(TAG, "Timer done; new timer!");
                 pageSwitcher();
                 countDownTimer.start();
             }

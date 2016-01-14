@@ -1,7 +1,6 @@
 package picframe.at.picframe.helper.local_storage;
 
 import android.os.Environment;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -36,7 +35,6 @@ public class SD_Card_Helper {
             // Compute full list for debugging purposes only
             ArrayList<String> list = new ArrayList<>();
             for (File root : roots) {
-                Log.d(TAG, "path: "+root.getAbsolutePath());
                 list.add(root.getAbsolutePath());
             }
             path = list.get(list.size()-1);

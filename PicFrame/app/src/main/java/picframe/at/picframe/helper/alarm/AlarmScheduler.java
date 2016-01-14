@@ -38,7 +38,7 @@ public class AlarmScheduler {
 
         Long nextAlarmTime;
         Long currentTime = new GregorianCalendar().getTimeInMillis();
-        nextAlarmTime = AppData.getLastAlarmTime() + AppData.getUpdateIntervalInHours() * 1000 /** 60 */* 60;
+        nextAlarmTime = AppData.getLastAlarmTime() + AppData.getUpdateIntervalInHours() * 1000 * 60 * 60;
 
         Log.d(TAG, "currentTime    : "+tc.millisecondsToDate(currentTime));
         Log.d(TAG, "previousAlarm  : "+tc.millisecondsToDate(AppData.getLastAlarmTime()));
@@ -61,8 +61,6 @@ public class AlarmScheduler {
     }
 
     private void setAlarm (Long nextAlarmTime){
-        //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
-        deleteAlarm();
         Intent intent = new Intent(MainActivity.getContext(),AlarmReceiver.class);
 //        intent.setAction("ACTION_UPDATE_ALARM");
         alarmManager.set(AlarmManager.RTC_WAKEUP, nextAlarmTime, PendingIntent.getBroadcast(MainActivity.getContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT));
