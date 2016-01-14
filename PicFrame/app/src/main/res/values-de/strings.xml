@@ -96,4 +96,10 @@
     <string name="service_notif_finishedTextFiles">Dateien heruntergeladen.</string>
     <string name="service_notif_failureLogin">Verbindung/Anmeldung fehlgeschlagen, bitte überprüfen Sie ihre Einstellungen.</string>
     <string name="service_notif_failureText">Download fehlgeschlagen.</string>
+    <string name="sett_toast_noAlarmSet">Konnte Download-Alarm nicht setzen, da Login-Check nicht erfolgreich war.</string>
+    <string name="sett_detailsPrefScreen_title">Einstellungen</string>
+    <string name="sett_detailsPrefScreen_summ">Ändern Sie spezifische Einstellungen für</string>
+    <string name="sett_loginCheck">Login-Check</string>
+    <string name="sett_loginCheckSumm">Klicken Sie hier, um den Login zu testen</string>
+    <string name="sett_srcPath_OwnCloud">OwnCloud URL</string>
 </resources>

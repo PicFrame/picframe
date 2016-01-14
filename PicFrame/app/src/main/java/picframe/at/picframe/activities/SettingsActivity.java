@@ -196,6 +196,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             //update display/transition title
             updateFieldTitle(key);
             if (getString(R.string.sett_key_srctype).equals(key)) {
+                AppData.setLoginSuccessful(false);
                 createCat2Fields();
             }
         }

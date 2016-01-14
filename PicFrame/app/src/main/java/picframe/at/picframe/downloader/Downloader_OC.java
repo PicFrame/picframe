@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
+import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.viewpager.EXIF_helper;
 import picframe.at.picframe.Keys;
 import picframe.at.picframe.service_broadcast.ServiceCallbacks;
@@ -59,6 +60,7 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
     private AtomicInteger mDownloadedFilesCount;                // total count of sucessfully downloaded files
     private AtomicInteger mThreadCounter;                       // Count active threads so task only finishes once all threads are done
     private boolean loginFailed = false;
+    private boolean firstOperation = true;
 
 
     public Downloader_OC(HashMap<String, Object> args) {
@@ -202,10 +204,16 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
 
     @Override
     public void onRemoteOperationFinish(RemoteOperation operation, RemoteOperationResult result) {
-        if (!result.isSuccess()) {
-            if (DEBUG)  Log.d(TAG, "operation unsuccessful, login/connection failed");
-            this.loginFailed();
-            return;
+        if (firstOperation) {
+            if (!result.isSuccess()) {
+                if (DEBUG)  Log.d(TAG, "operation unsuccessful, login/connection failed");
+                AppData.setLoginSuccessful(false);
+                this.loginFailed();
+                return;
+            } else {
+                AppData.setLoginSuccessful(true);
+            }
+            firstOperation = false;
         }
         if (operation instanceof ReadRemoteFolderOperation) {
             if (result.isSuccess()) {
@@ -245,8 +253,6 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
                 }
                 mDownloadedFilesCount.getAndIncrement();
                 publishProgress((float)mDownloadedFilesCount.get() / (float)mRemoteFilesToDownloadList.size(), false);  // is between 0 and 1
-            } else {
-                if (DEBUG) Log.e(TAG, "Download: FAILURE -- info:" + result.getFilename() + " = " + result.getLogMessage());
             }
             mThreadCounter.getAndDecrement();
         }

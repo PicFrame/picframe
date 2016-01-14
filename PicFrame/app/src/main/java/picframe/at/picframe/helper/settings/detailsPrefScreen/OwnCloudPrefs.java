@@ -9,28 +9,35 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.support.v4.content.LocalBroadcastManager;
+import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import picframe.at.picframe.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.activities.SettingsActivity;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.helper.settings.SettingsDefaults;
 import picframe.at.picframe.service_broadcast.connectionChecker.ConnectionCheck_OC;
 
 public class OwnCloudPrefs implements IDetailsPreferenceScreen {
     private ArrayList<Preference> allPrefs = new ArrayList<>();
     private Context mSettAct;
+    private ViewGroup statusVG;
+    public HashMap<Integer, Integer> statusFields = new HashMap<>(); // refactor this in a static class, maybe to "Keys"
 
     public OwnCloudPrefs(SettingsActivity mSettAct) {
         this.mSettAct = mSettAct;
 
-        //createStatusView();
+        populateStatusFields();
+
+        populateStatusView();
         createUrlPref();
         createUsernamePref();
         createPasswordPref();
@@ -38,11 +45,27 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
         createLoginCheckButton();
     }
 
+    private void populateStatusFields() {
+        // save: title-string (id) and value-view-id (add to view as tag?!)
+        //statusFields.put("statusNo1", R.)
+    }
+
+    private void populateStatusView() {
+        LayoutInflater li = (LayoutInflater) mSettAct.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        ViewGroup container = (ViewGroup) mSettAct.getResources().getLayout(R.layout.status_container);
+
+    }
+
     private void createUrlPref() {
         EditTextPreference mySrcPathPref = new EditTextPreference(mSettAct);
         mySrcPathPref.setTitle(R.string.sett_srcPath_OwnCloud);
         mySrcPathPref.setSummary(R.string.sett_srcPath_OwnCloudSumm);
-        mySrcPathPref.setDefaultValue("www.owncloud.org");  // TODO change to resource
+        String srcDefault = "https://www.owncloud.com";
+        Object obj = SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_owncloud);
+        if (obj instanceof String) {
+            srcDefault = (String) obj;
+        }
+        mySrcPathPref.setDefaultValue(srcDefault);
         mySrcPathPref.setKey(mSettAct.getString(R.string.sett_key_srcpath_owncloud));
         mySrcPathPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
@@ -51,7 +74,7 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
                     Toast
                             .makeText(
                                     mSettAct,
-                                    "forbidden character at end of url: \"" + File.separator + "\"",    //TODO
+                                    R.string.sett_toast_wrongUrl,
                                     Toast.LENGTH_SHORT)
                             .show();
                     return false;
@@ -120,6 +143,7 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
                         sendBroadcast(Keys.ACTION_SETALARM);
                     } else {
                         sendBroadcast(Keys.ACTION_DELETEALARM);
+                        Toast.makeText(mSettAct, R.string.sett_toast_noAlarmSet, Toast.LENGTH_SHORT).show();
                     }
                 }
                 return true;
@@ -130,8 +154,8 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
 
     private void createLoginCheckButton() {
         Preference connCeckButton = new Preference(mSettAct);
-        connCeckButton.setTitle("Login-Check");
-        connCeckButton.setSummary("Click here, to test the connection.");
+        connCeckButton.setTitle(mSettAct.getString(R.string.sett_loginCheck));
+        connCeckButton.setSummary(mSettAct.getString(R.string.sett_loginCheckSumm));
         connCeckButton.setKey(mSettAct.getString(R.string.sett_key_loginCheckButton));
         connCeckButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override

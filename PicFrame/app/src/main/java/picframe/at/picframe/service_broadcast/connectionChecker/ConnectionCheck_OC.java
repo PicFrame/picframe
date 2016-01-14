@@ -105,9 +105,11 @@ public class ConnectionCheck_OC implements Runnable {
             String status;
             if (loginSuccess) {
                 Log.d(TAG, "login successful");
+                AppData.setLoginSuccessful(true);
                 status = Keys.ACTION_LOGINSTATUSSUCCESS;
             } else {
                 Log.d(TAG, "login failure");
+                AppData.setLoginSuccessful(false);
                 status = Keys.ACTION_LOGINSTATUSFAILURE;
             }
             LocalBroadcastManager

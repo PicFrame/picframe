@@ -155,6 +155,15 @@ public class AppData {
         return mPrefs.getString(getAppContext().getString(R.string.sett_key_srcpath_sd), "");
     }
 */
+    // get flag whether the last loginCheck for a server was successful or not
+    public static boolean getLoginSuccessful() {
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_loginCheckButton), false);
+    }
+    // set flag whether the last loginCheck for a server is successful or not
+    public static void setLoginSuccessful(boolean loginSuccess) {
+        mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_loginCheckButton), loginSuccess).commit();
+    }
+
     public static void setSdSourcePath(String path) {
         mPrefs.edit().putString(getAppContext().getString(R.string.sett_key_srcpath_sd), path).commit();
     }

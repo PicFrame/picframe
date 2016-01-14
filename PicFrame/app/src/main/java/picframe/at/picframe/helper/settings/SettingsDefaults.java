@@ -13,14 +13,8 @@ public class SettingsDefaults {
     private static final Map<Integer, Object> defValues = new HashMap<>();
 
     static {
-        defValues.put(
-                R.string.sett_key_username,
-                MainApp.getINSTANCE().getApplicationContext().getString(R.string.sett_username)
-                        .toLowerCase());
-        defValues.put(
-                R.string.sett_key_password,
-                MainApp.getINSTANCE().getApplicationContext().getString(R.string.sett_password)
-                        .toLowerCase());
+        defValues.put(R.string.sett_key_username,"");
+        defValues.put(R.string.sett_key_password,"");
         defValues.put(R.string.sett_key_slideshow, true);
         defValues.put(R.string.sett_key_scaling, false);
         defValues.put(R.string.sett_key_randomize, false);
