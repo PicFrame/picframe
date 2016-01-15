@@ -395,7 +395,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                             public void onClick(DialogInterface dialog, int which) {
                                 debug("in click on yes!");
                                 resetSettingsToDefault();
-                                Toast.makeText(SettingsActivity.this, "Reset settings!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(SettingsActivity.this, R.string.sett_toast_reset, Toast.LENGTH_SHORT).show();
                                 updateAllFieldTitles();
                             }
                         });
@@ -486,8 +486,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     private void showNotConnectedDialog(final Dialog dialog) {
         AlertDialog notConnectedAlert = new AlertDialog.Builder(SettingsActivity.this)
-                .setMessage("Are you sure, you want to leave ownCloud Settings?" +
-                        "\nThe last Login-Check was not successful, so the download won't work.")
+                .setMessage(R.string.sett_dialog_notConnected_message)
                 .setPositiveButton(R.string.sett_yes,
                         new DialogInterface.OnClickListener() {
                             @Override
