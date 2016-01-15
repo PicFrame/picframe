@@ -79,7 +79,7 @@
     <string name="sett_resetTitle">Restore default settings</string>
     <string name="sett_resetSummary">Reset settings to default</string>
     <string name="sett_confirmationDialogMessage">Do you really want to delete your settings information and reset everything to default?</string>
-    <!-- Settings-Details Strings -->
+        <!-- Settings-Details Strings -->
     <string name="sett_srcPath_externalSD">Directory</string>
     <string name="sett_srcPath_externalSDSumm">Browse path to pictures</string>
     <string name="sett_username">Username</string>
@@ -92,11 +92,13 @@
     <string name="sett_downloadIntervalSumm">Choose an interval, after which the images are fetched from the source again</string>
     <string name="sett_loginCheck">Login-Check</string>
     <string name="sett_loginCheckSumm">Click here, to test the login</string>
-    <!-- Settings Toast Strings -->
+        <!-- Settings Toast Strings -->
     <string name="sett_toast_delFiles">Deleting images!</string>
     <string name="sett_toast_wrongUrl">Forbidden character at end of URL: \'/\'. Not saving.</string>
     <string name="sett_toast_noAlarmSet">Could not set download alarm - last login-check was not successful.</string>
-            <!-- Settings Dialog Strings -->
+    <string name="sett_toast_loginSuccess">Login successful</string>
+    <string name="sett_toast_loginFailure">Login not successful</string>
+        <!-- Settings Dialog Strings -->
     <string name="sett_dialog_title">Select directory</string>
     <string name="sett_dialog_posBtn" tools:ignore="ButtonCase">Ok</string>
     <string name="sett_dialog_negBtn">Cancel</string>
@@ -106,7 +108,8 @@
     <string name="sett_deleteDataDialog_negBtn">No</string>
     <string name="sett_detailsPrefScreen_title">Settings</string>
     <string name="sett_detailsPrefScreen_summ">Set specific settings for</string>
-
+    <string name="sett_yes">Yes!</string>
+    <string name="sett_no">No</string>
 
         <!-- KEYS -->
     <string name="sett_key_cat1" translatable="false">sett_cat1</string>
@@ -838,7 +841,5 @@
         Apache JackRabbit depends on Commons HTTPClient version 3.1 and SLF4j version 1.7.5.\n
         Copyright © 2004-2010 The Apache Software Foundation. Licensed under Apache License,
         Version 2.0."</string>
-    <string name="sett_no">No</string>
-    <string name="sett_yes">Yes!</string>
     <!-- ABOUT STRINGS END -->
 </resources>

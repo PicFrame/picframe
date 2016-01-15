@@ -19,6 +19,7 @@
 */
 
 package picframe.at.picframe.activities;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -53,11 +54,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
-import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.helper.Keys;
+import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
 import picframe.at.picframe.helper.viewpager.BackgroundToForegroundTransformer;
 import picframe.at.picframe.helper.viewpager.CubeOutTransformer;
@@ -73,9 +73,11 @@ import picframe.at.picframe.helper.viewpager.StackTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomInTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomOutPageTransformer;
 import picframe.at.picframe.service.DownloadService;
+import picframe.at.picframe.settings.AppData;
 
 public class MainActivity extends ActionBarActivity {
 
+    private final static boolean DEBUG = true;
     private static final String TAG = MainActivity.class.getSimpleName();
     private ResponseReceiver receiver;
     LocalBroadcastManager broadcastManager;
@@ -112,8 +114,6 @@ public class MainActivity extends ActionBarActivity {
 
     //public static boolean mConnCheckOC, mConnCheckSMB; //TODO still needed?
     public boolean mDoubleBackToExitPressedOnce;
-
-    private final static boolean DEBUG = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,7 +186,7 @@ public class MainActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
 
-        Log.d(TAG, "onResume");
+        debug("onResume");
         // refresh toolbar options (hide/show downloadNow)
         supportInvalidateOptionsMenu();
         if (AppData.getFirstAppStart()) {
@@ -259,7 +259,7 @@ public class MainActivity extends ActionBarActivity {
                 myIntent = new Intent(this, SettingsActivity.class);
                 break;
             case R.id.action_download:
-                Log.d(TAG, "dowdnload now clicked");
+                debug("dowdnload now clicked");
                 Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
                 startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
                 startService(startDownloadIntent);
@@ -339,7 +339,7 @@ public class MainActivity extends ActionBarActivity {
                 localpage--;
             }
             pager.setCurrentItem(localpage, true);
-            Log.d(TAG, "localpage " + localpage);
+            debug("localpage " + localpage);
         }
     }
 
@@ -353,7 +353,7 @@ public class MainActivity extends ActionBarActivity {
         // Save the current Page to resume after next start
         // maybe not right here will test
         AppData.setCurrentPage(currentPage);
-        Log.d(TAG,"SAVING PAGE  " + currentPage);
+        debug("SAVING PAGE  " + currentPage);
 
         // Save the direction of the pageviewer
         AppData.setDirection(rightToLeft);
@@ -459,9 +459,9 @@ public class MainActivity extends ActionBarActivity {
 /*                            if(position < pager.getAdapter().getCount() -1 && position > 0) {
                                 pager.setCurrentItem(position);
                                 page=position;
-                                Log.d(TAG, "position in range: "+position);
+                                debug("position in range: "+position);
                             } else {
-                                Log.d(TAG, "not in range: "+position);
+                                debug("not in range: "+position);
                             }
 */             //               pager.setPagingEnabled(false);
                             if (mRemainingTimeLayout.getVisibility() == View.VISIBLE)
@@ -546,10 +546,10 @@ public class MainActivity extends ActionBarActivity {
                 if ("".equals(AppData.getUserName()) || "".equals(AppData.getUserPassword())) {
                     Toast.makeText(this, R.string.main_toast_noUsernameSet, Toast.LENGTH_SHORT).show();
                 } else {
-                    if (DEBUG) Log.i(TAG, "username and pw set");
+                    debug("username and pw set");
                     // Try to connect & login to selected source server
                     if (AppData.sourceTypes.OwnCloud.equals(AppData.getSourceType())) {
-                        if (DEBUG) Log.i(TAG, "trying OC check");
+                        debug("trying OC check");
                         //startConnectionCheck();
                         Intent startDownloadIntent = new Intent(mContext, DownloadService.class);
                         startDownloadIntent.setAction(Keys.ACTION_STARTDOWNLOAD);
@@ -666,11 +666,11 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "In onReceive!");
+            debug("In onReceive!");
             if (intent != null) {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
-                    if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
+                    debug("received 'download_finished' action via broadcast");
                     progressBroadCastsReceived = 0;
                     new Handler().post(new Runnable() {
                         @Override
@@ -682,8 +682,8 @@ public class MainActivity extends ActionBarActivity {
                     progressBroadCastsReceived++;
                     int progressPercent = intent.getIntExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, 0);
                     Boolean indeterminate = intent.getBooleanExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, true);
-                    if (DEBUG)  Log.d(TAG, "received 'progress_update' - " +
-                            progressPercent+"% - indeterminate?" + indeterminate);
+                    debug("received 'progress_update' - " +
+                            progressPercent + "% - indeterminate?" + indeterminate);
                     if (progressBroadCastsReceived > 2) {
                         new Handler().post(new Runnable() {
                             @Override
@@ -699,38 +699,38 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private void startSlideshowCountDown(){
-        Log.d(TAG, "startSlideshowCountDown");
-        if(remainingDisplayTime != 0 && remainingDisplayTime < AppData.getDisplayTime()){
-            Log.d(TAG, "remainingDisplayTime: "+remainingDisplayTime+" < "+AppData.getDisplayTime()+", displayTime");
+    private void startSlideshowCountDown() {
+        debug("startSlideshowCountDown");
+        if(remainingDisplayTime != 0 && remainingDisplayTime < AppData.getDisplayTime()) {
+            debug("remainingDisplayTime: " + remainingDisplayTime + " < " + AppData.getDisplayTime()+", displayTime");
             countDownTimer = new CountDownTimer((AppData.getDisplayTime()-remainingDisplayTime)*1000, countdownIntervalInMilliseconds) {
                 @Override
                 public void onTick(long l) {
-                    Log.d(TAG+" unique", "tick!"+l/1000);
+                    debug("unique tick!" + l / 1000);
                     remainingDisplayTime = l;
                 }
 
                 @Override
                 public void onFinish() {
-                    Log.d(TAG,"done with this timer!");
+                    debug("done with this timer!");
                     pageSwitcher();
                     startRepeatingCountDowns();
                 }
             }.start();
         } else {
-            Log.d(TAG, "no leftover displaytime!");
+            debug("no leftover displaytime!");
             startRepeatingCountDowns();
         }
 
     }
 
-    private void startRepeatingCountDowns(){
-        Log.d(TAG, "startRepeatingCountDowns");
+    private void startRepeatingCountDowns() {
+        debug("startRepeatingCountDowns");
         countDownTimer = new CountDownTimer(AppData.getDisplayTime()*1000, countdownIntervalInMilliseconds) {
             @Override
             public void onTick(long l) {
                 remainingDisplayTime = l/1000;
-                Log.d(TAG, "tick!" + remainingDisplayTime);
+                debug("tick!" + remainingDisplayTime);
             }
 
             @Override
@@ -748,12 +748,18 @@ public class MainActivity extends ActionBarActivity {
             then the value of countdownIntervalInMilliseconds will never change, and resetting
             the value will be more accurate.
          */
-        if(AppData.getDisplayTime() < countdownIntervalInMilliseconds/1000){
-            Log.d(TAG, AppData.getDisplayTime()+" < "+countdownIntervalInMilliseconds/1000);
+        if(AppData.getDisplayTime() < countdownIntervalInMilliseconds/1000) {
+            debug(AppData.getDisplayTime() + " < " + countdownIntervalInMilliseconds/1000);
             remainingDisplayTime = 0;
         }
         if(countDownTimer != null){
             countDownTimer.cancel();
+        }
+    }
+
+    private void debug(String msg) {
+        if (DEBUG) {
+            Log.d(TAG, msg);
         }
     }
 }

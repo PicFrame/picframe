@@ -468,18 +468,17 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         @Override
         public void onReceive(Context context, Intent intent) {
-           /* if (intent != null) {
-                // received an intent to update the viewpager
+            if (intent != null) {
                 if (Keys.ACTION_LOGINSTATUSSUCCESS.equals(intent.getAction())) {
-                    if (DEBUG)  Log.d(TAG, "received 'loginSuccess' action via broadcast");
-                    Toast.makeText(getApplicationContext(), "LOGINSUCCESS", Toast.LENGTH_SHORT).show();
+                    debug("received 'loginSuccess' action via broadcast");
+                    Toast.makeText(getApplicationContext(), R.string.sett_toast_loginSuccess, Toast.LENGTH_SHORT).show();
 //TODO
                 } else if (Keys.ACTION_LOGINSTATUSFAILURE.equals(intent.getAction())) {
-                    if (DEBUG)  Log.d(TAG, "received 'loginFailure' action via boadcast");
-                    Toast.makeText(getApplicationContext(), "LOGINFAILURE", Toast.LENGTH_SHORT).show();
+                    debug("received 'loginFailure' action via boadcast");
+                    Toast.makeText(getApplicationContext(), R.string.sett_toast_loginFailure, Toast.LENGTH_SHORT).show();
 //TODO
                 }
-            }*/
+            }
         }
     }
 }
