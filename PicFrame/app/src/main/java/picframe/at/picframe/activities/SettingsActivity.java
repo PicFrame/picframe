@@ -42,6 +42,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -451,12 +452,52 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         //list.addView(detailsPrefScreenToAdd.getStatusViewGroup(), 1); //TODO
         bar.setTitle(preferenceScreen.getTitle());
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogI) {
+                if (AppData.getLoginSuccessful()) {
+                    dialogI.dismiss();
+                } else {
+                    showNotConnectedDialog(dialog);
+                }
+            }
+        });
         bar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialog.dismiss();
+                if (AppData.getLoginSuccessful()) {
+                    dialog.dismiss();
+                } else {
+                    showNotConnectedDialog(dialog);
+                }
             }
         });
+    }
+
+    private void showNotConnectedDialog(final Dialog dialog) {
+        AlertDialog notConnectedAlert = new AlertDialog.Builder(SettingsActivity.this)
+                .setMessage("Are you sure, you want to leave ownCloud Settings?" +
+                        "\nThe last Login-Check was not successful, so the download won't work.")
+                .setPositiveButton(R.string.sett_yes,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialog.dismiss();
+                                dialogInterface.dismiss();
+                            }
+                        })
+                .setNegativeButton(R.string.sett_no,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                                dialog.show();
+                            }
+                        })
+                .create();
+        notConnectedAlert.getWindow().setGravity(Gravity.CENTER);
+        notConnectedAlert.setCancelable(false);
+        notConnectedAlert.show();
     }
 
     private void debug(String msg) { if (DEBUG) { Log.d(TAG, msg); } }
