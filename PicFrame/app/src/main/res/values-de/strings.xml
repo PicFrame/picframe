@@ -102,4 +102,11 @@
     <string name="sett_loginCheck">Login-Check</string>
     <string name="sett_loginCheckSumm">Klicken Sie hier, um den Login zu testen</string>
     <string name="sett_srcPath_OwnCloud">OwnCloud URL</string>
+    <string name="sett_resetSummary">Wiederherstellen der Standardeinstellungen</string>
+    <string name="sett_confirmationDialogMessage">Sind Sie sicher, dass Sie Ihre Einstellungen löschen und die Standardeinstellungen wiederherstellen wollen?</string>
+    <string name="sett_no">No</string>
+    <string name="sett_yes">Ja!</string>
+    <string name="sett_resetTitle">Standardeinstellungen wiederherstellen</string>
+    <string name="sett_loginCheck_failure">Fehlgeschlagen</string>
+    <string name="sett_loginCheck_success">Erfolgreich</string>
 </resources>
