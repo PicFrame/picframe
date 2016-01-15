@@ -213,7 +213,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
 
     public void updateAllFieldTitles() {
-        Log.d(TAG, "in updateAllFieldTitles");
         for (String prefKey : editableTitleFields) {
             updateFieldTitle(prefKey);
         }
@@ -226,9 +225,13 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         if (mPref != null) {
             if (mPref instanceof ListPreference) {
-                mPrefValue = ((ListPreference)mPref).getEntry() == null ? "" :  ((ListPreference)mPref).getEntry().toString();
+//                mPrefValue = ((ListPreference)mPref).getEntry() == null ? "" :  ((ListPreference)mPref).getEntry().toString();
+                mPrefValue = (String) mPrefs.getAll().get(key);
+                int index = ((ListPreference) mPref).findIndexOfValue(mPrefValue);
+                mPrefValue = (String)((ListPreference) mPref).getEntries()[index];
             } else if (mPref instanceof EditTextPreference) {
-                mPrefValue = ((EditTextPreference)mPref).getText();
+                mPrefValue = (String) mPrefs.getAll().get(key);
+//                mPrefValue = ((EditTextPreference)mPref).getText();
                 if (getString(R.string.sett_key_password).equals(key) && mPrefValue != null && !mPrefValue.equals("")) {
                     //noinspection ReplaceAllDot
                     mPrefValue = mPrefValue.replaceAll(".", "*");
@@ -241,7 +244,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                     mPrefValue = AppData.getLoginSuccessful() ? getString(R.string.sett_loginCheck_success) : getString(R.string.sett_loginCheck_failure);
                 }
             }
-
             if (getString(R.string.sett_key_displaytime).equals(key)) {
                 mPrefTitle = getString(R.string.sett_displayTime);
             } else if (getString(R.string.sett_key_transition).equals(key)) {
@@ -370,7 +372,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                         .setPositiveButton(R.string.sett_yes, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Log.d(TAG, "in click on yes!");
+                                debug ("in click on yes!");
                                 resetSettingsToDefault();
                                 Toast.makeText(SettingsActivity.this, "Reset settings!", Toast.LENGTH_SHORT).show();
                                 updateAllFieldTitles();
