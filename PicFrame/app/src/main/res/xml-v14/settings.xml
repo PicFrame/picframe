@@ -25,7 +25,7 @@
             android:summary="@string/sett_transitionSumm"
             android:key="@string/sett_key_transition"
             android:dependency="Slideshow"
-            android:defaultValue="8"
+            android:defaultValue="10"
             android:entries="@array/transitionTypeEntries"
             android:entryValues="@array/transitionTypeValues" />
         <picframe.at.picframe.helper.settings.MySwitchPref
