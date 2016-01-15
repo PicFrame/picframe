@@ -14,6 +14,7 @@ import picframe.at.picframe.helper.settings.SimpleFileDialog;
 public class ExtSdPrefs implements IDetailsPreferenceScreen {
     private ArrayList<Preference> allPrefs = new ArrayList<>();
     private Context mSettAct;
+    private Preference folderPicker;
 
     public ExtSdPrefs(SettingsActivity mSettAct) {
         this.mSettAct = mSettAct;
@@ -23,12 +24,12 @@ public class ExtSdPrefs implements IDetailsPreferenceScreen {
     }
 
     private void createSourcePref() {
-        Preference mySrcPathPref = new Preference(mSettAct);
-        mySrcPathPref.setTitle(mSettAct.getString(R.string.sett_srcPath_externalSD));
-        mySrcPathPref.setSummary(R.string.sett_srcPath_externalSDSumm);
-        mySrcPathPref.setDefaultValue("");
-        mySrcPathPref.setKey(mSettAct.getString(R.string.sett_key_srcpath_sd));
-        mySrcPathPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        folderPicker = new Preference(mSettAct);
+        folderPicker.setTitle(mSettAct.getString(R.string.sett_srcPath_externalSD));
+        folderPicker.setSummary(R.string.sett_srcPath_externalSDSumm);
+        folderPicker.setDefaultValue("");
+        folderPicker.setKey(mSettAct.getString(R.string.sett_key_srcpath_sd));
+        folderPicker.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             String _chosenDir = AppData.getSourcePath();
 
             @Override
@@ -48,7 +49,11 @@ public class ExtSdPrefs implements IDetailsPreferenceScreen {
                 return true;
             }
         });
-        allPrefs.add(mySrcPathPref);
+        allPrefs.add(folderPicker);
+    }
+
+    public Preference getFolderPicker() {
+        return folderPicker;
     }
 
 

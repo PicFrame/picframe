@@ -60,6 +60,7 @@ import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.settings.AppData;
 import picframe.at.picframe.helper.settings.DetailsPreferenceScreen;
 import picframe.at.picframe.helper.settings.MySwitchPref;
+import picframe.at.picframe.helper.settings.detailsPrefScreen.ExtSdPrefs;
 
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -183,6 +184,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     private void populateFieldsToRemove() {
         fieldsToRemove.add(getString(R.string.sett_key_recursiveSearch));
         fieldsToRemove.add(getString(R.string.sett_key_deleteData));
+        fieldsToRemove.add(getString(R.string.sett_key_srcpath_sd));
         fieldsToRemove.add(getString(R.string.sett_key_restoreDefaults));
     }
 
@@ -295,14 +297,22 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     }
 
     public void setDetailsPrefScreen() {
-        detailsPrefScreenToAdd = new DetailsPreferenceScreen(
+        if (AppData.sourceTypes.OwnCloud.equals(AppData.getSourceType())) {
+            detailsPrefScreenToAdd = new DetailsPreferenceScreen(
                     AppData.getSrcTypeInt(),
                     getPreferenceManager().createPreferenceScreen(this),
                     SettingsActivity.this);
-        //detailsPrefScreenToAdd.set*Resource
-        if (myCat2 != null && detailsPrefScreenToAdd.getPreferenceScreen() != null) {
-            myCat2.addPreference(detailsPrefScreenToAdd.getPreferenceScreen());
+            //detailsPrefScreenToAdd.set*Resource
+            if (myCat2 != null && detailsPrefScreenToAdd.getPreferenceScreen() != null) {
+                myCat2.addPreference(detailsPrefScreenToAdd.getPreferenceScreen());
+            }
+        } else if (AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
+            Preference pref = new ExtSdPrefs(this).getFolderPicker();
+            if (myCat2 != null && pref != null) {
+                myCat2.addPreference(pref);
+            }
         }
+
     }
 
     private void setIncludeSubdirsSwitchPref() {
