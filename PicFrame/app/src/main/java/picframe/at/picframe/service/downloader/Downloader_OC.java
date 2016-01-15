@@ -20,14 +20,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.helper.viewpager.EXIF_helper;
 import picframe.at.picframe.service.ServiceCallbacks;
 
@@ -205,6 +207,12 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
             if (DEBUG) Log.i(TAG, "No file needs to be downloaded!");
             return false;
         } else {
+            Collections.sort(mRemoteFilesToDownloadList, new Comparator<RemoteFile>() {
+                @Override
+                public int compare(RemoteFile lhs, RemoteFile rhs) {
+                    return lhs.getRemotePath().compareToIgnoreCase(rhs.getRemotePath());
+                }
+            });
             if (DEBUG) Log.i(TAG, "Starting download of missing files (" + mRemoteFilesToDownloadList.size() + ") shortly");
             return true;
         }
@@ -286,12 +294,13 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
                 deleted = fileToDelete.delete();
                 if (deleted)
                     if (DEBUG) Log.i(TAG, "deleted >" + fileToProcess + "<");
-                    else
+                else
                     if (DEBUG) Log.e(TAG, "couldn't delete >" + fileToProcess + "<");
             }
         } else {
             if (DEBUG) Log.e(TAG, "Failure while processing file[" + fileToProcess + "]. (scaleRotateAndSave");
         }
+        publishProgress((float)mDownloadedFilesCount.get() / (float)mRemoteFilesToDownloadList.size(), false);  // is between 0 and 1
     }
 
     private boolean scaleRotateAndSave(String filepath) {
@@ -426,7 +435,7 @@ public class Downloader_OC extends Downloader implements OnRemoteOperationListen
                 e.printStackTrace();
             }
             mDownloadedFilesCount.getAndIncrement();
-            publishProgress((float)mDownloadedFilesCount.get() / (float)mRemoteFilesToDownloadList.size(), false);  // is between 0 and 1
+            // publishProgress was here before
         } else {
             if (DEBUG) Log.e(TAG, "Download: FAILURE -- info:" + result.getFilename() + " = " + result.getLogMessage());
         }

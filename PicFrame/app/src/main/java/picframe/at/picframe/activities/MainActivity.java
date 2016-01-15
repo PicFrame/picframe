@@ -655,6 +655,7 @@ public class MainActivity extends ActionBarActivity {
 
 
     public class ResponseReceiver extends BroadcastReceiver {
+        private int progressBroadCastsReceived = 0;
         public static final String BOOTED_MSG = "booted";
         private float percent;
         private boolean indeterminate;
@@ -670,6 +671,7 @@ public class MainActivity extends ActionBarActivity {
                 // received an intent to update the viewpager
                 if (Keys.ACTION_DOWNLOAD_FINISHED.equals(intent.getAction())) {
                     if (DEBUG)  Log.d(TAG, "received 'download_finished' action via broadcast");
+                    progressBroadCastsReceived = 0;
                     new Handler().post(new Runnable() {
                         @Override
                         public void run() {
@@ -677,11 +679,21 @@ public class MainActivity extends ActionBarActivity {
                         }
                     });
                 } else if (Keys.ACTION_PROGRESSUPDATE.equals(intent.getAction())) {
+                    progressBroadCastsReceived++;
                     int progressPercent = intent.getIntExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, 0);
                     Boolean indeterminate = intent.getBooleanExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, true);
-
                     if (DEBUG)  Log.d(TAG, "received 'progress_update' - " +
                             progressPercent+"% - indeterminate?" + indeterminate);
+                    if (progressBroadCastsReceived > 2) {
+                        new Handler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateFileList();
+                            }
+                        });
+                        progressBroadCastsReceived = 0;
+                    }
+
                 }
             }
         }
