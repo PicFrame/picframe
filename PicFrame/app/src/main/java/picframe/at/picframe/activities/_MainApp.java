@@ -1,4 +1,4 @@
-package picframe.at.picframe;
+package picframe.at.picframe.activities;
 
 import android.app.Application;
 
@@ -26,8 +26,8 @@ import org.acra.sender.HttpSender;
 //        ,mode = ReportingInteractionMode.SILENT,
         reportType= HttpSender.Type.JSON
 )
-public class MainApp extends Application {
-    private static MainApp INSTANCE = null;
+public class _MainApp extends Application {
+    private static _MainApp INSTANCE = null;
 
     @Override
     public void onCreate() {
@@ -38,7 +38,7 @@ public class MainApp extends Application {
         ACRA.init(this);
     }
 
-    public static MainApp getINSTANCE() {
+    public static _MainApp getINSTANCE() {
         return INSTANCE;
     }
 }

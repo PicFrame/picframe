@@ -1,12 +1,13 @@
-package picframe.at.picframe;
+package picframe.at.picframe.helper;
 
 public class Keys {
 
-    /* Keys for the download-parameters */
+/* Keys for the download-parameters */
     public static final String PICFRAMEPATH = "picframeRootPath";
     public static final String CALLBACK = "callback";
     public static final String CONTEXT = "context";
 
+/* Keys for the notification */
     public static final int NOTIFICATION_ID = 654321;
     public enum NotificationStates {
         START, PROGRESS, FINISHED, STOP, INTERRUPT, FAILURE ;
@@ -20,7 +21,7 @@ public class Keys {
         }
     }
 
-    /* Keys for the actions and messages */
+/* Keys for the local broadcasts between actvities, notification and service */
     // FROM ACTIVITY TO SERVICE(started with startService(intent) )
     public static final String ACTION_STARTDOWNLOAD = "picframe.at.picframe.service.STARTDOWNLOAD";
             // FROM SERVICE TO RECEIVER (started with .sendBroadcast(intent) )
@@ -37,6 +38,12 @@ public class Keys {
     public static final String MSG_PROGRESSUPDATE_INDITERMINATE = "progressUpdateInditerminate";
     public static final String MSG_FAILURE = "failure";
 
-    //alarms
+/* Keys to SettingsActivity */
+    public static final String ACTION_LOGINSTATUSSUCCESS = "picframe.at.picframe.service.LOGINSTATUSSUCCESS";
+    public static final String ACTION_LOGINSTATUSFAILURE = "picframe.at.picframe.service.LOGINSTATUSFAILURE";
+
+/* Keys to AlarmManager */
+    public static final String ACTION_DELETEALARM = "picframe.at.picframe.service.DELETEALARM";
+    public static final String ACTION_SETALARM = "picframe.at.picframe.service.SETALARM";
     public static final String ACTION_UPDATE_ALARM = "ACTION_UPDATE_ALARM";
 }

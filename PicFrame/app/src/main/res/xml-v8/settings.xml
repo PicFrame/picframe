@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
         android:icon="@android:drawable/ic_menu_preferences"
@@ -25,16 +26,9 @@
             android:summary="@string/sett_transitionSumm"
             android:key="@string/sett_key_transition"
             android:dependency="Slideshow"
-            android:defaultValue="0"
+            android:defaultValue="10"
             android:entries="@array/transitionTypeEntries"
             android:entryValues="@array/transitionTypeValues" />
-        <CheckBoxPreference
-            android:title="@string/sett_randomize"
-            android:summary="@string/sett_randomizeSumm"
-            android:summaryOff="@string/sett_randomizeSummOff"
-            android:summaryOn="@string/sett_randomizeSummOn"
-            android:key="@string/sett_key_randomize"
-            android:defaultValue="false" />
         <CheckBoxPreference
             android:title="@string/sett_scaling"
             android:summary="@string/sett_scalingSumm"
@@ -42,6 +36,13 @@
             android:summaryOn="@string/sett_scalingSummOn"
             android:defaultValue="false"
             android:key="@string/sett_key_scaling" />
+        <CheckBoxPreference
+            android:title="@string/sett_randomize"
+            android:summary="@string/sett_randomizeSumm"
+            android:summaryOff="@string/sett_randomizeSummOff"
+            android:summaryOn="@string/sett_randomizeSummOn"
+            android:key="@string/sett_key_randomize"
+            android:defaultValue="false" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -54,22 +55,7 @@
             android:defaultValue="0"
             android:entries="@array/srcTypeEntries"
             android:entryValues="@array/srcTypeValues" />
-        <EditTextPreference
-            android:title="@string/sett_username"
-            android:summary="@string/sett_usernameSumm"
-            android:shouldDisableView="true"
-            android:defaultValue=""
-            android:inputType="textNoSuggestions|textPersonName"
-            android:imeOptions="flagNoExtractUi"
-            android:key="@string/sett_key_username" />
-        <EditTextPreference
-            android:title="@string/sett_password"
-            android:summary="@string/sett_passwordSumm"
-            android:shouldDisableView="true"
-            android:defaultValue=""
-            android:inputType="textNoSuggestions|textPassword|"
-            android:imeOptions="flagNoExtractUi"
-            android:key="@string/sett_key_password" />
+        <!-- remaining Preferences will be set programmatically in SettingsActivity -->
     </PreferenceCategory>
 
 </PreferenceScreen>

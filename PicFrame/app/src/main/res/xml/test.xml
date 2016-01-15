@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="fill_parent" android:weightSum="1">
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="fill_parent"
+        android:layout_height="200dip">
+    </ListView>
+    <android.webkit.WebView
+        android:id="@+id/webView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+    </android.webkit.WebView>
+</LinearLayout>
+<!--
+    public class CustomPrefActivityActivity extends PreferenceActivity {
+
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
+                    setContentView(R.layout.main); //set the contentview. On the layout, you need a listview with the id: @android:id/list
+
+                    //you could also make a new listview here, and set the id to android.R.id.list, so you don't have to use xml layouts.
+
+                    addPreferencesFromResource(R.xml.settings); //load preferences from xml, or create preferences by code here
+
+                    //setup any other views that you have
+                    WebView webView = (WebView) findViewById(R.id.webView1);
+                    webView.setWebViewClient(new WebViewClient());
+                    webView.loadUrl("http://helloandroid.com&quot;);
+            }
+    }
+-->
