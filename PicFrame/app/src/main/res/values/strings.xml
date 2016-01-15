@@ -840,5 +840,11 @@
         Version 2.0."</string>
     <string name="sett_no">No</string>
     <string name="sett_yes">Yes!</string>
+    <string name="status">Status</string>
+    <string name="status_nbFiles">Files in current display folder:</string>
+    <string name="ownCloud">ownCloud Status</string>
+    <string name="status_local">Status</string>
+    <string name="status_ownCloud">ownCloud Status</string>
+    <string name="statusOC_nbRemoteFiles">Files on ownCloud server:</string>
     <!-- ABOUT STRINGS END -->
 </resources>
