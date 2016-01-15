@@ -30,6 +30,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -58,7 +59,9 @@ import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
+import picframe.at.picframe.service.connectionChecker.ConnectionCheck_OC;
 import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SettingsDefaults;
 import picframe.at.picframe.settings.detailsPrefScreen.DetailsPreferenceScreen;
 import picframe.at.picframe.settings.MySwitchPref;
 import picframe.at.picframe.settings.detailsPrefScreen.ExtSdPrefs;
@@ -204,6 +207,13 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                         getString(R.string.sett_key_password).equals(key) ||
                         getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
                 setLoginStatus(false);
+                if (!AppData.getUserName().equals("") &&
+                        !AppData.getUserPassword().equals("") &&
+                        !AppData.getSourcePath().equals("") &&
+                        !AppData.getSourcePath().equals(SettingsDefaults
+                                .getDefaultValueForKey(R.string.sett_key_srcpath_owncloud))) {
+                    new Handler().post(new ConnectionCheck_OC());
+                }
             } else if (getString(R.string.sett_key_loginCheckButton).equals(key)) {
                 alarmScheduler.scheduleAlarm();
             }
