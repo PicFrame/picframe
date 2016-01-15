@@ -50,7 +50,7 @@ public class DetailsPreferenceScreen {
         mPreferenceScreen.setTitle(mLocalizedSrcTypeValue + " " +
                 mSettAct.getString(R.string.sett_detailsPrefScreen_title));
         mPreferenceScreen.setSummary(mSettAct.getString(R.string.sett_detailsPrefScreen_summ) +
-                " " + mLocalizedSrcTypeValue + ".");
+                " " + mLocalizedSrcTypeValue);
         mPreferenceScreen.setKey(mSettAct.getString(R.string.sett_key_prefScreenDetails));
 
         for (Preference p : detailsPreferenceScreen.getAllDetailPreferenceFields()) {
