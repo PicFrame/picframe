@@ -17,7 +17,7 @@
    along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package picframe.at.picframe.downloader;
+package picframe.at.picframe.helper.alarm;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,11 +26,9 @@ import android.util.Log;
 
 import java.util.GregorianCalendar;
 
-import picframe.at.picframe.Keys;
-import picframe.at.picframe.helper.alarm.AlarmScheduler;
-import picframe.at.picframe.helper.alarm.TimeConverter;
-import picframe.at.picframe.helper.settings.AppData;
-import picframe.at.picframe.service_broadcast.DownloadService;
+import picframe.at.picframe.helper.Keys;
+import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.service.DownloadService;
 
 
 /**

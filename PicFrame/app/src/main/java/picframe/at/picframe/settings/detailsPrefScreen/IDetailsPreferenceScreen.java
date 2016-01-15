@@ -1,4 +1,4 @@
-package picframe.at.picframe.helper.settings.detailsPrefScreen;
+package picframe.at.picframe.settings.detailsPrefScreen;
 
 import android.preference.Preference;
 import android.view.ViewGroup;

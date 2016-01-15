@@ -1,4 +1,4 @@
-package picframe.at.picframe.helper.settings;
+package picframe.at.picframe.settings.detailsPrefScreen;
 
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
@@ -8,9 +8,7 @@ import java.util.Arrays;
 
 import picframe.at.picframe.R;
 import picframe.at.picframe.activities.SettingsActivity;
-import picframe.at.picframe.helper.settings.detailsPrefScreen.ExtSdPrefs;
-import picframe.at.picframe.helper.settings.detailsPrefScreen.IDetailsPreferenceScreen;
-import picframe.at.picframe.helper.settings.detailsPrefScreen.OwnCloudPrefs;
+import picframe.at.picframe.settings.AppData;
 
 public class DetailsPreferenceScreen {
     private AppData.sourceTypes mSrcType;

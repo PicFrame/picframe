@@ -5,7 +5,7 @@
         android:icon="@android:drawable/ic_menu_preferences"
         android:key="@string/sett_key_cat1"
         android:title="@string/sett_cat1">
-        <picframe.at.picframe.helper.settings.MySwitchPref
+        <picframe.at.picframe.settings.MySwitchPref
             android:title="@string/sett_slideShow"
             android:summary="@string/sett_slideShowSumm"
             android:summaryOff="@string/sett_slideShowSummOff"
@@ -28,14 +28,14 @@
             android:defaultValue="10"
             android:entries="@array/transitionTypeEntries"
             android:entryValues="@array/transitionTypeValues" />
-        <picframe.at.picframe.helper.settings.MySwitchPref
+        <picframe.at.picframe.settings.MySwitchPref
             android:title="@string/sett_scaling"
             android:summary="@string/sett_scalingSumm"
             android:summaryOff="@string/sett_scalingSummOff"
             android:summaryOn="@string/sett_scalingSummOn"
             android:defaultValue="false"
             android:key="@string/sett_key_scaling" />
-        <picframe.at.picframe.helper.settings.MySwitchPref
+        <picframe.at.picframe.settings.MySwitchPref
             android:title="@string/sett_randomize"
             android:summary="@string/sett_randomizeSumm"
             android:summaryOff="@string/sett_randomizeSummOff"

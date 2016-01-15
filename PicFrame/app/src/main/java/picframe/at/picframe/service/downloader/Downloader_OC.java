@@ -1,4 +1,4 @@
-package picframe.at.picframe.downloader;
+package picframe.at.picframe.service.downloader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -26,10 +26,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import picframe.at.picframe.Keys;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.viewpager.EXIF_helper;
-import picframe.at.picframe.service_broadcast.ServiceCallbacks;
+import picframe.at.picframe.service.ServiceCallbacks;
 
 
 @SuppressWarnings("ConstantConditions")

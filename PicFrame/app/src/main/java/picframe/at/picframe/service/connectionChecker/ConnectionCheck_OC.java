@@ -1,4 +1,4 @@
-package picframe.at.picframe.service_broadcast.connectionChecker;
+package picframe.at.picframe.service.connectionChecker;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -15,11 +15,11 @@ import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.resources.files.FileUtils;
 import com.owncloud.android.lib.resources.files.ReadRemoteFolderOperation;
 
-import picframe.at.picframe.Keys;
-import picframe.at.picframe.MainApp;
+import picframe.at.picframe.helper.Keys;
+import picframe.at.picframe.activities._MainApp;
 import picframe.at.picframe.R;
-import picframe.at.picframe.helper.settings.AppData;
-import picframe.at.picframe.helper.settings.SettingsDefaults;
+import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SettingsDefaults;
 
 public class ConnectionCheck_OC implements Runnable {
     private final String TAG = ConnectionCheck_OC.class.getSimpleName();
@@ -54,7 +54,7 @@ public class ConnectionCheck_OC implements Runnable {
             mClient = OwnCloudClientFactory
                     .createOwnCloudClient(
                             serverUri,
-                            MainApp.getINSTANCE().getApplicationContext(),
+                            _MainApp.getINSTANCE().getApplicationContext(),
                             true);
             mClient.setCredentials(
                     OwnCloudCredentialsFactory.newBasicCredentials(
@@ -113,7 +113,7 @@ public class ConnectionCheck_OC implements Runnable {
                 status = Keys.ACTION_LOGINSTATUSFAILURE;
             }
             LocalBroadcastManager
-                    .getInstance(MainApp.getINSTANCE().getApplicationContext())
+                    .getInstance(_MainApp.getINSTANCE().getApplicationContext())
                     .sendBroadcast(new Intent().setAction(status));
         }
     }

@@ -17,14 +17,14 @@
     along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package picframe.at.picframe.helper.settings;
+package picframe.at.picframe.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import java.io.File;
 
-import picframe.at.picframe.MainApp;
+import picframe.at.picframe.activities._MainApp;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.local_storage.SD_Card_Helper;
 
@@ -34,7 +34,7 @@ import picframe.at.picframe.helper.local_storage.SD_Card_Helper;
  */
 public class AppData {
     public static final String mySettingsFilename = "PicFrameSettings";
-    private static final SharedPreferences mPrefs = MainApp.getINSTANCE().getSharedPreferences(mySettingsFilename, Context.MODE_PRIVATE);
+    private static final SharedPreferences mPrefs = _MainApp.getINSTANCE().getSharedPreferences(mySettingsFilename, Context.MODE_PRIVATE);
 
     public static void resetSettings() {
         SettingsDefaults.resetSettings();
@@ -245,6 +245,6 @@ public class AppData {
         return mPrefs;
     }
     private static Context getAppContext() {
-        return MainApp.getINSTANCE().getApplicationContext();
+        return _MainApp.getINSTANCE().getApplicationContext();
     }
 }

@@ -1,4 +1,4 @@
-package picframe.at.picframe.service_broadcast;
+package picframe.at.picframe.service;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -24,13 +24,13 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import picframe.at.picframe.Keys;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.activities.MainActivity;
-import picframe.at.picframe.downloader.Downloader;
-import picframe.at.picframe.downloader.Downloader_OC;
+import picframe.at.picframe.service.downloader.Downloader;
+import picframe.at.picframe.service.downloader.Downloader_OC;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.settings.AppData;
 
 
 public class DownloadService extends Service implements ServiceCallbacks {

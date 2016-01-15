@@ -1,4 +1,4 @@
-package picframe.at.picframe.helper.settings.detailsPrefScreen;
+package picframe.at.picframe.settings.detailsPrefScreen;
 
 import android.content.Context;
 import android.preference.Preference;
@@ -8,8 +8,8 @@ import java.util.ArrayList;
 
 import picframe.at.picframe.R;
 import picframe.at.picframe.activities.SettingsActivity;
-import picframe.at.picframe.helper.settings.AppData;
-import picframe.at.picframe.helper.settings.SimpleFileDialog;
+import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SimpleFileDialog;
 
 public class ExtSdPrefs implements IDetailsPreferenceScreen {
     private ArrayList<Preference> allPrefs = new ArrayList<>();

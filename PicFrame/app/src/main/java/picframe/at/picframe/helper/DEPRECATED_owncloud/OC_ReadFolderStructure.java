@@ -17,7 +17,7 @@
     along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package picframe.at.picframe.helper.owncloud;
+package picframe.at.picframe.helper.DEPRECATED_owncloud;
 
 
 import android.content.Context;

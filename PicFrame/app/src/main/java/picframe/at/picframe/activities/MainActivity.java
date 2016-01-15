@@ -53,11 +53,11 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import picframe.at.picframe.Keys;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.settings.AppData;
 import picframe.at.picframe.helper.viewpager.AccordionTransformer;
 import picframe.at.picframe.helper.viewpager.BackgroundToForegroundTransformer;
 import picframe.at.picframe.helper.viewpager.CubeOutTransformer;
@@ -72,7 +72,7 @@ import picframe.at.picframe.helper.viewpager.RotateDownTransformer;
 import picframe.at.picframe.helper.viewpager.StackTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomInTransformer;
 import picframe.at.picframe.helper.viewpager.ZoomOutPageTransformer;
-import picframe.at.picframe.service_broadcast.DownloadService;
+import picframe.at.picframe.service.DownloadService;
 
 public class MainActivity extends ActionBarActivity {
 

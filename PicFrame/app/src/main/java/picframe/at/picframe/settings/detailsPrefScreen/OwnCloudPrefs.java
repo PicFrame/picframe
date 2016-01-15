@@ -1,4 +1,4 @@
-package picframe.at.picframe.helper.settings.detailsPrefScreen;
+package picframe.at.picframe.settings.detailsPrefScreen;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -21,9 +21,9 @@ import picframe.at.picframe.R;
 import picframe.at.picframe.activities.SettingsActivity;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
-import picframe.at.picframe.helper.settings.AppData;
-import picframe.at.picframe.helper.settings.SettingsDefaults;
-import picframe.at.picframe.service_broadcast.connectionChecker.ConnectionCheck_OC;
+import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SettingsDefaults;
+import picframe.at.picframe.service.connectionChecker.ConnectionCheck_OC;
 
 public class OwnCloudPrefs implements IDetailsPreferenceScreen {
     private ArrayList<Preference> allPrefs = new ArrayList<>();

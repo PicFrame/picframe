@@ -8,10 +8,9 @@ import android.util.Log;
 
 import java.util.GregorianCalendar;
 
-import picframe.at.picframe.MainApp;
+import picframe.at.picframe.activities._MainApp;
 import picframe.at.picframe.activities.MainActivity;
-import picframe.at.picframe.downloader.AlarmReceiver;
-import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.settings.AppData;
 
 /**
  * Created by linda on 28.12.2015.
@@ -22,7 +21,7 @@ public class AlarmScheduler {
 
     public AlarmScheduler(){
         if(alarmManager == null)
-            alarmManager = (AlarmManager) MainApp.getINSTANCE().getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+            alarmManager = (AlarmManager) _MainApp.getINSTANCE().getApplicationContext().getSystemService(Context.ALARM_SERVICE);
     }
 
     public Long scheduleAlarm(){

@@ -1,11 +1,11 @@
-package picframe.at.picframe.helper.settings;
+package picframe.at.picframe.settings;
 
 import android.content.SharedPreferences;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import picframe.at.picframe.MainApp;
+import picframe.at.picframe.activities._MainApp;
 import picframe.at.picframe.R;
 
 public class SettingsDefaults {
@@ -42,13 +42,13 @@ public class SettingsDefaults {
             if (prefSet.getValue() instanceof String) {
                 prefEditor
                     .putString(
-                        MainApp.getINSTANCE().getApplicationContext().getString(prefSet.getKey()),
+                        _MainApp.getINSTANCE().getApplicationContext().getString(prefSet.getKey()),
                             (String)prefSet.getValue())
                     .commit();
             } else if (prefSet.getValue() instanceof Boolean) {
                 prefEditor
                     .putBoolean(
-                        MainApp.getINSTANCE().getApplicationContext().getString(prefSet.getKey()),
+                        _MainApp.getINSTANCE().getApplicationContext().getString(prefSet.getKey()),
                             (Boolean) prefSet.getValue())
                     .commit();
             }

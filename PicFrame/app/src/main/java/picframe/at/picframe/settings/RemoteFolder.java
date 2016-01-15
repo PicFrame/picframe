@@ -1,4 +1,4 @@
-package picframe.at.picframe.helper.settings;
+package picframe.at.picframe.settings;
 
 import java.util.LinkedList;
 

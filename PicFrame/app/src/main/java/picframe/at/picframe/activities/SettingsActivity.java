@@ -53,14 +53,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 
-import picframe.at.picframe.Keys;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
-import picframe.at.picframe.helper.settings.AppData;
-import picframe.at.picframe.helper.settings.DetailsPreferenceScreen;
-import picframe.at.picframe.helper.settings.MySwitchPref;
-import picframe.at.picframe.helper.settings.detailsPrefScreen.ExtSdPrefs;
+import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.detailsPrefScreen.DetailsPreferenceScreen;
+import picframe.at.picframe.settings.MySwitchPref;
+import picframe.at.picframe.settings.detailsPrefScreen.ExtSdPrefs;
 
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -382,7 +382,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                         .setPositiveButton(R.string.sett_yes, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                debug ("in click on yes!");
+                                debug("in click on yes!");
                                 resetSettingsToDefault();
                                 Toast.makeText(SettingsActivity.this, "Reset settings!", Toast.LENGTH_SHORT).show();
                                 updateAllFieldTitles();

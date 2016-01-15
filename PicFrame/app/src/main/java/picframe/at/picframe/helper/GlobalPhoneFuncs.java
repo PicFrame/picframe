@@ -33,8 +33,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import picframe.at.picframe.MainApp;
-import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.activities._MainApp;
+import picframe.at.picframe.settings.AppData;
 
 public class GlobalPhoneFuncs {
     private static List<String> allowedExts = Arrays.asList("jpg", "jpeg", "png");
@@ -120,7 +120,7 @@ public class GlobalPhoneFuncs {
     }
 
     public static boolean wifiConnected() {
-        NetworkInfo wifi = ((ConnectivityManager) MainApp.getINSTANCE()
+        NetworkInfo wifi = ((ConnectivityManager) _MainApp.getINSTANCE()
                 .getApplicationContext()
                 .getSystemService(Context.CONNECTIVITY_SERVICE))
                 .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
