@@ -27,8 +27,6 @@ import android.widget.TextView;
 
 import picframe.at.picframe.R;
 
-
-@SuppressWarnings("deprecation")
 public class AboutActivity extends ActionBarActivity {
 
     @Override
