@@ -80,7 +80,7 @@ public class MainActivity extends ActionBarActivity {
     private ResponseReceiver receiver;
     LocalBroadcastManager broadcastManager;
 
-    private DisplayImages setUp;
+    private ImagePagerAdapter imagePagerAdapter;
     private CustomViewPager pager;
     private final long countdownIntervalInMilliseconds = 2*60*1000-50; // interval to slightly less than 2 minutes
     private CountDownTimer countDownTimer;
@@ -325,10 +325,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void pageSwitcher() {
-        if (setUp.getCount() > 0 && !paused) {
+        if (imagePagerAdapter.getCount() > 0 && !paused) {
             int localpage = pager.getCurrentItem();
             // switch diretion if extremity of slideshow is reacher
-            if (localpage >= setUp.getCount() - 1) {
+            if (localpage >= imagePagerAdapter.getCount() - 1) {
                 rightToLeft = false;
             } else if (localpage == 0) {
                 rightToLeft = true;
@@ -376,7 +376,7 @@ public class MainActivity extends ActionBarActivity {
         cancelSlideShowCoundown();
     }
 
-    private class DisplayImages extends PagerAdapter {
+    private class ImagePagerAdapter extends PagerAdapter {
         //        private List<String> mFilePaths;
         private Activity activity;
         private LayoutInflater inflater;
@@ -384,7 +384,7 @@ public class MainActivity extends ActionBarActivity {
         private int localpage;
 //        private int size;
 
-        public DisplayImages(Activity activity) {
+        public ImagePagerAdapter(Activity activity) {
             this.activity = activity;
             updateSettings();
         }
@@ -502,17 +502,17 @@ public class MainActivity extends ActionBarActivity {
             }
         }
         setSize(); // size is count of images in folder, or constant if example pictures are used
-        setUp.notifyDataSetChanged();
+        imagePagerAdapter.notifyDataSetChanged();
     }
 
 
     private void loadAdapter(){
-        setUp = new DisplayImages(MainActivity.this);
+        imagePagerAdapter = new ImagePagerAdapter(MainActivity.this);
 //        pager.setPagingEnabled(true);
 //        setUp = new DisplayImages(MainActivity.this);
         try {
-            pager.setAdapter(setUp);
-            currentPage = setUp.getPage();
+            pager.setAdapter(imagePagerAdapter);
+            currentPage = imagePagerAdapter.getPage();
         }
         catch (Exception e){
             e.printStackTrace();
