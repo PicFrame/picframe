@@ -240,6 +240,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             if (mPref instanceof ListPreference) {
 //                mPrefValue = ((ListPreference)mPref).getEntry() == null ? "" :  ((ListPreference)mPref).getEntry().toString();
                 mPrefValue = (String) mPrefs.getAll().get(key);
+                if (mPrefValue != ((ListPreference) mPref).getValue()) {
+                    ((ListPreference) mPref).setValue(mPrefValue);
+                }
                 int index = ((ListPreference) mPref).findIndexOfValue(mPrefValue);
                 mPrefValue = (String)((ListPreference) mPref).getEntries()[index];
             } else if (mPref instanceof EditTextPreference) {
@@ -420,6 +423,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (preference instanceof PreferenceScreen) {
             setUpNestedScreen((PreferenceScreen) preference);
         }
+        updateAllFieldTitles();
         return false;
     }
 
