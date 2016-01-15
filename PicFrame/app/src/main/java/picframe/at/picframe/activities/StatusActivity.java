@@ -13,5 +13,4 @@ public class StatusActivity extends ActionBarActivity {
         setContentView(R.layout.activity_status);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
-
 }
