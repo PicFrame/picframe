@@ -74,7 +74,7 @@
     <!-- ABOUT STRINGS END -->
     <string name="service_notif_failureFolderInitFailure">Konnte download Ordner nicht erstellen.</string>
     <string name="main_toast_noFolderPathSet">Sie haben noch keinen Ordner Bilder-Ornder ausgewählt! </string>
-    <string name="main_dialog_tutorial_text">Um die Einstellungen zu öffnen, drücken Sie bitte den Menu-Button oder swipen Sie nach unten und tippen das Einstellungen Icon an.</string>
+    <string name="main_dialog_tutorial_text">Um die Einstellungen zu öffnen, tappen Sie oder swipen Sie nach unten, und tippen das Einstellungen Icon an.</string>
     <string name="main_dialog_tutorial_okButton">OK</string>
     <string name="main_dialog_tutorial_dontShowAgainButton">Diese Nachricht nicht mehr anzeigen</string>
     <string name="main_dialog_tutorial_openSettingsNowButton">Einstellungen jetzt öffnen</string>
@@ -104,11 +104,19 @@
     <string name="sett_srcPath_OwnCloud">OwnCloud URL</string>
     <string name="sett_resetSummary">Wiederherstellen der Standardeinstellungen</string>
     <string name="sett_confirmationDialogMessage">Sind Sie sicher, dass Sie Ihre Einstellungen löschen und die Standardeinstellungen wiederherstellen wollen?</string>
-    <string name="sett_no">No</string>
+    <string name="sett_no">Nein</string>
     <string name="sett_yes">Ja!</string>
     <string name="sett_resetTitle">Standardeinstellungen wiederherstellen</string>
     <string name="sett_loginCheck_failure">Fehlgeschlagen</string>
     <string name="sett_loginCheck_success">Erfolgreich</string>
-    <string name="ownCloud">ownCloud Status</string>
-    <string name="status_local">Status</string>
+    <string name="ownCloud">Status - ownCloud</string>
+    <string name="status_local">Status - Allgemein</string>
+    <string name="sett_toast_loginFailure">Login fehlgeschlagen</string>
+    <string name="sett_toast_loginSuccess">Login erfolgreich</string>
+    <string name="sett_toast_wrongUrl">Unerlaubtes Zeichen am Ende der URL: \'/\'. URL wird nicht gespeichert.</string>
+    <string name="sett_dialog_notConnected_message">Der letzte Login-Check ist fehlgeschlagen; der Download wird nicht starten. Sind Sie sicher, dass Sie die ownCloud-Eintellungen verlassen wollen?</string>
+    <string name="sett_toast_reset">Einstellungen zurückgesetzt</string>
+    <string name="statusOC_nbRemoteFiles">Dateien auf ownCloud Server</string>
+    <string name="status_nbFiles">Dateien in aktuellen Anzeigeordner</string>
+    <string name="status_ownCloud">Status - ownCloud</string>
 </resources>

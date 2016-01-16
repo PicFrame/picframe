@@ -12,6 +12,9 @@
 * Want to develop? - “Import Project” into Android Studio and you should be good to go.
 * Want to build a signed apk without developing? - Use the “build-picframe.bat” script in the folder where it’s located.
 
+### Adding example photographs
+To include example photographs to be displayed whenever the selected picture source folder is empty, include six pictures named ex0, ex1, ex2, ex3, ex4, ex5 in the res/drawable folder of PicFrame.
+
 ### Branching strategy
 This repository holds two branches with an infinite lifetime:
 
@@ -60,5 +63,9 @@ You should have received a copy of the GNU General Public License
 along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Third party libraries
-PicFrame uses ownCloud Android Library (https://github.com/owncloud/android-library).
-For PicFrame, ownCloud Android Library source code was altered in two places, as seen in this commit https://github.com/PicFrame/android-library/commit/3d57985c2f041b07ae59d46146de9b2e567de951
+PicFrame uses ownCloud Android Library (https://github.com/owncloud/android-library), which is available under MIT license.
+
+ownCloud Android Library uses Apache JackRabbit, licensed under Apache License, Version 2.0.
+Apache JackRabbit depends on Commons HTTPClient licensed under Apache License, Version 2.0.
+
+For PicFrame, ownCloud Android Library source code was altered in two places; details are available in this commit: https://github.com/PicFrame/android-library/commit/3d57985c2f041b07ae59d46146de9b2e567de951

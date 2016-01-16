@@ -30,6 +30,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -42,6 +43,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +59,9 @@ import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
+import picframe.at.picframe.service.connectionChecker.ConnectionCheck_OC;
 import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SettingsDefaults;
 import picframe.at.picframe.settings.detailsPrefScreen.DetailsPreferenceScreen;
 import picframe.at.picframe.settings.MySwitchPref;
 import picframe.at.picframe.settings.detailsPrefScreen.ExtSdPrefs;
@@ -203,6 +207,13 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                         getString(R.string.sett_key_password).equals(key) ||
                         getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
                 setLoginStatus(false);
+                if (!AppData.getUserName().equals("") &&
+                        !AppData.getUserPassword().equals("") &&
+                        !AppData.getSourcePath().equals("") &&
+                        !AppData.getSourcePath().equals(SettingsDefaults
+                                .getDefaultValueForKey(R.string.sett_key_srcpath_owncloud))) {
+                    new Handler().post(new ConnectionCheck_OC());
+                }
             } else if (getString(R.string.sett_key_loginCheckButton).equals(key)) {
                 alarmScheduler.scheduleAlarm();
             }
@@ -229,6 +240,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             if (mPref instanceof ListPreference) {
 //                mPrefValue = ((ListPreference)mPref).getEntry() == null ? "" :  ((ListPreference)mPref).getEntry().toString();
                 mPrefValue = (String) mPrefs.getAll().get(key);
+                if (mPrefValue != ((ListPreference) mPref).getValue()) {
+                    ((ListPreference) mPref).setValue(mPrefValue);
+                }
                 int index = ((ListPreference) mPref).findIndexOfValue(mPrefValue);
                 mPrefValue = (String)((ListPreference) mPref).getEntries()[index];
             } else if (mPref instanceof EditTextPreference) {
@@ -384,7 +398,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                             public void onClick(DialogInterface dialog, int which) {
                                 debug("in click on yes!");
                                 resetSettingsToDefault();
-                                Toast.makeText(SettingsActivity.this, "Reset settings!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(SettingsActivity.this, R.string.sett_toast_reset, Toast.LENGTH_SHORT).show();
                                 updateAllFieldTitles();
                             }
                         });
@@ -409,6 +423,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (preference instanceof PreferenceScreen) {
             setUpNestedScreen((PreferenceScreen) preference);
         }
+        updateAllFieldTitles();
         return false;
     }
 
@@ -451,12 +466,51 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         }
         //list.addView(detailsPrefScreenToAdd.getStatusViewGroup(), 1); //TODO
         bar.setTitle(preferenceScreen.getTitle());
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogI) {
+                if (AppData.getLoginSuccessful()) {
+                    dialogI.dismiss();
+                } else {
+                    showNotConnectedDialog(dialog);
+                }
+            }
+        });
         bar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialog.dismiss();
+                if (AppData.getLoginSuccessful()) {
+                    dialog.dismiss();
+                } else {
+                    showNotConnectedDialog(dialog);
+                }
             }
         });
+    }
+
+    private void showNotConnectedDialog(final Dialog dialog) {
+        AlertDialog notConnectedAlert = new AlertDialog.Builder(SettingsActivity.this)
+                .setMessage(R.string.sett_dialog_notConnected_message)
+                .setPositiveButton(R.string.sett_yes,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialog.dismiss();
+                                dialogInterface.dismiss();
+                            }
+                        })
+                .setNegativeButton(R.string.sett_no,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                                dialog.show();
+                            }
+                        })
+                .create();
+        notConnectedAlert.getWindow().setGravity(Gravity.CENTER);
+        notConnectedAlert.setCancelable(false);
+        notConnectedAlert.show();
     }
 
     private void debug(String msg) { if (DEBUG) { Log.d(TAG, msg); } }
@@ -468,18 +522,17 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
         @Override
         public void onReceive(Context context, Intent intent) {
-           /* if (intent != null) {
-                // received an intent to update the viewpager
+            if (intent != null) {
                 if (Keys.ACTION_LOGINSTATUSSUCCESS.equals(intent.getAction())) {
-                    if (DEBUG)  Log.d(TAG, "received 'loginSuccess' action via broadcast");
-                    Toast.makeText(getApplicationContext(), "LOGINSUCCESS", Toast.LENGTH_SHORT).show();
+                    debug("received 'loginSuccess' action via broadcast");
+                    Toast.makeText(getApplicationContext(), R.string.sett_toast_loginSuccess, Toast.LENGTH_SHORT).show();
 //TODO
                 } else if (Keys.ACTION_LOGINSTATUSFAILURE.equals(intent.getAction())) {
-                    if (DEBUG)  Log.d(TAG, "received 'loginFailure' action via boadcast");
-                    Toast.makeText(getApplicationContext(), "LOGINFAILURE", Toast.LENGTH_SHORT).show();
+                    debug("received 'loginFailure' action via boadcast");
+                    Toast.makeText(getApplicationContext(), R.string.sett_toast_loginFailure, Toast.LENGTH_SHORT).show();
 //TODO
                 }
-            }*/
+            }
         }
     }
 }

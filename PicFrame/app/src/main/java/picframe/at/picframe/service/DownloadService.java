@@ -24,13 +24,14 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.activities.MainActivity;
+import picframe.at.picframe.helper.GlobalPhoneFuncs;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.service.downloader.Downloader;
 import picframe.at.picframe.service.downloader.Downloader_OC;
-import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SettingsDefaults;
 
 
 public class DownloadService extends Service implements ServiceCallbacks {
@@ -45,6 +46,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
     private Downloader downloader;
     private boolean downloading;
     private boolean finished;
+    private Intent progressIntent;
 
     // arguments for the downloader class
     private HashMap<String, Object> args;
@@ -81,13 +83,17 @@ public class DownloadService extends Service implements ServiceCallbacks {
         if (notificationBuilder == null)
             notificationBuilder = new NotificationCompat.Builder(this);
 
-        // set up Intent to open activity
+        // set up Intent to open activity from notification
         mainActIntent = new Intent(this, MainActivity.class);
         mainActIntent.addCategory(Intent.CATEGORY_DEFAULT);
-        // set up Intent to stop download/service
+        // set up Intent to stop download/service from notification
         stopDownloadIntent = new Intent(this, DownloadService.class);
-        stopDownloadIntent.setAction(Keys.ACTION_STOPDOWNLOAD);
         stopDownloadIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        stopDownloadIntent.setAction(Keys.ACTION_STOPDOWNLOAD);
+        // set up Intent for progress updates
+        progressIntent  = new Intent();
+        progressIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        progressIntent.setAction(Keys.ACTION_PROGRESSUPDATE);
 
         if (!downloading) {
             // check for problems only in mainactivity (after settings changed) (checkForProblemsAndShowToasts)
@@ -209,9 +215,10 @@ public class DownloadService extends Service implements ServiceCallbacks {
         OwnCloudClient mClientOwnCloud;
 
         Uri serverUri = Uri.parse(AppData.getSourcePath());
-        if (AppData.getUserName().equals("") || AppData.getUserPassword().equals("") ||
+        if (AppData.getUserName().equals(SettingsDefaults.getDefaultValueForKey(R.string.sett_key_username)) ||
+                AppData.getUserPassword().equals(SettingsDefaults.getDefaultValueForKey(R.string.sett_key_password)) ||
+                AppData.getSourcePath().equals(SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_owncloud)) ||
                 AppData.getSourcePath().equals("") ||
-                AppData.getSourcePath().equals("https://") || // TODO get from Default
                 serverUri == null) {
             return null;
         }
@@ -266,8 +273,6 @@ public class DownloadService extends Service implements ServiceCallbacks {
                     .setOngoing(true)
                     .setAutoCancel(false);                          // to stop from dismissing notif. on click
         // START
-            Intent progressBarIntent = new Intent();
-            progressBarIntent.setAction(Keys.ACTION_PROGRESSUPDATE);
             if (Keys.NotificationStates.START.equals(notification_state)) {
                 notificationBuilder
                         .setTicker(getString(R.string.app_name) + " - " + getString(R.string.service_notif_startDownloadTicker))
@@ -276,19 +281,13 @@ public class DownloadService extends Service implements ServiceCallbacks {
                         .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.service_notif_actionStop), stopDownloadPendIntent)
                         .setSubText(null)
                         .setProgress(100, 50, true);
-                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, true);
-                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, 50);
-
         // PROGRESS
             } else if (Keys.NotificationStates.PROGRESS.equals(notification_state)) {
                 notificationBuilder
                         .setContentText(getString(R.string.service_notif_progressText) + " " + progress + "%")
                         .setSubText(null)
                         .setProgress(100, progress, false);
-                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, false);
-                progressBarIntent.putExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, progress);
             }
-            broadcastManager.sendBroadcast(new Intent().setAction(Keys.ACTION_PROGRESSUPDATE));
         } else if (Keys.NotificationStates.FAILURE.equals(notification_state)
                 || Keys.NotificationStates.INTERRUPT.equals(notification_state)
                 || Keys.NotificationStates.STOP.equals(notification_state)
@@ -343,7 +342,11 @@ public class DownloadService extends Service implements ServiceCallbacks {
     @Override
     public void publishProgress(float progressPercent, boolean progressIndeterminate) {
         Log.d(TAG, "SHOW NOTIFICATION PROGRESS: " + progressPercent);
-        showNotification(Keys.NotificationStates.PROGRESS, Math.round(progressPercent), null);
+        int percent = Math.round(progressPercent);
+        showNotification(Keys.NotificationStates.PROGRESS, percent, null);
+        progressIntent.putExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, percent);
+        progressIntent.putExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, progressIndeterminate);
+        broadcastManager.sendBroadcast(progressIntent);
     }
 
     @Override
