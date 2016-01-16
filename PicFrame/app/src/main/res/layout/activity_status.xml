@@ -28,12 +28,6 @@
             android:orientation="horizontal"
             android:paddingBottom="5dp">
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/status_nbFiles"
-                android:layout_toLeftOf="@id/status_reference_colon"/>
-            <TextView
                 android:id="@+id/status_reference_colon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -42,6 +36,12 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/status_nbFiles"
+                android:layout_toLeftOf="@id/status_reference_colon"/>
             <TextView
                 android:id="@+id/status_nbFiles"
                 android:layout_width="wrap_content"
@@ -64,12 +64,6 @@
             android:orientation="horizontal"
             android:paddingBottom="5dp">
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/statusOC_nbRemoteFiles"
-                android:layout_toLeftOf="@id/status_reference_colon2"/>
-            <TextView
                 android:id="@+id/status_reference_colon2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -78,6 +72,12 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/statusOC_nbRemoteFiles"
+                android:layout_toLeftOf="@id/status_reference_colon2"/>
             <TextView
                 android:id="@+id/statusOC_nbRomoteFiles"
                 android:layout_width="wrap_content"
