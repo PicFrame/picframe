@@ -132,8 +132,7 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
         myUpdatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Log.d("Bla 1: ", String.valueOf(AppData.getUpdateIntervalInHours()));
-                alarmScheduler.scheduleAlarm();
+//                alarmScheduler.scheduleAlarm();
                 if (!"-1".equals(String.valueOf(newValue)) && !AppData.getLoginSuccessful()) {
                     Toast.makeText(mSettAct, R.string.sett_toast_noAlarmSet, Toast.LENGTH_SHORT).show();
                 }
@@ -141,7 +140,6 @@ public class OwnCloudPrefs implements IDetailsPreferenceScreen {
             }
         });
         allPrefs.add(myUpdatePref);
-        Log.d("Bla 2: ", String.valueOf(AppData.getUpdateIntervalInHours()));
     }
 
     private void createLoginCheckButton() {

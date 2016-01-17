@@ -21,6 +21,8 @@ public class StatusActivity extends ActionBarActivity {
     private TextView nbFiles;
     private TextView currentFolder;
     private TextView nextDownload;
+    private TextView nbRemoteOCFiles;
+    private TextView lastLoginCheck;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +32,8 @@ public class StatusActivity extends ActionBarActivity {
         nbFiles = (TextView) findViewById(R.id.status_nbFiles);
         currentFolder = (TextView) findViewById(R.id.status_currentFolder);
         nextDownload = (TextView) findViewById(R.id.statusOC_nextAlarm);
+        nbRemoteOCFiles= (TextView) findViewById(R.id.statusOC_nbRomoteFiles);
+        lastLoginCheck = (TextView) findViewById(R.id.statusOC_loginCheck);
     }
 
     protected void onResume(){
@@ -53,23 +57,24 @@ public class StatusActivity extends ActionBarActivity {
     }
 
     private void setOwnCloudStatus(){
-        if(! (AppData.getSourceType() == AppData.sourceTypes.OwnCloud) )
-            return;
         String remoteOCFolder = "";
-        String remoteOCFileCount;
-        String nextDownload;
-        String loginCheckResult;
+        String remoteOCFileCount = "-";
+        String nextDownload = getString(R.string.status_downloadIntervalNoDownload);
+        String loginCheckResult = "-";
 
+        if((AppData.getSourceType() == AppData.sourceTypes.OwnCloud) ) {
 
-        Long nextAlarm = AppData.getNextAlarmTime();
-        if(nextAlarm == -1 || nextAlarm < new GregorianCalendar().getTimeInMillis()){
-            nextDownload = "No download scheduled";
-        } else {
-            TimeConverter tc = new TimeConverter();
-            nextDownload = tc.millisecondsToDate(nextAlarm);
+            Long nextAlarm = AppData.getNextAlarmTime();
+            if (nextAlarm != -1 && new GregorianCalendar().getTimeInMillis() >= nextAlarm) {
+                TimeConverter tc = new TimeConverter();
+                nextDownload = tc.millisecondsToDate(nextAlarm);
+            }
+
+            loginCheckResult = (AppData.getLoginSuccessful()) ? "Successful" : "Failed";
         }
         this.nextDownload.setText(nextDownload);
-
+        this.nbRemoteOCFiles.setText(remoteOCFileCount);
+        this.lastLoginCheck.setText(loginCheckResult);
     }
 
 }

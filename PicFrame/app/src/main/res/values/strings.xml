@@ -861,6 +861,7 @@
     <string name="sett_key_direction">toogledirection</string>
     <string name="sett_key_lastAlarmTime">alarmtime</string>
     <string name="sett_key_nextAlarmTime">nextalarmtime</string>
+    <string name="status_downloadIntervalNoDownload">No download scheduled</string>
     <!-- STATUS STRINGS END -->
 
 

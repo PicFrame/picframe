@@ -214,7 +214,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                                 .getDefaultValueForKey(R.string.sett_key_srcpath_owncloud))) {
                     new Handler().post(new ConnectionCheck_OC());
                 }
-            } else if (getString(R.string.sett_key_loginCheckButton).equals(key)) {
+            } else if (getString(R.string.sett_key_loginCheckButton).equals(key) ||
+                    getString(R.string.sett_key_downloadInterval).equals(key)) {
                 alarmScheduler.scheduleAlarm();
             }
         }
