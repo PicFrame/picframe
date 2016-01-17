@@ -119,4 +119,6 @@
     <string name="statusOC_nbRemoteFiles">Dateien auf ownCloud Server</string>
     <string name="status_nbFiles">Dateien in aktuellen Anzeigeordner</string>
     <string name="status_ownCloud">Status - ownCloud</string>
+    <string name="statusOC_nextAlarm">Nächster Download</string>
+    <string name="statusOC_noAlarm">Kein Download geplant</string>
 </resources>

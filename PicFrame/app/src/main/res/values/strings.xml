@@ -846,11 +846,16 @@
     <!-- ABOUT STRINGS END -->
     <!-- STATUS STRINGS -->
     <string name="status" translatable="false">Status</string>
-    <string name="status_nbFiles">Files in current display folder:</string>
+    <string name="status_nbFiles">Files in current display folder</string>
     <string name="ownCloud">ownCloud Status</string>
     <string name="status_local">Status - General</string>
     <string name="status_ownCloud">Status - ownCloud</string>
-    <string name="statusOC_nbRemoteFiles">Files on ownCloud server:</string>
+    <string name="statusOC_nbRemoteFiles">Files on ownCloud server</string>
+    <string name="statusOC_nextAlarm">Next download</string>
+    <string name="statusOC_noAlarm">No download scheduled</string>
+    <string name="statusOC_loginCheck">Connection status</string>
+    <string name="status_currentFolder">Current display folder</string>
+    <string name="status_buttonAbout">Developped by, Photo credit, Licenses</string>
     <!-- STATUS STRINGS END -->
 
 
