@@ -18,6 +18,8 @@ import picframe.at.picframe.settings.AppData;
 public class AlarmScheduler {
     private static final String TAG = AlarmScheduler.class.getSimpleName();
     private static AlarmManager alarmManager;
+    private String nextAlarmAsDate;
+    Long nextAlarmTime;
 
     public AlarmScheduler(){
         if(alarmManager == null)
@@ -28,11 +30,15 @@ public class AlarmScheduler {
 
         deleteAlarm();
         if(AppData.getSourceType() != AppData.sourceTypes.OwnCloud
-                || AppData.getUpdateIntervalInHours() == -1
-                || !AppData.getLoginSuccessful())
+                || AppData.getUpdateIntervalInHours() == -1)
         {
+            Log.d(TAG,"NExt alarm: -1");
+            AppData.setNextAlarmTime(-1L);
+            return -1L;
+        } else if (!AppData.getLoginSuccessful()){
             return -1L;
         }
+
 
         TimeConverter tc = new TimeConverter();
 
@@ -45,8 +51,9 @@ public class AlarmScheduler {
         Log.d(TAG, "Update Interval: "+String.valueOf(AppData.getUpdateIntervalInHours()));
         Log.d(TAG, "nextAlarm      : " + tc.millisecondsToDate(nextAlarmTime));
 
-        // If the time for the next scheduled alarm is passed, download immediately
-        if(nextAlarmTime < currentTime){
+        // If no alarm is currently scheduled, or if the time for the next scheduled alarm is passed,
+        // download immediately
+        if(AppData.getNextAlarmTime() == -1 || nextAlarmTime < currentTime){
             Log.d(TAG, tc.millisecondsToDate(nextAlarmTime)+" < "+tc.millisecondsToDate(currentTime));
             Log.d(TAG, "previously scheduled alarm is in the past; start new alarm in 1 minute");
             nextAlarmTime = currentTime + 2 * 1000 * 60;
@@ -55,6 +62,8 @@ public class AlarmScheduler {
         }
 
         setAlarm(nextAlarmTime);
+        AppData.setNextAlarmTime(nextAlarmTime);
+        nextAlarmAsDate = tc.millisecondsToDate(nextAlarmTime);
         System.out.println("Start time: " + tc.millisecondsToDate(currentTime) + " " + (currentTime));
         System.out.println("Go OFF time: " + tc.millisecondsToDate(nextAlarmTime) + " " + nextAlarmTime);
         return nextAlarmTime;
@@ -72,6 +81,11 @@ public class AlarmScheduler {
         PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
         alarmManager.cancel(p);
         p.cancel();
+    }
+
+    public String getNextAlarmAsDate(){
+        TimeConverter tc = new TimeConverter();
+        return tc.millisecondsToDate(AppData.getNextAlarmTime());
     }
 
 }

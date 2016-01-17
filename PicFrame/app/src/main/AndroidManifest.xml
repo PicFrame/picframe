@@ -51,7 +51,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.MainActivity" />
         </activity>
-
+        <activity
+            android:name=".activities.StatusActivity"
+            android:label="@string/title_activity_status"
+            android:parentActivityName=".activities.MainActivity"
+            android:screenOrientation="sensorLandscape" >
+            <!-- Parent act. meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.MainActivity" />
+        </activity>
         <!-- Register the Alarm Receiver -->
         <receiver android:name=".helper.alarm.AlarmReceiver">
             <intent-filter>

@@ -179,7 +179,7 @@
         android:layout_height="wrap_content"
         android:text="@string/status_buttonAbout"
         android:id="@+id/status_buttonAbout"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 

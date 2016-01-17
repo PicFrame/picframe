@@ -121,4 +121,7 @@
     <string name="status_ownCloud">Status - ownCloud</string>
     <string name="statusOC_nextAlarm">Nächster Download</string>
     <string name="statusOC_noAlarm">Kein Download geplant</string>
+    <string name="statusOC_loginCheck">Verbindungsstatus</string>
+    <string name="status_buttonAbout">Entwickler, Fotografen, Lizenen</string>
+    <string name="status_currentFolder">Aktueller Ordner</string>
 </resources>

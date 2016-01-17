@@ -136,8 +136,9 @@ public class AppData {
     // holds the time-interval to initiate the next download of images in hours
     public static int getUpdateIntervalInHours() {
         return Integer.parseInt(mPrefs.getString(getAppContext().getString(R.string.sett_key_downloadInterval),
-                (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_downloadInterval)));
+               (String) SettingsDefaults.getDefaultValueForKey(R.string.sett_key_downloadInterval)));
     }
+
 
     // flag whether to include images in subfolders (on=true)
     public static boolean getRecursiveSearch() {
@@ -193,30 +194,37 @@ public class AppData {
     }
 
     public static int getCurrentPage(){
-        return mPrefs.getInt("currentpage", 1);
+        return mPrefs.getInt(getAppContext().getString(R.string.sett_key_currentPage), 1);
     }
 
     public static void setCurrentPage(int page){
-        mPrefs.edit().putInt("currentpage", page).commit();
+                mPrefs.edit().putInt(getAppContext().getString(R.string.sett_key_currentPage), page).commit();
     }
 
     // flag for slideshow direction
     public static boolean getDirection() {
-        return mPrefs.getBoolean("toogledirection", true);
+        return mPrefs.getBoolean(getAppContext().getString(R.string.sett_key_direction), true);
     }
     public static void setDirection(boolean toggleDirection) {
-        mPrefs.edit().putBoolean("toogledirection", toggleDirection).commit();
+        mPrefs.edit().putBoolean(getAppContext().getString(R.string.sett_key_direction), toggleDirection).commit();
     }
 
     // last alarm time in millisecs
     public static Long getLastAlarmTime() {
-        return mPrefs.getLong("alarmtime", -1);
+        return mPrefs.getLong(getAppContext().getString(R.string.sett_key_lastAlarmTime), -1);
     }
 
     public static void setLastAlarmTime (Long time) {
-        mPrefs.edit().putLong("alarmtime", time).commit();
+        mPrefs.edit().putLong(getAppContext().getString(R.string.sett_key_lastAlarmTime), time).commit();
     }
 
+    public static Long getNextAlarmTime() {
+        return mPrefs.getLong(getAppContext().getString(R.string.sett_key_nextAlarmTime), -1);
+    }
+
+    public static void setNextAlarmTime (Long time) {
+        mPrefs.edit().putLong(getAppContext().getString(R.string.sett_key_nextAlarmTime), time).commit();
+    }
 /* TODO
     // holds the remaining time to display the current image
     public static int getRemainingDisplayTime() {

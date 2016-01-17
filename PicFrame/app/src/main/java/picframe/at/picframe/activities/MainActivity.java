@@ -265,7 +265,7 @@ public class MainActivity extends ActionBarActivity {
                 startService(startDownloadIntent);
                 return true;
             case R.id.action_about:
-                myIntent = new Intent(this, AboutActivity.class);
+                myIntent = new Intent(this, StatusActivity.class);
                 break;
             default:
                 return super.onOptionsItemSelected(item);

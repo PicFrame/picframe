@@ -855,7 +855,12 @@
     <string name="statusOC_noAlarm">No download scheduled</string>
     <string name="statusOC_loginCheck">Connection status</string>
     <string name="status_currentFolder">Current display folder</string>
-    <string name="status_buttonAbout">Developped by, Photo credit, Licenses</string>
+    <string name="status_buttonAbout">Developed by, Photo credit, Licenses</string>
+    <string name="title_activity_status">Status</string>
+    <string name="sett_key_currentPage">currentpage</string>
+    <string name="sett_key_direction">toogledirection</string>
+    <string name="sett_key_lastAlarmTime">alarmtime</string>
+    <string name="sett_key_nextAlarmTime">nextalarmtime</string>
     <!-- STATUS STRINGS END -->
 
 
