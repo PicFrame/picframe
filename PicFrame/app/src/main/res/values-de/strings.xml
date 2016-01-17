@@ -124,4 +124,6 @@
     <string name="statusOC_loginCheck">Verbindungsstatus</string>
     <string name="status_buttonAbout">Entwickler, Fotografen, Lizenen</string>
     <string name="status_currentFolder">Aktueller Ordner</string>
+    <string name="status_downloadIntervalNoDownload">Kein Download geplant</string>
+    <string name="title_activity_status">Status</string>
 </resources>

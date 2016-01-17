@@ -857,10 +857,10 @@
     <string name="status_currentFolder">Current display folder</string>
     <string name="status_buttonAbout">Developed by, Photo credit, Licenses</string>
     <string name="title_activity_status">Status</string>
-    <string name="sett_key_currentPage">currentpage</string>
-    <string name="sett_key_direction">toogledirection</string>
-    <string name="sett_key_lastAlarmTime">alarmtime</string>
-    <string name="sett_key_nextAlarmTime">nextalarmtime</string>
+    <string name="sett_key_currentPage" translatable="false">currentpage</string>
+    <string name="sett_key_direction" translatable="false">toogledirection</string>
+    <string name="sett_key_lastAlarmTime" translatable="false">alarmtime</string>
+    <string name="sett_key_nextAlarmTime" translatable="false">nextalarmtime</string>
     <string name="status_downloadIntervalNoDownload">No download scheduled</string>
     <!-- STATUS STRINGS END -->
 
