@@ -16,7 +16,6 @@ import java.util.GregorianCalendar;
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.alarm.TimeConverter;
-import picframe.at.picframe.service.folderChecker.RemoteFolderListDownloader_OC;
 import picframe.at.picframe.settings.AppData;
 
 public class StatusActivity extends ActionBarActivity {
@@ -84,23 +83,6 @@ public class StatusActivity extends ActionBarActivity {
             }
 
             loginCheckResult = (AppData.getLoginSuccessful()) ? "Successful" : "Failed";
-
-            Context context = getApplicationContext();
-            ServiceConnection serviceConnection = new ServiceConnection() {
-                @Override
-                public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-
-                }
-
-                @Override
-                public void onServiceDisconnected(ComponentName componentName) {
-
-                }
-            };
-            Intent readFoldersIntent = new Intent(context, RemoteFolderListDownloader_OC.class);
-            readFoldersIntent.setAction("FOLDERS");
-            context.bindService(readFoldersIntent,serviceConnection,Context.BIND_AUTO_CREATE);
-
         }
         this.nextDownload.setText(nextDownload);
 //        this.nbRemoteOCFiles.setText(remoteOCFileCount);
