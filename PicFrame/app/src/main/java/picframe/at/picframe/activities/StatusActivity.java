@@ -1,35 +1,29 @@
 package picframe.at.picframe.activities;
 
-import android.app.AlarmManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import java.util.GregorianCalendar;
-import java.util.logging.Handler;
 
 import picframe.at.picframe.R;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.alarm.AlarmScheduler;
 import picframe.at.picframe.helper.alarm.TimeConverter;
-import picframe.at.picframe.service.connectionChecker.ConnectionCheck_OC;
-import picframe.at.picframe.service.folderChecker.FolderReaderService;
 import picframe.at.picframe.service.folderChecker.RemoteFolderListDownloader_OC;
 import picframe.at.picframe.settings.AppData;
 
 public class StatusActivity extends ActionBarActivity {
 
-    private Button aboutButton;
     private TextView nbFiles;
     private TextView currentFolder;
     private TextView nextDownload;
-    private TextView nbRemoteOCFiles;
     private TextView lastLoginCheck;
 
     @Override
@@ -42,7 +36,7 @@ public class StatusActivity extends ActionBarActivity {
         nextDownload = (TextView) findViewById(R.id.statusOC_nextAlarm);
 //        nbRemoteOCFiles= (TextView) findViewById(R.id.statusOC_nbRomoteFiles);
         lastLoginCheck = (TextView) findViewById(R.id.statusOC_loginCheck);
-        aboutButton = (Button) findViewById(R.id.status_buttonAbout);
+        Button aboutButton = (Button) findViewById(R.id.status_buttonAbout);
         aboutButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -90,8 +84,23 @@ public class StatusActivity extends ActionBarActivity {
             }
 
             loginCheckResult = (AppData.getLoginSuccessful()) ? "Successful" : "Failed";
-//            android.os.Handler handler = new android.os.Handler();
-//            handler.post(new RemoteFolderListDownloader_OC(handler))
+
+            Context context = getApplicationContext();
+            ServiceConnection serviceConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName componentName) {
+
+                }
+            };
+            Intent readFoldersIntent = new Intent(context, RemoteFolderListDownloader_OC.class);
+            readFoldersIntent.setAction("FOLDERS");
+            context.bindService(readFoldersIntent,serviceConnection,Context.BIND_AUTO_CREATE);
+
         }
         this.nextDownload.setText(nextDownload);
 //        this.nbRemoteOCFiles.setText(remoteOCFileCount);

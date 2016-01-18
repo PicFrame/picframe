@@ -201,7 +201,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             //update display/transition title
             updateFieldTitle(key);
             if (getString(R.string.sett_key_srctype).equals(key)) {
-                setLoginStatus(false);
                 createCat2Fields();
             } else if (getString(R.string.sett_key_username).equals(key)  ||
                         getString(R.string.sett_key_password).equals(key) ||
