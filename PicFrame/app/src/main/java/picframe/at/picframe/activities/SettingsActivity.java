@@ -202,6 +202,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             updateFieldTitle(key);
             if (getString(R.string.sett_key_srctype).equals(key)) {
                 createCat2Fields();
+                alarmScheduler.scheduleAlarm();
             } else if (getString(R.string.sett_key_username).equals(key)  ||
                         getString(R.string.sett_key_password).equals(key) ||
                         getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
