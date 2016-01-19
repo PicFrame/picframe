@@ -18,6 +18,10 @@
             android:name=".service.DownloadService"
             android:exported="false" >
         </service>
+        <service
+            android:name=".folder_picker.FolderPickerService"
+            android:exported="false" >
+        </service>
         <activity
             android:launchMode="singleTask"
             android:name=".activities.MainActivity"

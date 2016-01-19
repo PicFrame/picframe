@@ -14,8 +14,11 @@ import android.widget.TextView;
 import java.util.GregorianCalendar;
 
 import picframe.at.picframe.R;
+import picframe.at.picframe.folder_picker.FolderPickerService;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.helper.alarm.TimeConverter;
+import picframe.at.picframe.service.DownloadService;
 import picframe.at.picframe.settings.AppData;
 
 public class StatusActivity extends ActionBarActivity {
@@ -87,6 +90,12 @@ public class StatusActivity extends ActionBarActivity {
         this.nextDownload.setText(nextDownload);
 //        this.nbRemoteOCFiles.setText(remoteOCFileCount);
         this.lastLoginCheck.setText(loginCheckResult);
+
+        Context context = getApplicationContext();
+        Intent startDownloadIntent = new Intent(context, FolderPickerService.class);
+        startDownloadIntent.setAction("readfolders");
+        context.startService(startDownloadIntent);
+
     }
 
 }
