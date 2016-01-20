@@ -80,9 +80,33 @@ ECHO.
 ECHO ^Welcome to the PicFrame build script.
 ECHO ^It prepares and creates a picframe apk.
 ECHO.
-ECHO ^To start off, please verify the following directories:
-IF %androidHome%==empty GOTO :ANDROID
+ECHO ^Verifying home variables:
 IF %javaHome%==empty    GOTO :JAVA
+IF %androidHome%==empty GOTO :ANDROID
+
+:JAVA
+IF !javaHomeFound!==TRUE (
+	ECHO ^Java directory....
+	ECHO ^JAVA_HOME: "%JAVA_HOME%"
+	@REM escape brackets, esp. in case of JAVA_HOME being located in window's Program Files x86 folder
+	SET "javaHome=%JAVA_HOME%"
+	SET javaHome=!javaHome:^(="^("!
+	SET javaHome=!javaHome:^)="^)"!
+	ECHO ^Press any key to proceed.
+	PAUSE>NUL
+)  ELSE IF !javaHomeFound!==FALSE (
+	ECHO ^Java Home Variable is not set.
+	ECHO ^Please set the path to your jdk in your home variables and restart the script.
+	GOTO :EXIT
+@Rem	ECHO ^JAVA_HOME environment variable is not set.
+@Rem	ECHO ^Please enter the path to your java jdk folder:
+@Rem	SET /p input="Enter path: "
+@Rem	IF !input!==empty (
+@Rem		GOTO :TOP
+@Rem	) ELSE (
+@Rem		SET "javaHome=!input!"
+@Rem	)
+)
 
 :ANDROID
 IF !androidHomeFound!==TRUE (
@@ -110,27 +134,7 @@ IF !androidHomeFound!==TRUE (
 SET "platformPath=%androidHome%/platforms/android-%platformVersionNeeded%/"
 ECHO !platformPath!
 
-:JAVA
-IF !javaHomeFound!==TRUE (
-	ECHO ^Java directory....
-	ECHO ^JAVA_HOME: "%JAVA_HOME%"
-	@REM escape brackets, esp. in case of JAVA_HOME being located in window's Program Files x86 folder
-	SET "javaHome=%JAVA_HOME%"
-	SET javaHome=!javaHome:^(="^("!
-	SET javaHome=!javaHome:^)="^)"!
-	ECHO ^Press any key to proceed.
-	PAUSE>NUL
-)  ELSE IF !javaHomeFound!==FALSE (
-	ECHO ^JAVA_HOME environment variable is not set.
-	ECHO ^Please enter the path to your java jdk folder:
-	SET /p input="Enter path: "
-	IF !input!==empty (
-		GOTO :TOP
-	) ELSE (
-		SET "javaHome=!input!"
-	)
-)
-@REM ECHO android: !androidHome! -- java: !javaHome!... & pause
+ECHO android: !androidHome! -- java: !javaHome!... & pause
 
 
 :versionCheck
