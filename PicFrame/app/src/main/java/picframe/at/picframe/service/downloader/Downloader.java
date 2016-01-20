@@ -1,6 +1,6 @@
-package picframe.at.picframe.downloader;
+package picframe.at.picframe.service.downloader;
 
-import picframe.at.picframe.service_broadcast.ServiceCallbacks;
+import picframe.at.picframe.service.ServiceCallbacks;
 
 public abstract class Downloader extends Thread {
     protected ServiceCallbacks serviceCallbacks;

@@ -1,4 +1,4 @@
-package picframe.at.picframe.service_broadcast;
+package picframe.at.picframe.service;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -24,20 +24,20 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import picframe.at.picframe.Keys;
 import picframe.at.picframe.R;
 import picframe.at.picframe.activities.MainActivity;
-import picframe.at.picframe.downloader.Downloader;
-import picframe.at.picframe.downloader.Downloader_OC;
 import picframe.at.picframe.helper.GlobalPhoneFuncs;
-import picframe.at.picframe.helper.settings.AppData;
+import picframe.at.picframe.helper.Keys;
+import picframe.at.picframe.service.downloader.Downloader;
+import picframe.at.picframe.service.downloader.Downloader_OC;
+import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SettingsDefaults;
 
 
 public class DownloadService extends Service implements ServiceCallbacks {
     private final String TAG = this.getClass().getSimpleName();
     private static final boolean DEBUG = true;
 
-    private AppData settObj;
     private LocalBroadcastManager broadcastManager;
     private NotificationCompat.Builder notificationBuilder;
     private NotificationManager notificationManager;
@@ -46,6 +46,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
     private Downloader downloader;
     private boolean downloading;
     private boolean finished;
+    private Intent progressIntent;
 
     // arguments for the downloader class
     private HashMap<String, Object> args;
@@ -82,16 +83,17 @@ public class DownloadService extends Service implements ServiceCallbacks {
         if (notificationBuilder == null)
             notificationBuilder = new NotificationCompat.Builder(this);
 
-        // set up Intent to open activity
+        // set up Intent to open activity from notification
         mainActIntent = new Intent(this, MainActivity.class);
         mainActIntent.addCategory(Intent.CATEGORY_DEFAULT);
-        // set up Intent to stop download/service
+        // set up Intent to stop download/service from notification
         stopDownloadIntent = new Intent(this, DownloadService.class);
-        stopDownloadIntent.setAction(Keys.ACTION_STOPDOWNLOAD);
         stopDownloadIntent.addCategory(Intent.CATEGORY_DEFAULT);
-
-        // load shared preferences settingsObject
-        settObj = AppData.getINSTANCE();
+        stopDownloadIntent.setAction(Keys.ACTION_STOPDOWNLOAD);
+        // set up Intent for progress updates
+        progressIntent  = new Intent();
+        progressIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        progressIntent.setAction(Keys.ACTION_PROGRESSUPDATE);
 
         if (!downloading) {
             // check for problems only in mainactivity (after settings changed) (checkForProblemsAndShowToasts)
@@ -113,7 +115,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
             /* create downloader object according to selected type */
             // if type is external sd, no download should happen (should never be the case)
             AppData.sourceTypes tmpSource;
-            tmpSource = settObj.getSourceType();
+            tmpSource = AppData.getSourceType();
             if (AppData.sourceTypes.ExternalSD.equals(tmpSource)) {
                 Log.d(TAG, "FAILURE! DownloadService started, while SD Card is selected");
                 stopSelf();
@@ -176,10 +178,10 @@ public class DownloadService extends Service implements ServiceCallbacks {
         boolean dirCreated;
         // check if folders exist, if not, create them
         ArrayList<String> folderList = new ArrayList<>();
-        if (DEBUG) Log.d(TAG, settObj.getExtFolderAppRoot());
-        folderList.add(settObj.getExtFolderAppRoot());
-        folderList.add(settObj.getExtFolderCachePath());
-        folderList.add(settObj.getExtFolderDisplayPath());
+        if (DEBUG) Log.d(TAG, "ExtFolderAppRoot" + AppData.getExtFolderAppRoot());
+        folderList.add(AppData.getExtFolderAppRoot());
+        folderList.add(AppData.getExtFolderCachePath());
+        folderList.add(AppData.getExtFolderDisplayPath());
         for (String folder : folderList) {
             File dir = new File(folder);
             if (dir.exists() && dir.isDirectory())
@@ -195,48 +197,28 @@ public class DownloadService extends Service implements ServiceCallbacks {
         File folder = new File(folderList.get(1));
         if (DEBUG) Log.i(TAG, "deleting files in cache dir before downloading");
         // delete all files and folders in cache folder
-        if (!recursiveDelete(folder, false)) {
-            return false;
-        }
-        File nomedia = new File(folderList.get(1) + File.separator + ".nomedia");
-        if (!nomedia.exists()) {
+        GlobalPhoneFuncs.recursiveDeletionInBackgroundThread(folder, false);
+        File noMedia = new File(folderList.get(1) + File.separator + ".noMedia");
+        if (!noMedia.exists()) {
             try {
-                if (nomedia.createNewFile()) {
-                    if (DEBUG) Log.i(TAG, "Created .nomedia file successfully");
+                if (noMedia.createNewFile()) {
+                    if (DEBUG) Log.i(TAG, "Created .noMedia file successfully");
                 }
             } catch (IOException e) {
-                if (DEBUG) Log.e(TAG, "Couldn't create .nomedia file");
+                if (DEBUG) Log.e(TAG, "Couldn't create .noMedia file");
             }
-        }
-        return true;
-    }
-
-    public boolean recursiveDelete(File dir, boolean delRoot) {
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                        return false;
-                    }
-                }
-            }
-        }
-        //noinspection SimplifiableIfStatement
-        if (delRoot) {
-            return dir.delete();
         }
         return true;
     }
 
     private HashMap<String, Object> setUpOcClientArguments() {
         OwnCloudClient mClientOwnCloud;
-        Uri serverUri = Uri.parse(settObj.getSourcePath());
-        if (settObj.getUserName().equals("") || settObj.getUserPassword().equals("") ||
-                settObj.getSourcePath().equals("") ||
-                settObj.getSourcePath().equals("https://") || // TODO get from Default
+
+        Uri serverUri = Uri.parse(AppData.getSourcePath());
+        if (AppData.getUserName().equals(SettingsDefaults.getDefaultValueForKey(R.string.sett_key_username)) ||
+                AppData.getUserPassword().equals(SettingsDefaults.getDefaultValueForKey(R.string.sett_key_password)) ||
+                AppData.getSourcePath().equals(SettingsDefaults.getDefaultValueForKey(R.string.sett_key_srcpath_owncloud)) ||
+                AppData.getSourcePath().equals("") ||
                 serverUri == null) {
             return null;
         }
@@ -245,13 +227,13 @@ public class DownloadService extends Service implements ServiceCallbacks {
         mClientOwnCloud = OwnCloudClientFactory.createOwnCloudClient(serverUri, getApplicationContext(), true);
         mClientOwnCloud.setCredentials(
                 OwnCloudCredentialsFactory.newBasicCredentials(
-                        settObj.getUserName(),
-                        settObj.getUserPassword()
+                        AppData.getUserName(),
+                        AppData.getUserPassword()
                 )
         );
         args.put(Downloader_OC.CLIENT, mClientOwnCloud);
         args.put(Downloader_OC.HANDLER, new Handler());
-        args.put(Keys.PICFRAMEPATH, settObj.getExtFolderAppRoot());
+        args.put(Keys.PICFRAMEPATH, AppData.getExtFolderAppRoot());
         args.put(Keys.CONTEXT, getApplicationContext());
     //    args.put(Downloader_OC.REMOTEFOLDER,   settObj. getRemoteFolderPath); TODO FOLDERPICKER STUFF
         args.put(Keys.CALLBACK, this);
@@ -297,6 +279,7 @@ public class DownloadService extends Service implements ServiceCallbacks {
                         .setContentText(getString(R.string.service_notif_startDownloadText))
                         .setSubText(null)
                         .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.service_notif_actionStop), stopDownloadPendIntent)
+                        .setSubText(null)
                         .setProgress(100, 50, true);
         // PROGRESS
             } else if (Keys.NotificationStates.PROGRESS.equals(notification_state)) {
@@ -359,7 +342,11 @@ public class DownloadService extends Service implements ServiceCallbacks {
     @Override
     public void publishProgress(float progressPercent, boolean progressIndeterminate) {
         Log.d(TAG, "SHOW NOTIFICATION PROGRESS: " + progressPercent);
-        showNotification(Keys.NotificationStates.PROGRESS, Math.round(progressPercent), null);
+        int percent = Math.round(progressPercent);
+        showNotification(Keys.NotificationStates.PROGRESS, percent, null);
+        progressIntent.putExtra(Keys.MSG_PROGRESSUPDATE_PERCENT, percent);
+        progressIntent.putExtra(Keys.MSG_PROGRESSUPDATE_INDITERMINATE, progressIndeterminate);
+        broadcastManager.sendBroadcast(progressIntent);
     }
 
     @Override

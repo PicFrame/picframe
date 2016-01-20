@@ -16,8 +16,8 @@ android {
         applicationId "picframe.at.picframe"
         minSdkVersion 8
         targetSdkVersion 21
-        versionCode 7
-        versionName "1.5.1"
+        versionCode 10
+        versionName "1.6.1"
     }
     buildTypes {
         release {

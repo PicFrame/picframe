@@ -1,35 +1,28 @@
-/*
-    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher
+/*    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher
 
-    This file is part of PicFrame.
+        This file is part of PicFrame.
 
-    PicFrame is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+        PicFrame is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
 
-    PicFrame is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+        PicFrame is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
+        You should have received a copy of the GNU General Public License
+        along with PicFrame.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package picframe.at.picframe.helper.settings;
+
+package picframe.at.picframe.settings;
 
 /*
 * original Source:   http://www.scorchworks.com/Blog/simple-file-dialog-for-android-applications/
 *   => heavily deleted/cleared/modified
 */
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -40,86 +33,72 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
-import picframe.at.picframe.R;
-import picframe.at.picframe.helper.local_storage.SD_Card_Helper;
 
-public class SimpleFileDialog {
-    private String m_sdcardDirectory = "";
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import picframe.at.picframe.R;
+
+public class SimpleRemoteFileDialog {
     private Context m_context;
 
-    private String m_dir = "";
+    private RemoteFolder currDir; //former m_dir
     private List<String> m_subdirs = null;
-    private SimpleFileDialogListener m_SimpleFileDialogListener = null;
+    private SimpleRemoteFileDialogListener m_SimpleRemoteFileDialogListener = null;
     private ArrayAdapter<String> m_listAdapter = null;
     private AlertDialog.Builder myDialog;
 
     //////////////////////////////////////////////////////
     // Callback interface for selected directory
     //////////////////////////////////////////////////////
-    public interface SimpleFileDialogListener {
-        public void onChosenDir(String chosenDir);
+    public interface SimpleRemoteFileDialogListener {
+        public void onChosenDir(RemoteFolder chosenDir);
     }
 
-    public SimpleFileDialog(Context context, SimpleFileDialogListener SimpleFileDialogListener) {
+    public SimpleRemoteFileDialog(Context context, SimpleRemoteFileDialogListener SimpleRemoteFileDialogListener) {
         m_context = context;
-//        m_sdcardDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
-        m_sdcardDirectory = new SD_Card_Helper().getExteralStoragePath();
-//        m_sdcardDirectory = "/storage";
-        m_SimpleFileDialogListener = SimpleFileDialogListener;
+        m_SimpleRemoteFileDialogListener = SimpleRemoteFileDialogListener;
 
-        try {
-            m_sdcardDirectory = new File(m_sdcardDirectory).getCanonicalPath();
-        } catch (IOException ioe) {
-            System.err.println("Error getting the canonical path of >"+m_sdcardDirectory+"<");
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////
     // chooseFile_or_Dir() - load directory chooser dialog for initial
     // default sdcard directory
     ///////////////////////////////////////////////////////////////////////
-    public void chooseFile_or_Dir() {
-        // Initial directory is sdcard directory
-        if (m_dir.equals(""))	chooseFile_or_Dir(m_sdcardDirectory);
-        else chooseFile_or_Dir(m_dir);
-    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // chooseFile_or_Dir(String dir) - load directory chooser dialog for initial
     // input 'dir' directory
     ////////////////////////////////////////////////////////////////////////////////
-    public void chooseFile_or_Dir(String dir) {
-        File dirFile = new File(dir);
-        if (! dirFile.exists() || ! dirFile.isDirectory()) {
-            dir = m_sdcardDirectory;
-        }
+    public void chooseFile_or_Dir(RemoteFolder dir) {
 
-        try {
-            dir = new File(dir).getCanonicalPath();
-        } catch (IOException ioe) {
-            System.err.println("Error getting the canonical path of >"+dir+"<");
-            return;
-        }
 
-        m_dir = dir;
         m_subdirs = getDirectories(dir);
 
-        class SimpleFileDialogOnClickListener implements DialogInterface.OnClickListener {
+        class SimpleRemoteFileDialogOnClickListener implements OnClickListener {
             public void onClick(DialogInterface dialog, int item) {
                 String sel = "" + ((AlertDialog) dialog).getListView().getAdapter().getItem(item);
                 if (sel.charAt(sel.length()-1) == '/')	sel = sel.substring(0, sel.length()-1);
 
                 // Navigate into the sub-directory
                 if (sel.equals("..")) {
-                    m_dir = m_dir.substring(0, m_dir.lastIndexOf("/"));
+                    currDir = currDir.parent;
                 } else {
-                    m_dir += "/" + sel;
+
+                    for(RemoteFolder r : currDir.children) {
+                        if(r.name.equals(sel)) {
+                            currDir = r;
+                            break;
+                        }
+                    }
                 }
                 updateDirectory();
             }
         }
 
-        SimpleFileDialogOnClickListener onClickListener = new SimpleFileDialogOnClickListener();
+        SimpleRemoteFileDialogOnClickListener onClickListener = new SimpleRemoteFileDialogOnClickListener();
         AlertDialog.Builder myDialog = new AlertDialog.Builder(m_context);
         m_listAdapter = createListAdapter(m_subdirs);
         myDialog.setTitle(m_context.getString(R.string.sett_dialog_title))
@@ -130,8 +109,8 @@ public class SimpleFileDialog {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         // Current directory chosen => Call registered listener supplied with the chosen directory
-                            if (m_SimpleFileDialogListener != null) {
-                                m_SimpleFileDialogListener.onChosenDir(m_dir);
+                            if (m_SimpleRemoteFileDialogListener != null) {
+                                m_SimpleRemoteFileDialogListener.onChosenDir(currDir);
                             }
                     }
                 });
@@ -141,28 +120,21 @@ public class SimpleFileDialog {
         dirsDialog.show();
     }
 
-    private List<String> getDirectories(String dir) {
+    private List<String> getDirectories(RemoteFolder dir) {
         List<String> dirs = new ArrayList<String>();
-        try {
-            File dirFile = new File(dir);
+
             // if directory is not the base sd card directory add ".." for going up one directory
-            if (! m_dir.equals(m_sdcardDirectory) ) {
+            if (dir.parent != null) {
                 dirs.add("..");
             }
-            if (! dirFile.exists() || ! dirFile.isDirectory()) {
+            if (dir.children == null || dir.children.isEmpty()) {
                 return dirs;
             }
-            for (File file : dirFile.listFiles()) {
-                if ( file.isDirectory()) {      // Add "/" to directory names to identify them in the list
-                    if (!(file.getName().startsWith("."))) {
-                        dirs.add( file.getName() + "/" );
+            for (RemoteFolder folder : dir.children) {
+                    if (!(folder.name.startsWith("."))) {
+                        dirs.add( folder.name + "/" );
                     }
                 }
-            }
-        } catch (Exception e) {
-            System.err.println("Error appeared while browsing dir: " + dir);
-            e.printStackTrace();
-        }
 
         Collections.sort(dirs, new Comparator<String>() {
             public int compare(String o1, String o2) {
@@ -174,7 +146,7 @@ public class SimpleFileDialog {
 
     private void updateDirectory() {
         m_subdirs.clear();
-        m_subdirs.addAll(getDirectories(m_dir));
+        m_subdirs.addAll(getDirectories(currDir));
         //myDialog.setTitle(m_context.getString(R.string.sett_dialog_title) + "\n" + m_dir); // can't update normal Dialog Title once shown
         //m_tv_Path.setText(m_dir);
         m_listAdapter.notifyDataSetChanged();

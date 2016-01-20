@@ -1,4 +1,4 @@
-package picframe.at.picframe.helper.settings;
+package picframe.at.picframe.settings;
 
 import android.annotation.TargetApi;
 import android.content.Context;

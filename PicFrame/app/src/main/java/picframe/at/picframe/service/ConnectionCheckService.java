@@ -1,6 +1,4 @@
-package picframe.at.picframe.service_broadcast;
-
-
+package picframe.at.picframe.service;
 import android.app.IntentService;
 import android.content.Intent;
 

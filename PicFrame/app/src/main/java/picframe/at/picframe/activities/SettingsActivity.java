@@ -1,5 +1,6 @@
 /*
-    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher
+    Copyright (C) 2015 Myra Fuchs, Linda Spindler, Clemens Hlawacek, Ebenezer Bonney Ussher,
+    Martin Bayerl, Christoph Krasa
 
     This file is part of PicFrame.
 
@@ -19,14 +20,16 @@
 
 package picframe.at.picframe.activities;
 
-import android.app.AlarmManager;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
+import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Environment;
+import android.os.Bundle;
 import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -35,81 +38,104 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
-import android.os.Bundle;
-import android.preference.TwoStatePreference;
+import android.preference.PreferenceScreen;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Map;
 
-import picframe.at.picframe.MainApp;
+import picframe.at.picframe.helper.Keys;
 import picframe.at.picframe.R;
+import picframe.at.picframe.helper.GlobalPhoneFuncs;
 import picframe.at.picframe.helper.alarm.AlarmScheduler;
-import picframe.at.picframe.helper.settings.AppData;
-import picframe.at.picframe.helper.settings.SimpleFileDialog;
-import picframe.at.picframe.helper.settings.MySwitchPref;
-import picframe.at.picframe.Keys;
+import picframe.at.picframe.service.connectionChecker.ConnectionCheck_OC;
+import picframe.at.picframe.settings.AppData;
+import picframe.at.picframe.settings.SettingsDefaults;
+import picframe.at.picframe.settings.detailsPrefScreen.DetailsPreferenceScreen;
+import picframe.at.picframe.settings.MySwitchPref;
+import picframe.at.picframe.settings.detailsPrefScreen.ExtSdPrefs;
 
 @SuppressWarnings("deprecation")
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
-    private AppData settingsObj;
-    private SharedPreferences mPrefs;
-    private final static boolean DEBUG = false;
-    @SuppressWarnings("FieldCanBeLocal")
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private PreferenceCategory myCat2;
     private AlarmScheduler alarmScheduler;
+    private SharedPreferences mPrefs;
+    private ArrayList<String> editableTitleFields = new ArrayList<>();
+    private ArrayList<String> fieldsToRemove = new ArrayList<>();
+    private StatusReceiver receiver;
+    private LocalBroadcastManager broadcastManager;
+    private DetailsPreferenceScreen detailsPrefScreenToAdd;
+    private final static boolean DEBUG = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         PreferenceManager prefMgr = getPreferenceManager();
         prefMgr.setSharedPreferencesName(AppData.mySettingsFilename);
         prefMgr.setSharedPreferencesMode(MODE_PRIVATE);
+        mPrefs = AppData.getSharedPreferences();
+        mPrefs.registerOnSharedPreferenceChangeListener(this);
 
-        settingsObj = AppData.getINSTANCE();
-        mPrefs = this.getSharedPreferences(AppData.mySettingsFilename, MODE_PRIVATE);
-/*
+        if (DEBUG)  printAllPreferences();
+        addPreferencesFromResource(R.xml.settings);
+        myCat2 = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
+
+        populateEditableFieldsList();
+        populateFieldsToRemove();
+        createCat2Fields();
+        updateAllFieldTitles();
+
+        // set all missing fields
+
+//        setCorrectSrcPathField();
+//        updateTitlePrefsWithValues(mPrefs, "all");
+        //System.out.println(AppData.toString());
+    }
+
+    private void printAllPreferences() {
         Map<String, ?> keyMap = mPrefs.getAll();
         for (String e : keyMap.keySet()) {
-            System.out.println("Key: " + e + " == Value: " + keyMap.get(e));
+            debug("DUMP| Key: " + e + " ++ Value: " + keyMap.get(e));
         }
-*/
+
         alarmScheduler = new AlarmScheduler();
 
-        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                if (MainApp.getINSTANCE().getApplicationContext().getString(R.string.sett_key_srctype).equals(key)) {
-                    setCorrectSrcPathField();
-                    if (AppData.sourceTypes.ExternalSD.equals(settingsObj.getSourceType())) {
-                        Log.d(TAG, "SD-Card; delete alarm");
-                        alarmScheduler.deleteAlarm();
-                    } else if (AppData.sourceTypes.OwnCloud.equals(settingsObj.getSourceType())) {
-                        // set new alarm when switching from sd-card to owncloud
-                        Log.d(TAG, "OwnCloud");
-                        // do smth here..clicked OC, if user&pw set, start logincheck TODO
-                    }
-                }
-                updateTitlePrefsWithValues(sharedPreferences, key);
-            }
-        };
-        mPrefs.registerOnSharedPreferenceChangeListener(listener);
+    }
 
-        addPreferencesFromResource(R.xml.settings);
-        setCorrectSrcPathField();
-        updateTitlePrefsWithValues(mPrefs, "all");
-        //System.out.println(settingsObj.toString());
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (broadcastManager == null) {
+            broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        }
+        if (receiver == null) {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Keys.ACTION_LOGINSTATUSSUCCESS);
+            filter.addAction(Keys.ACTION_LOGINSTATUSFAILURE);
+            filter.addCategory(Intent.CATEGORY_DEFAULT);
+            receiver = new StatusReceiver();
+            broadcastManager.registerReceiver(receiver, filter);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        broadcastManager.unregisterReceiver(receiver);
+        receiver = null;
     }
 
     @Override
@@ -147,318 +173,184 @@ public class SettingsActivity extends PreferenceActivity {
         });
     }
 
-    private void setCorrectSrcPathField() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
-        Preference mySrcPathPref = null;
-        String[] SrcPaths = { getString(R.string.sett_key_srcpath_sd),
-                getString(R.string.sett_key_srcpath_owncloud),
-                getString(R.string.sett_key_srcpath_dropbox),
-                getString(R.string.sett_key_recursiveSearch),
-                getString(R.string.sett_key_updateInterval),
-                getString(R.string.sett_key_deleteData)};
-        for (String path : SrcPaths) {
-            mySrcPathPref = findPreference(path);
-            if (mySrcPathPref != null) {
-                myCategory.removePreference(mySrcPathPref);
-            }
-        }
-        // could also be an intent
-        int srcType = settingsObj.getSrcTypeInt();
-        if (srcType == AppData.sourceTypes.ExternalSD.ordinal()) {
-            mySrcPathPref = new Preference(this);
-            //mySrcPathPref.setTitle(R.string.sett_srcPath_externalSD);
-            mySrcPathPref.setSummary(R.string.sett_srcPath_externalSDSumm);
-            mySrcPathPref.setDefaultValue("");
+    private void populateEditableFieldsList() {
+        editableTitleFields.add(getString(R.string.sett_key_displaytime));
+        editableTitleFields.add(getString(R.string.sett_key_transition));
+        editableTitleFields.add(getString(R.string.sett_key_srctype));
+        editableTitleFields.add(getString(R.string.sett_key_srcpath_sd));
+        editableTitleFields.add(getString(R.string.sett_key_username));
+        editableTitleFields.add(getString(R.string.sett_key_password));
+        editableTitleFields.add(getString(R.string.sett_key_srcpath_owncloud));
+        editableTitleFields.add(getString(R.string.sett_key_downloadInterval));
+        editableTitleFields.add(getString(R.string.sett_key_loginCheckButton));
+    }
 
-            mySrcPathPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                String _chosenDir;
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    SimpleFileDialog FolderChooseDialog =
-                            new SimpleFileDialog(SettingsActivity.this, new SimpleFileDialog.SimpleFileDialogListener() {
-                                @Override
-                                public void onChosenDir(String chosenDir) {   // The code in this function will be executed when the dialog OK button is pushed
-                                    _chosenDir = chosenDir;
-                                    SharedPreferences.Editor mPrefsE = mPrefs.edit();
-                                    mPrefsE.putString(getString(R.string.sett_key_srcpath_sd),_chosenDir);
-                                    mPrefsE.commit();
-                                }
-                            });
-                    FolderChooseDialog.chooseFile_or_Dir();
-                    return false;
-                }
-            });
-            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_sd));
-//            deleteAlarm();
-        } else if (srcType == AppData.sourceTypes.OwnCloud.ordinal()) {
-            mySrcPathPref = new EditTextPreference(this);
-           // mySrcPathPref.setTitle(mPrefs.getString("SrcType", "-1") + " URL");
-            mySrcPathPref.setSummary(R.string.sett_srcPath_OwnCloudSumm);
-            mySrcPathPref.setDefaultValue(getString(R.string.sett_example_owncloud_path));
-            // android:imeOptions="flagNoExtractUi"
-            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_owncloud));
-            mySrcPathPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    if (newValue.toString().endsWith(File.separator)) {
-                        Toast
-                            .makeText(SettingsActivity.this,
-                                    "forbidden character at end of url: \"" + File.separator + "\"",
-                                    Toast.LENGTH_SHORT)
-                            .show();
-                        return false;
-                        //newValue = newValue.toString().substring(0,newValue.toString().lastIndexOf(File.separator)-1); // not working
-                    }
-                    AlertDialog.Builder myDialQBuilder = new AlertDialog.Builder(SettingsActivity.this);
-                    myDialQBuilder.setMessage(R.string.sett_dialog_changedURL_message) //
-                            .setNegativeButton(R.string.sett_deleteDataDialog_negBtn, null)
-                            .setPositiveButton(R.string.sett_deleteDataDialog_posBtn,
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            Toast.makeText(SettingsActivity.this, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT).show();
-                                            new Handler().post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    recursiveDelete(new File(settingsObj.getExtFolderAppRoot()), false);
-                                                }
-                                            });
-                                        }
-                                    });
-                    myDialQBuilder.show();
-                    //AlertDialog myDialQuestion = myDialQBuilder.show();
-                    return true;
-                }
-            });
-        } else if (srcType == AppData.sourceTypes.Dropbox.ordinal()) {
-            mySrcPathPref = new Preference(this);
-            mySrcPathPref.setTitle("Placeholder for Dropbox Dir Field");
-            mySrcPathPref.setSummary("According summary text");
-            mySrcPathPref.setDefaultValue("MySambaShare");
-            mySrcPathPref.setKey(getString(R.string.sett_key_srcpath_dropbox));
+    private void populateFieldsToRemove() {
+        fieldsToRemove.add(getString(R.string.sett_key_recursiveSearch));
+        fieldsToRemove.add(getString(R.string.sett_key_deleteData));
+        fieldsToRemove.add(getString(R.string.sett_key_srcpath_sd));
+        fieldsToRemove.add(getString(R.string.sett_key_restoreDefaults));
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (sharedPreferences != null && key != null) {
+            debug("CHANGED| Key:" + key + " ++ Value: " + sharedPreferences.getAll().get(key));
         }
-        if (mySrcPathPref != null && myCategory != null) {
-//            mySrcPathPref.setKey("SrcPath");
-            if (mySrcPathPref instanceof EditTextPreference) {
-                EditTextPreference myEdTePref = (EditTextPreference) mySrcPathPref;
-                myEdTePref.getEditText().setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-                myCategory.addPreference(myEdTePref);
-            } else {
-                myCategory.addPreference(mySrcPathPref);
+        if (editableTitleFields.contains(key)) {
+            //update display/transition title
+            updateFieldTitle(key);
+            if (getString(R.string.sett_key_srctype).equals(key)) {
+                createCat2Fields();
+                alarmScheduler.scheduleAlarm();
+            } else if (getString(R.string.sett_key_username).equals(key)  ||
+                        getString(R.string.sett_key_password).equals(key) ||
+                        getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
+                setLoginStatus(false);
+                if (!AppData.getUserName().equals("") &&
+                        !AppData.getUserPassword().equals("") &&
+                        !AppData.getSourcePath().equals("") &&
+                        !AppData.getSourcePath().equals(SettingsDefaults
+                                .getDefaultValueForKey(R.string.sett_key_srcpath_owncloud))) {
+                    new Handler().post(new ConnectionCheck_OC());
+                }
+            } else if (getString(R.string.sett_key_loginCheckButton).equals(key) ||
+                    getString(R.string.sett_key_downloadInterval).equals(key)) {
+                alarmScheduler.scheduleAlarm();
             }
-            setRecursiveCheckbox();
-            setUpdateDialogWithButton();
-            setDeleteDataButton();
         }
     }
 
-    private void updateTitlePrefsWithValues(SharedPreferences sharedPreferences, String key) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            if (findPreference(key) instanceof CheckBoxPreference) return;
-        } else {
-            if (findPreference(key) instanceof CheckBoxPreference ||
-                    findPreference(key) instanceof TwoStatePreference) return;
-        }
-        String[] SwitchPrefsAndOthersToSkip = { getString(R.string.sett_key_slideshow),    // TODO: add the custom-sett-keys too (like tutorial), else app dies at [String keyValue = sharedPreferences.getString(key, "-1");]
-                getString(R.string.sett_key_scaling),
-                getString(R.string.sett_key_randomize),
-                getString(R.string.sett_key_tutorial),
-                getString(R.string.sett_key_firstStart),
-                getString(R.string.sett_key_recursiveSearch)};
-        for (String path : SwitchPrefsAndOthersToSkip) {
-            if (key.contains(path)) {
-                return;
-            }
-        }
-        // Needed so we can interate through the other keys
-        if(key.equals("currentpage")){
-            return;
-        }
-        if(key.equals("alarmtime")){
-            return;
-        }
-        if(key.equals("toogledirection")){
-            return;
-        }
+    private void setLoginStatus(boolean status) {
+        AppData.setLoginSuccessful(status);
+        // TODO: change layout (status view)
+    }
 
-
-        // UNTIL HERE ARE CHECKS FOR SWITCH-PREFERENCES, APP WOULD CRASH OTHERWISE
-
-        boolean loadAll = false;
-        String titleStr = null;
-        //String summStr = null;
-        String keyValue = sharedPreferences.getString(key, "-1");
-        if (keyValue.equals("-1")) {
-            keyValue = null;
+    public void updateAllFieldTitles() {
+        for (String prefKey : editableTitleFields) {
+            updateFieldTitle(prefKey);
         }
-        //System.out.println("mprefs- key: " +key + " -- value: " +mPrefs.getString(key,"-1"));       // sharedPrefs and mprefs values = the same
+    }
 
-        switch (key) {
-            case "all":
-                loadAll = true;
-                break;
-            case "Username":
-                titleStr = getString(R.string.sett_username);
-                break;
-            case "Password":
-                if (keyValue != null)
+    public void updateFieldTitle(String key) {
+        Preference mPref = findPreference(key);
+        String mPrefTitle = "";
+        String mPrefValue = "";
+
+        if (mPref != null) {
+            if (mPref instanceof ListPreference) {
+//                mPrefValue = ((ListPreference)mPref).getEntry() == null ? "" :  ((ListPreference)mPref).getEntry().toString();
+                mPrefValue = (String) mPrefs.getAll().get(key);
+                if (mPrefValue != ((ListPreference) mPref).getValue()) {
+                    ((ListPreference) mPref).setValue(mPrefValue);
+                }
+                int index = ((ListPreference) mPref).findIndexOfValue(mPrefValue);
+                mPrefValue = (String)((ListPreference) mPref).getEntries()[index];
+            } else if (mPref instanceof EditTextPreference) {
+                mPrefValue = (String) mPrefs.getAll().get(key);
+//                mPrefValue = ((EditTextPreference)mPref).getText();
+                if (getString(R.string.sett_key_password).equals(key) && mPrefValue != null && !mPrefValue.equals("")) {
                     //noinspection ReplaceAllDot
-                    keyValue = keyValue.replaceAll(".", "*");
-                titleStr = getString(R.string.sett_password);
-                break;
-            case "SrcType":
-                keyValue = settingsObj.getSourceType().toString();
-                // String was number => to correct string (like External SD/Externe SD Karte)
-                //keyValue = getResources().getStringArray(R.array.srcTypeEntries)[settingsObj.getSrcTypeInt()];
-                //System.err.println("KeyValue after: " + keyValue);
-                titleStr = getString(R.string.sett_srcType);
-                toggleUnusedFields(key, keyValue);
-                break;
-            case "DisplayTime":
-                ListPreference tmp = (ListPreference) findPreference(key);
-                if (tmp != null) {
-                    if (tmp.getEntry() != null) {
-                        keyValue = tmp.getEntry().toString();
-                    }
+                    mPrefValue = mPrefValue.replaceAll(".", "*");
                 }
-                titleStr = getString(R.string.sett_displayTime);
-                break;
-            case "SrcPath_sd":
-                titleStr = getString(R.string.sett_srcPath_externalSD);
-            //    summStr = getString(R.string.sett_srcPath_externalSDSumm);
-                break;
-            case "SrcPath_owncloud":
-                titleStr = settingsObj.getSourceType().toString() + " URL";
-             //   titleStr = getResources().getStringArray(R.array.srcTypeEntries)[settingsObj.getSrcTypeInt()] + " URL";
-             //   summStr = getString((R.string.sett_srcPath_OwnCloudSumm));
-                break;
-            case "SrcPath_samba":
+            } else {
+                if (getString(R.string.sett_key_srcpath_sd).equals(mPref.getKey()) &&
+                        AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
+                    mPrefValue = AppData.getSourcePath();
+                } else if (getString(R.string.sett_key_loginCheckButton).equals(mPref.getKey())) {
+                    mPrefValue = AppData.getLoginSuccessful() ? getString(R.string.sett_loginCheck_success) : getString(R.string.sett_loginCheck_failure);
+                }
+            }
+            if (getString(R.string.sett_key_displaytime).equals(key)) {
+                mPrefTitle = getString(R.string.sett_displayTime);
+            } else if (getString(R.string.sett_key_transition).equals(key)) {
+                mPrefTitle = getString(R.string.sett_transition);
+            } else if (getString(R.string.sett_key_srctype).equals(key)) {
+                mPrefTitle = getString(R.string.sett_srcType);
+            } else if (getString(R.string.sett_key_srcpath_sd).equals(key)) {
+                mPrefTitle = getString(R.string.sett_srcPath_externalSD);
+            } else if (getString(R.string.sett_key_username).equals(key)) {
+                mPrefTitle = getString(R.string.sett_username);
+            } else if (getString(R.string.sett_key_password).equals(key)) {
+                mPrefTitle = getString(R.string.sett_password);
+            } else if (getString(R.string.sett_key_srcpath_owncloud).equals(key)) {
+                mPrefTitle = getString(R.string.sett_srcPath_OwnCloud);
+            } else if (getString(R.string.sett_key_downloadInterval).equals(key)) {
+                mPrefTitle = getString(R.string.sett_downloadInterval);
+            } else if (getString(R.string.sett_key_loginCheckButton).equals(key)) {
+                mPrefTitle = getString(R.string.sett_loginCheck);
+            }
+            mPref.setTitle(mPrefTitle + ": " + mPrefValue);
+        }
+    }
 
-                break;
-            default:
-                //System.out.println("Default?! => " + key);
-                return;
+    public void createCat2Fields() {
+        removeCat2Fields();
+        // add PreferenceScreens depending on which sourceType
+        setDetailsPrefScreen();
+        setIncludeSubdirsSwitchPref();
+        setDeleteDataButton();
+        setResetToDefaultButton();
+    }
+
+    private void removeCat2Fields() {
+        // remove the preference screen, before adding it again
+        PreferenceScreen removeScreen = (PreferenceScreen) findPreference(getString(R.string.sett_key_prefScreenDetails));
+        if (removeScreen != null) {
+            myCat2.removePreference(removeScreen);
+            debug("removed old Pref screen");
         }
-        if (loadAll) {
-            //System.out.println("Seems like u want to update everything now.");
-            updateTitlePrefsWithValues(sharedPreferences, "Username");
-            updateTitlePrefsWithValues(sharedPreferences, "Password");
-            updateTitlePrefsWithValues(sharedPreferences, "SrcType");
-            updateTitlePrefsWithValues(sharedPreferences, "DisplayTime");
-            return;
-        }
-        Preference connPref = SettingsActivity.this.findPreference(key);
-        if (connPref == null)
-            return;
-        //System.out.println("VALUE CHECK:\ntitleString: " + titleStr +  "\nkeyValue: " + keyValue);
-        if (titleStr != null) {
-            if (keyValue == null) {
-                connPref.setTitle(titleStr);
-            }
-            else {
-                connPref.setTitle(titleStr + ": " +keyValue);
-                //System.out.println("Title changed. Trigger: >" +key + "< Value: >" + titleStr + ": " + keyValue +"<");
-                /*if (summStr != null) {
-                    connPref.setSummary(summStr);
-                }*/
-            }
-        }
-        if (key.contains("SrcType")) {
-            Preference mySrcPathPref;
-            String[] SrcPaths = { getString(R.string.sett_key_srcpath_sd),
-                    getString(R.string.sett_key_srcpath_owncloud),
-                    getString(R.string.sett_key_srcpath_dropbox)};
-            for (String path : SrcPaths) {
-                mySrcPathPref = findPreference(path);
-                if (mySrcPathPref != null) {
-                    //myCategory.removePreference(mySrcPathPref);
-                    updateTitlePrefsWithValues(sharedPreferences, path);
-                }
+        // remove the fields, before adding them again
+        Preference removePref;
+        for (String path : fieldsToRemove) {
+            removePref = findPreference(path);
+            if (removePref != null) {
+                myCat2.removePreference(removePref);
+                debug("removed:" + removePref.getTitle().toString());
             }
         }
     }
 
-    private void toggleUnusedFields(String key, String keyValue) {
-        switch (key) {
-            case "SrcType":
-                //System.err.println("trying to toggle fields");
-                EditTextPreference username = (EditTextPreference) findPreference("Username");
-                EditTextPreference password = (EditTextPreference) findPreference("Password");
-                ListPreference updateInterval = (ListPreference) findPreference(getString(R.string.sett_key_updateInterval));
-                if (username == null || password == null) return;
-                //if (keyValue.equals(String.valueOf(AppData.sourceTypes.ExternalSD.ordinal())))
-                if (keyValue.contains(AppData.sourceTypes.ExternalSD.toString()))
-                {
-                    username.setEnabled(false);
-                    password.setEnabled(false);
-                    updateInterval.setEnabled(false);
-                }
-                else {
-                    username.setEnabled(true);
-                    password.setEnabled(true);
-                    updateInterval.setEnabled(true);
-                }
-                break;
-            default:
+    public void setDetailsPrefScreen() {
+        if (AppData.sourceTypes.OwnCloud.equals(AppData.getSourceType())) {
+            detailsPrefScreenToAdd = new DetailsPreferenceScreen(
+                    AppData.getSrcTypeInt(),
+                    getPreferenceManager().createPreferenceScreen(this),
+                    SettingsActivity.this);
+            //detailsPrefScreenToAdd.set*Resource
+            if (myCat2 != null && detailsPrefScreenToAdd.getPreferenceScreen() != null) {
+                myCat2.addPreference(detailsPrefScreenToAdd.getPreferenceScreen());
+            }
+        } else if (AppData.sourceTypes.ExternalSD.equals(AppData.getSourceType())) {
+            Preference pref = new ExtSdPrefs(this).getFolderPicker();
+            if (myCat2 != null && pref != null) {
+                myCat2.addPreference(pref);
+            }
         }
+
     }
 
-    private void setRecursiveCheckbox() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
+    private void setIncludeSubdirsSwitchPref() {
+        Preference myRecCheckbox;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            CheckBoxPreference myRecCheckbox = new CheckBoxPreference(this);
-            myRecCheckbox.setSummaryOff(R.string.sett_recursiveSearchSummOff);
-            myRecCheckbox.setSummaryOn(R.string.sett_recursiveSearchSummOn);
-            myRecCheckbox.setTitle(R.string.sett_recursiveSearch);
-            myRecCheckbox.setSummary(R.string.sett_recursiveSearchSumm);
-            myRecCheckbox.setDefaultValue(true);
-            myRecCheckbox.setKey(getString(R.string.sett_key_recursiveSearch));
-            if (myCategory != null) {
-                myCategory.addPreference(myRecCheckbox);
-            }
+            myRecCheckbox = new CheckBoxPreference(this);
+            ((CheckBoxPreference)myRecCheckbox).setSummaryOff(R.string.sett_recursiveSearchSummOff);
+            ((CheckBoxPreference)myRecCheckbox).setSummaryOn(R.string.sett_recursiveSearchSummOn);
         } else {
-            MySwitchPref myRecCheckbox = new MySwitchPref(this);
-            myRecCheckbox.setSummaryOff(R.string.sett_recursiveSearchSummOff);
-            myRecCheckbox.setSummaryOn(R.string.sett_recursiveSearchSummOn);
-            myRecCheckbox.setTitle(R.string.sett_recursiveSearch);
-            myRecCheckbox.setSummary(R.string.sett_recursiveSearchSumm);
-            myRecCheckbox.setDefaultValue(true);
-            myRecCheckbox.setKey(getString(R.string.sett_key_recursiveSearch));
-            if (myCategory != null) {
-                myCategory.addPreference(myRecCheckbox);
-            }
+            myRecCheckbox = new MySwitchPref(this);
+            ((MySwitchPref)myRecCheckbox).setSummaryOff(R.string.sett_recursiveSearchSummOff);
+            ((MySwitchPref)myRecCheckbox).setSummaryOn(R.string.sett_recursiveSearchSummOn);
         }
-    }
-
-    private void setUpdateDialogWithButton() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
-        ListPreference myUpdatePref = new ListPreference(this);
-        myUpdatePref.setTitle(R.string.sett_updateInterval);
-        myUpdatePref.setSummary(R.string.sett_updateIntervalSumm);
-        myUpdatePref.setKey(getString(R.string.sett_key_updateInterval));
-        myUpdatePref.setEntries(R.array.updateIntervalEntries);
-        myUpdatePref.setEntryValues(R.array.updateIntervalValues);
-        myUpdatePref.setShouldDisableView(true);
-        myUpdatePref.setDefaultValue("12");
-        myUpdatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                if ("-1".equals(String.valueOf(newValue))) {
-                    alarmScheduler.deleteAlarm();
-                }
-                return true;
-            } /* else {
-                    setAlarm();
-                    return true;
-                }*/
-        });
-        if (myCategory != null) {
-            myCategory.addPreference(myUpdatePref);
+        myRecCheckbox.setTitle(R.string.sett_recursiveSearch);
+        myRecCheckbox.setSummary(R.string.sett_recursiveSearchSumm);
+        myRecCheckbox.setDefaultValue(true);
+        myRecCheckbox.setKey(getString(R.string.sett_key_recursiveSearch));
+        if (myCat2 != null) {
+            myCat2.addPreference(myRecCheckbox);
         }
     }
 
     private void setDeleteDataButton() {
-        PreferenceCategory myCategory = (PreferenceCategory) findPreference(getString(R.string.sett_key_cat2));
         Preference myDelDataButton = new Preference(this);
         myDelDataButton.setTitle(R.string.sett_deleteData);
         myDelDataButton.setSummary(R.string.sett_deleteDataSumm);
@@ -475,67 +367,173 @@ public class SettingsActivity extends PreferenceActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 Toast.makeText(SettingsActivity.this, R.string.sett_toast_delFiles, Toast.LENGTH_SHORT).show();
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        recursiveDelete(new File(settingsObj.getExtFolderAppRoot()), false);
-                                    }
-                                });
+                                GlobalPhoneFuncs.recursiveDeletionInBackgroundThread(
+                                        new File(AppData.getExtFolderAppRoot()),
+                                        false);
                             }
                         });
                 ensureDialogB.show();
                 return true;
             }
         });
-        if (myCategory != null) {
-            myCategory.addPreference(myDelDataButton);
+        if (myCat2 != null) {
+            myCat2.addPreference(myDelDataButton);
         }
     }
 
-    public boolean recursiveDelete(File dir, boolean delRoot) {       // for directories
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    recursiveDelete(new File(file.getAbsolutePath()), true);
-                } else {
-                    if (!file.delete()) {
-                        if (DEBUG) Log.e(TAG, "Couldn't delete >" + file.getName() + "<");
-                    }
-                }
+    public void setResetToDefaultButton() {
+        Preference myResetButton = new Preference(this);
+        myResetButton.setTitle(R.string.sett_resetTitle);
+        myResetButton.setSummary(R.string.sett_resetSummary);
+        myResetButton.setKey(getString(R.string.sett_key_restoreDefaults));
+        myResetButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                AlertDialog.Builder ensureDialogB = new AlertDialog.Builder(SettingsActivity.this);
+                ensureDialogB
+                        .setCancelable(false)
+                        .setMessage(R.string.sett_confirmationDialogMessage)
+                        .setNegativeButton(R.string.sett_no, null)
+                        .setPositiveButton(R.string.sett_yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                debug("in click on yes!");
+                                resetSettingsToDefault();
+                                Toast.makeText(SettingsActivity.this, R.string.sett_toast_reset, Toast.LENGTH_SHORT).show();
+                                updateAllFieldTitles();
+                            }
+                        });
+                ensureDialogB.show();
+                return true;
             }
+        });
+        if (myCat2 != null) {
+            myCat2.addPreference(myResetButton);
         }
-        if (delRoot) {
-            return dir.delete();
+
+    }
+
+    public void resetSettingsToDefault() {
+        AppData.resetSettings();
+    }
+
+    @Override
+    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+        super.onPreferenceTreeClick(preferenceScreen, preference);
+        // If the user has clicked on a preference screen, set up the screen
+        if (preference instanceof PreferenceScreen) {
+            setUpNestedScreen((PreferenceScreen) preference);
         }
-        // Comment to remove warning xD
+        updateAllFieldTitles();
         return false;
     }
 
-/*    private void deleteAlarm(){
-        System.out.println(" DELETE ALARMS ");
-        // clicked "never"
-        AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+    public ViewGroup getStatusView () {
+        return detailsPrefScreenToAdd.getStatusViewGroup();
+    }
 
-        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
-        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
-        am.cancel(p);
-        p.cancel();
-    }*/
-/*    private void setAlarm(){
-        System.out.println(" UPDATE SETTINGS ACTIVITY ");
+    /************************************************************************************
+    *   needed because else the nested preference screen don't have a actionbar/toolbar *
+    *   see the fix and the given problem here: http://stackoverflow.com/a/27455363     *
+    ************************************************************************************/
+    public void setUpNestedScreen(PreferenceScreen preferenceScreen) {
+        final Dialog dialog = preferenceScreen.getDialog();
+        //ViewGroup list;
+        Toolbar bar;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            //list = (ViewGroup) dialog.findViewById(android.R.id.list);
+            LinearLayout root = (LinearLayout) dialog.findViewById(android.R.id.list).getParent();
+            bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
+            root.addView(bar, 0); // insert at top
+        } else {
+            ViewGroup root = (ViewGroup) dialog.findViewById(android.R.id.content);
+            ListView content = (ListView) root.getChildAt(0);
+            //list = content;
+            root.removeAllViews();
+            bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
 
-        switchedToOwnCloudFlag = false; // void starting alarm twice
+            int height;
+            TypedValue tv = new TypedValue();
+            if (getTheme().resolveAttribute(R.attr.actionBarSize, tv, true)) {
+                height = TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
+            }else{
+                height = bar.getHeight();
+            }
 
-        AlarmManager am = (AlarmManager) getSystemService(MainActivity.getContext().ALARM_SERVICE);
+            content.setPadding(0, height, 0, 0);
 
-        Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
-        PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
-        am.cancel(p);
-        p.cancel();
+            root.addView(content);
+            root.addView(bar);
+        }
+        //list.addView(detailsPrefScreenToAdd.getStatusViewGroup(), 1); //TODO
+        bar.setTitle(preferenceScreen.getTitle());
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogI) {
+                if (AppData.getLoginSuccessful()) {
+                    dialogI.dismiss();
+                } else {
+                    showNotConnectedDialog(dialog);
+                }
+            }
+        });
+        bar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (AppData.getLoginSuccessful()) {
+                    dialog.dismiss();
+                } else {
+                    showNotConnectedDialog(dialog);
+                }
+            }
+        });
+    }
 
-        //LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(MainActivity.getContext());
-        Intent intent = new Intent();
-        intent.setAction("ACTION_UPDATE_ALARM");
-        sendBroadcast(intent);
-    }*/
+    private void showNotConnectedDialog(final Dialog dialog) {
+        AlertDialog notConnectedAlert = new AlertDialog.Builder(SettingsActivity.this)
+                .setMessage(R.string.sett_dialog_notConnected_message)
+                .setPositiveButton(R.string.sett_yes,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialog.dismiss();
+                                dialogInterface.dismiss();
+                            }
+                        })
+                .setNegativeButton(R.string.sett_no,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                                dialog.show();
+                            }
+                        })
+                .create();
+        notConnectedAlert.getWindow().setGravity(Gravity.CENTER);
+        notConnectedAlert.setCancelable(false);
+        notConnectedAlert.show();
+    }
+
+    private void debug(String msg) { if (DEBUG) { Log.d(TAG, msg); } }
+
+    private class StatusReceiver extends BroadcastReceiver {
+        private StatusReceiver() {
+
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null) {
+                if (Keys.ACTION_LOGINSTATUSSUCCESS.equals(intent.getAction())) {
+                    debug("received 'loginSuccess' action via broadcast");
+                    Toast.makeText(getApplicationContext(), R.string.sett_toast_loginSuccess, Toast.LENGTH_SHORT).show();
+//TODO
+                } else if (Keys.ACTION_LOGINSTATUSFAILURE.equals(intent.getAction())) {
+                    debug("received 'loginFailure' action via boadcast");
+                    Toast.makeText(getApplicationContext(), R.string.sett_toast_loginFailure, Toast.LENGTH_SHORT).show();
+//TODO
+                }
+            }
+        }
+    }
 }

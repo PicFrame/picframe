@@ -12,7 +12,7 @@ public class TimeConverter {
 
     }
     public String millisecondsToDate(long dateInMilliseconds){
-        DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+        DateFormat formatter = new SimpleDateFormat("DD.MM, HH:mm:ss");
         return formatter.format(new Date(dateInMilliseconds));
     }
 }

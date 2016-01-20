@@ -1,7 +1,7 @@
-package picframe.at.picframe.service_broadcast;
+package picframe.at.picframe.service;
 
 
-import picframe.at.picframe.downloader.Downloader;
+import picframe.at.picframe.service.downloader.Downloader;
 
 public abstract interface ServiceCallbacks {
     void publishProgress(float progressPercent, boolean progressIndeterminate); // TODO add filecount
