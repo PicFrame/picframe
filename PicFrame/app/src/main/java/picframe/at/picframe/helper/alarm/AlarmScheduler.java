@@ -77,6 +77,8 @@ public class AlarmScheduler {
 
     private void deleteAlarm(){
         Log.d(TAG, " DELETE ALARMS ");
+        if (MainActivity.getContext() == null)
+            return;
         Intent i = new Intent(MainActivity.getContext(),AlarmReceiver.class);
         PendingIntent p = PendingIntent.getBroadcast(MainActivity.getContext(), 1, i, 0);
         alarmManager.cancel(p);

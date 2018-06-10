@@ -442,7 +442,8 @@ public class MainActivity extends ActionBarActivity {
                         if (paused) {
                             cancelSlideShowCoundown();
 //                            pager.setPagingEnabled(true);
-                            mPause.setVisibility(View.VISIBLE);
+                            if (mPause != null)
+                                mPause.setVisibility(View.VISIBLE);
 
 //                            remainingDisplayTime = 4; // TODO: comment in once we show remaing alarmtime
 //                            if(settingsObj.getDisplayTime() >= 60){

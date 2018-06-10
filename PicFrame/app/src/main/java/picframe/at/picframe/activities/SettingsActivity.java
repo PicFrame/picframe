@@ -444,13 +444,26 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     ************************************************************************************/
     public void setUpNestedScreen(PreferenceScreen preferenceScreen) {
         final Dialog dialog = preferenceScreen.getDialog();
+        if (dialog == null)
+            return;
         //ViewGroup list;
-        Toolbar bar;
+        Toolbar bar = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             //list = (ViewGroup) dialog.findViewById(android.R.id.list);
-            LinearLayout root = (LinearLayout) dialog.findViewById(android.R.id.list).getParent();
-            bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
-            root.addView(bar, 0); // insert at top
+            View tmp = dialog.findViewById(android.R.id.list);
+            LinearLayout root = null;
+            if (tmp instanceof LinearLayout)
+            {
+                LinearLayout listView = (LinearLayout) tmp;
+                tmp = (View) listView.getParent();
+                if (tmp instanceof LinearLayout)
+                    root = (LinearLayout) tmp;
+            }
+            if (root != null)
+            {
+                bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.settings_toolbar, root, false);
+                root.addView(bar, 0); // insert at top
+            }
         } else {
             ViewGroup root = (ViewGroup) dialog.findViewById(android.R.id.content);
             ListView content = (ListView) root.getChildAt(0);
@@ -471,6 +484,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             root.addView(content);
             root.addView(bar);
         }
+        if (bar == null)
+            return;
         //list.addView(detailsPrefScreenToAdd.getStatusViewGroup(), 1); //TODO
         bar.setTitle(preferenceScreen.getTitle());
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
