@@ -4,7 +4,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':owncloud-library')
     compile 'com.android.support:appcompat-v7:21.0.0'
-    compile 'ch.acra:acra:4.6.2'
+    //compile 'ch.acra:acra:4.6.2'
     compile 'com.android.support:support-v4:23.0.1'
 }
 

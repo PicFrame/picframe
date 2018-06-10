@@ -2,17 +2,12 @@ package picframe.at.picframe.activities;
 
 import android.app.Application;
 
-import org.acra.ACRA;
-import org.acra.ReportField;
-import org.acra.annotation.ReportsCrashes;
-import org.acra.sender.HttpSender;
-
 /**
  * Created by MrAdmin on 24.05.2015.
  * Crash-report per mail to teampicframe@gmail.com
  * ACRA
  */
-@ReportsCrashes(
+/*@ReportsCrashes(
         mailTo = "teampicframe@gmail.com",
         customReportContent = {
                 ReportField.BRAND,
@@ -25,7 +20,7 @@ import org.acra.sender.HttpSender;
         //logcatArguments = { "-t", "200", "-v", "long","test:I" ,"*:D","*:S"}
 //        ,mode = ReportingInteractionMode.SILENT,
         reportType= HttpSender.Type.JSON
-)
+)*/
 public class _MainApp extends Application {
     private static _MainApp INSTANCE = null;
 
@@ -35,7 +30,7 @@ public class _MainApp extends Application {
         if (INSTANCE == null) {
             INSTANCE = this;
         }
-        ACRA.init(this);
+    //    ACRA.init(this);
     }
 
     public static _MainApp getINSTANCE() {
